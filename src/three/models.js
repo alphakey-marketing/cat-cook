@@ -209,6 +209,7 @@ export function makeCustomer(c) {
   const body = sph(0.32, col, 1, 1.15, 0.9); body.position.y = 0.55; g.add(body);
   const belly = sph(0.22, c.id === 'maneki' ? 0xffffff : 0xfff3e0, 1, 1.1, 0.6); belly.position.set(0, 0.5, 0.2); g.add(belly);
   const head = new THREE.Group(); head.position.y = 1.08; g.add(head);
+  const ears = [];
   head.add(sph(0.3, col, 1.1, 1, 1));
   const muzzleC = c.id === 'kuma' ? 0xd9b38c : c.id === 'kitsune' || c.id === 'shiba' ? 0xfff3e0 : 0xffffff;
   const mz = sph(0.12, muzzleC, 1.3, 0.85, 0.9); mz.position.set(0, -0.08, 0.24); head.add(mz);
@@ -222,7 +223,7 @@ export function makeCustomer(c) {
     if (c.ear === 'long') { ear = sph(0.07, col, 1, 3.2, 0.6); ear.position.set(s * 0.1, 0.42, 0); ear.rotation.z = -s * 0.15; }
     else if (c.ear === 'round') { ear = sph(0.09, col, 1, 1, 0.6); ear.position.set(s * 0.22, 0.24, 0); }
     else { ear = shadow(new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 12), mat(col))); ear.scale.z = 0.6; ear.position.set(s * 0.18, 0.3, 0); ear.rotation.z = -s * 0.3; }
-    head.add(ear);
+    head.add(ear); ears.push(ear);
     const arm = sph(0.08, col, 1, 1.6, 1); arm.position.set(s * 0.3, 0.6, 0.1); arm.rotation.z = s * 0.4; g.add(arm);
     if (c.id === 'maneki' && s === 1) { arm.position.set(0.3, 0.95, 0.1); arm.rotation.z = -0.3; g.userData.wave = arm; }
     const foot = sph(0.09, col, 1.2, 0.6, 1.4); foot.position.set(s * 0.14, 0.05, 0.08); g.add(foot);
@@ -232,7 +233,55 @@ export function makeCustomer(c) {
     const bell = sph(0.05, mat(0xf5c542, { gloss: true })); bell.position.set(0, 0.8, 0.2); g.add(bell);
     const koban = cyl(0.12, 0.12, 0.02, mat(0xf5c542, { gloss: true })); koban.scale.set(0.7, 1, 1.2); koban.rotation.x = Math.PI / 2; koban.position.set(-0.15, 0.55, 0.3); g.add(koban);
   }
+  // ===== 每個種類獨有嘅外形同 idle 動作 =====
+  const tailAt = (obj, y = 0.4, z = -0.3) => { obj.position.set(0, y, z); g.add(obj); return obj; };
+  const dark = (c) => tiny(c);
+  let idle = () => {};
+  if (c.id === 'usagi') {
+    const tail = tailAt(sph(0.11, tiny(0xffffff))); tail.position.y = 0.3;
+    ears.forEach((e, i) => { const inner = sph(0.04, tiny(0xffb3c1), 1, 3, 0.3); inner.position.set(0, 0, 0.05); e.add(inner); });
+    idle = (t) => {
+      const k = Math.max(0, Math.sin(t * 1.3) - 0.7) / 0.3;       // 間唔中跳一下
+      g.position.y = Math.abs(k) * 0.12;
+      ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * 0.15 + Math.sin(t * 2.4 + i) * 0.1 - k * 0.3; });
+      head.rotation.x = Math.sin(t * 9) * 0.02;                    // 鼻郁郁
+    };
+  } else if (c.id === 'kuma') {
+    g.scale.setScalar(1.12);
+    tailAt(sph(0.08, c.color), 0.3);
+    ears.forEach((e) => { const inner = sph(0.05, tiny(0xd9b38c), 1, 1, 0.4); inner.position.z = 0.05; e.add(inner); });
+    idle = (t) => { g.rotation.z = Math.sin(t * 1.1) * 0.04; head.rotation.x = Math.sin(t * 0.8) * 0.05; };
+  } else if (c.id === 'kitsune') {
+    const tail = new THREE.Group();
+    const body = sph(0.17, c.color, 0.8, 2.2, 0.8); body.position.y = 0.2;
+    const tip = sph(0.12, tiny(0xffffff), 0.8, 1.2, 0.8); tip.position.y = 0.52;
+    tail.add(body, tip); tailAt(tail, 0.35, -0.3); tail.rotation.x = -0.7;
+    ears.forEach((e) => { const t = shadow(new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.1, 10), tiny(0x3a2a22))); t.position.y = 0.07; e.add(t); });
+    idle = (t) => { tail.rotation.z = Math.sin(t * 2.2) * 0.35; };
+    g.userData.tail = tail;
+  } else if (c.id === 'tanuki') {
+    belly.scale.multiplyScalar(1.25);
+    const leaf = sph(0.1, tiny(0x4caf50), 1.4, 0.25, 1); leaf.position.set(0, 0.32, 0.03); leaf.rotation.z = 0.25; head.add(leaf);
+    const tail = new THREE.Group();
+    for (let i = 0; i < 4; i++) { const r = sph(0.09 - i * 0.008, tiny(i % 2 ? 0x3a3028 : c.color), 1, 0.8, 1); r.position.y = i * 0.09; tail.add(r); }
+    tailAt(tail, 0.3, -0.3); tail.rotation.x = -1.0;
+    idle = (t) => {
+      const k = Math.max(0, Math.sin(t * 2.6) - 0.6) / 0.4;       // 拍肚皮
+      belly.scale.set(1.25 * (1 + k * 0.06), 1.1 * 1.25, 0.6 * 1.25 * (1 + k * 0.1));
+      g.position.y = k * 0.03; tail.rotation.z = Math.sin(t * 1.5) * 0.2;
+    };
+  } else if (c.id === 'shiba') {
+    const tail = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.04, 8, 16, Math.PI * 1.6), mat(c.color));
+    tail.castShadow = true; tailAt(tail, 0.4, -0.3); tail.rotation.set(0, Math.PI / 2, 0.3);
+    for (const sd of [-1, 1]) { const ch = sph(0.1, tiny(0xfff3e0), 1, 0.9, 0.7); ch.position.set(sd * 0.17, -0.07, 0.2); head.add(ch); }
+    idle = (t) => { tail.rotation.x = Math.sin(t * 14) * 0.3; head.rotation.z += Math.sin(t * 0.9) * 0.002 + 0.06 * Math.max(0, Math.sin(t * 0.6) - 0.8); };
+  } else if (c.id === 'maneki') {
+    idle = (t) => { head.rotation.z = Math.sin(t * 1.2) * 0.05; };
+  }
+  g.userData.idle = idle;
+  g.userData.id = c.id;
   g.userData.head = head;
+  g.userData.baseY = 0;
   return g;
 }
 

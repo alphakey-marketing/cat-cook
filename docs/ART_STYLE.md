@@ -29,3 +29,9 @@ basicMat({ color: 0xffffff });           // 唔受光嘅嘢（眼仔高光、發
 ## 手機效能
 - 描邊會將每件物件多畫一次，所以加新物件時盡量合併細件。
 - 像素密度上限 `MAX_DPR = 1.75`。
+
+## Phase 2：角色
+- 小黑表情：`cat.emote('happy'|'surprised'|'focus'|'sleepy'|'sad', 秒數)`；講嘢會自動開口，煮嘢（stir）自動專心。
+- 客人：每個種類喺 `makeCustomer()` 有獨有外形同 idle 動作（`userData.idle`）。
+- 對白頭像：`src/portraits.js`，SVG，7 個角色 × 3 表情；`bubble(..., { mood })` 設定。
+- 鏡頭：廚房 / 上菜鏡頭按螢幕闊度拉後，確保小黑同客人都完整入鏡（見 `fitAspect`）。

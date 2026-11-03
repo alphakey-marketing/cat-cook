@@ -132,10 +132,10 @@ export class World {
     this.workItems = new THREE.Group(); k.add(this.workItems);
 
     // 上菜位
-    this.servePos = new THREE.Vector3(0.75, this.counterY, 0.25);
+    this.servePos = new THREE.Vector3(0.6, this.counterY, 0.25);
     // 客人位
-    this.customerPos = new THREE.Vector3(1.1, 0, 1.0);
-    this.customerSpawn = new THREE.Vector3(3.5, 0, 1.6);
+    this.customerPos = new THREE.Vector3(0.85, 0, 0.8);
+    this.customerSpawn = new THREE.Vector3(3.0, 0, 1.4);
     // 裝修位
     this.decoSlots = {
       deco_lantern: [new THREE.Vector3(1.4, 2.9, -0.6), k],
@@ -213,9 +213,9 @@ export class World {
   // ===== 鏡頭 =====
   setView(name, instant = false) {
     this.view = name;
-    if (name === 'kitchen') { this.camTargetPos.set(0.2, 2.75, 5.0); this.camTargetLook.set(0.2, 1.55, 0); }
+    if (name === 'kitchen') { this.camTargetPos.set(0.3, 2.75, 5.0); this.camTargetLook.set(0.3, 1.55, 0); }
     if (name === 'cook') { this.camTargetPos.set(-0.3, 2.9, 3.6); this.camTargetLook.set(-0.4, 1.35, -0.1); }
-    if (name === 'serve') { this.camTargetPos.set(0.6, 2.5, 4.2); this.camTargetLook.set(0.5, 1.4, 0.3); }
+    if (name === 'serve') { this.camTargetPos.set(0.3, 2.6, 4.6); this.camTargetLook.set(0.3, 1.4, 0.3); }
     if (name === 'rest') { this.camTargetPos.set(REST_X - 0.1, 1.95, 4.0); this.camTargetLook.set(REST_X - 0.55, 1.15, -0.4); }
     if (name === 'restTable') { this.camTargetPos.set(REST_X, 2.75, 3.1); this.camTargetLook.set(REST_X, 0.75, 0.3); }
     this.fitAspect();
@@ -224,7 +224,9 @@ export class World {
   fitAspect() {
     // 窄身手機：鏡頭拉後啲
     const a = this.camera.aspect || 0.5;
-    const pull = a < 0.75 ? (0.75 / a - 1) * 0.55 : 0;
+    // 窄屏要拉得更後；廚房 / 上菜要同時容得落小黑同客人
+    const wide = this.view === 'kitchen' || this.view === 'serve';
+    const pull = a < 0.75 ? (0.75 / a - 1) * (wide ? 1.3 : 0.55) : 0;
     const dir = this.camTargetPos.clone().sub(this.camTargetLook);
     this.camTargetPos.copy(this.camTargetLook).add(dir.multiplyScalar(1 + pull));
   }
@@ -459,6 +461,7 @@ export class World {
     const t = this.clock.elapsedTime;
     if (this.customer) {
       this.customer.userData.head.rotation.z = Math.sin(t * 2) * 0.08;
+      if (!this.customerBusy) this.customer.userData.idle(t);
       if (this.customer.userData.wave) this.customer.userData.wave.rotation.z = -0.3 + Math.sin(t * 6) * 0.4;
     }
     if (this.decoObjs.deco_maneki?.userData.wave) this.decoObjs.deco_maneki.userData.wave.rotation.z = -0.3 + Math.sin(t * 4) * 0.4;

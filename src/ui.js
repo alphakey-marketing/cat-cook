@@ -1,4 +1,5 @@
 // DOM 介面工具
+import { portrait } from './portraits.js';
 import { toHTML, toRomaji } from './jp.js';
 import { say, sfx } from './audio.js';
 import { S, xpForLevel } from './save.js';
@@ -90,10 +91,11 @@ export function next(label = '繼續 ▶', ...above) {
 
 // ===== 對白泡泡 =====
 const bubbles = new Set();
-export function bubble(world, who, jp, yue, voice, { hidden = false, play = true } = {}) {
+export function bubble(world, who, jp, yue, voice, { hidden = false, play = true, mood = 'normal' } = {}) {
   clearBubble(who);
   const inner = h('div', { class: `bubble ${who}` });
-  inner.append(jpLine(jp, { yue, voice, hidden }));
+  const pid = who === 'cat' ? 'cat' : (world.customer?.userData.id || voice);
+  inner.append(h('div', { class: `portrait ${mood}`, html: portrait(pid, mood) }), jpLine(jp, { yue, voice, hidden }));
   const wrap = h('div', { class: 'bubble-anchor', 'data-who': who }, inner);
   $('#bubbles').append(wrap);
   bubbles.add(wrap);

@@ -216,7 +216,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   sfx('door');
   await world.customerIn(cust);
   if (cust.rare) { sfx('rare'); toast(`✨ 稀有客人：${cust.yue}！ 貼士 x${cust.tip}`, 2600, 'rare'); }
-  world.cat.play('wave', 0.8);
+  world.cat.play('wave', 0.8); world.cat.emote('happy', 1.2);
   await bubble(world, 'cat', CAT.irasshai.jp, CAT.irasshai.yue, 'cat');
   clearBubble('cat');
 
@@ -245,9 +245,9 @@ async function serveCustomer({ index, tutorial, forceDish }) {
     } else {
       tries++;
       sfx('bad');
-      world.cat.play('sad', 0.6);
+      world.cat.play('sad', 0.6); world.cat.emote('sad', 1.6);
       const wr = pick(REACT.wrong);
-      await bubble(world, 'cust', wr.jp, wr.yue, voice);
+      await bubble(world, 'cust', wr.jp, wr.yue, voice, { mood: 'surprised' });
       hint(`佢講：「${line.yue}」— 再聽一次！`, 3500);
       srsAnswer(rec.dish, false);
       await wait(600);
@@ -273,7 +273,8 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   await wait(500);
   const react = pick(stars === 3 ? REACT.great : REACT.ok);
   world.customerJump();
-  bubble(world, 'cust', react.jp, react.yue, voice);
+  world.cat.emote('happy', 2);
+  bubble(world, 'cust', react.jp, react.yue, voice, { mood: stars >= 2 ? 'happy' : 'normal' });
   const isSpecial = special() === rec.id;
   let coins = Math.round(rec.price * qty * (0.6 + 0.4 * score) * cust.tip * (isSpecial ? 2 : 1) / 10);
   if (listen && tries === 0) coins *= 2;
@@ -298,7 +299,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
 
   // 走
   const bye = pick(REACT.bye);
-  await bubble(world, 'cust', bye.jp, bye.yue, voice);
+  await bubble(world, 'cust', bye.jp, bye.yue, voice, { mood: 'happy' });
   clearBubble('cust');
   world.customerOut();
   milestones();

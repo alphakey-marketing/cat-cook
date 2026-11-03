@@ -59,14 +59,24 @@ export class Cat {
     const nose = sph(0.045, mat(0xff8fa8), 1.3, 0.8, 1);
     nose.position.set(0, -0.06, 0.44);
     this.head.add(nose);
-    // 口（細 ω）
+    // 口：三種嘴型（笑 ω / 開口 / 平）
     const mouthMat = basicMat({ color: 0x0a0a0e });
+    this.mouths = { smile: new THREE.Group(), open: new THREE.Group(), flat: new THREE.Group() };
     for (const s of [-1, 1]) {
       const m = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.008, 6, 12, Math.PI), mouthMat);
       m.position.set(s * 0.034, -0.13, 0.43);
       m.rotation.z = Math.PI;
-      this.head.add(m);
+      this.mouths.smile.add(m);
     }
+    const hole = sph(0.04, basicMat({ color: 0x2a0a12 }), 1, 1, 0.5);
+    hole.position.set(0, -0.17, 0.43);
+    const tongue = sph(0.022, basicMat({ color: 0xff7f9c }), 1.2, 0.7, 0.5);
+    tongue.position.set(0, -0.19, 0.45);
+    this.mouths.open.add(hole, tongue);
+    const flat = new THREE.Mesh(new THREE.CapsuleGeometry(0.006, 0.07, 3, 6), mouthMat);
+    flat.rotation.z = Math.PI / 2; flat.position.set(0, -0.14, 0.43);
+    this.mouths.flat.add(flat);
+    for (const k in this.mouths) this.head.add(this.mouths[k]);
     // 眼
     this.eyes = [];
     for (const s of [-1, 1]) {
@@ -82,6 +92,17 @@ export class Cat {
       this.head.add(eye);
       this.eyes.push(eye);
     }
+    // 開心眼（^ ^）同眉毛：平時隱藏，表情切換時先出
+    this.arcs = []; this.brows = [];
+    for (const s of [-1, 1]) {
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.016, 6, 14, Math.PI), basicMat({ color: 0x05050a }));
+      arc.position.set(s * 0.17, 0.02, 0.4); arc.rotation.y = s * 0.3; arc.visible = false;
+      this.head.add(arc); this.arcs.push(arc);
+      const brow = new THREE.Mesh(new THREE.CapsuleGeometry(0.011, 0.09, 3, 6), basicMat({ color: 0x8a8aa0 }));
+      brow.position.set(s * 0.17, 0.17, 0.37); brow.visible = false;
+      this.head.add(brow); this.brows.push(brow);
+    }
+    this.face = 'normal'; this.faceT = 0;
     // 耳
     this.ears = [];
     for (const s of [-1, 1]) {
@@ -226,9 +247,39 @@ export class Cat {
     }
   }
 
-  play(name, dur = 0.35) { this.action = { name, t: 0, dur }; }
+  play(name, dur = 0.35) { if (name === 'sad') this.emote('sad', 1.4); this.action = { name, t: 0, dur }; }
   setMode(m) { this.mode = m; }
   happy() { this.play('happy', 1.0); this.happyEyes = 1.2; }
+  // 表情：normal / happy / surprised / focus / sleepy / sad，維持 secs 秒後自動返原狀（0 = 一直）
+  emote(name, secs = 1.5) { this.face = name; this.faceT = secs; }
+
+  applyFace(blink) {
+    let f = this.face;
+    if (this.happyEyes > 0 || this.mode === 'pet') f = this.happyEyes > 100 ? 'sleepy' : 'happy';
+    else if (f === 'normal' && (this.mode === 'stir')) f = 'focus';
+    const sad = f === 'sad', happy = f === 'happy';
+    this.arcs.forEach((a) => { a.visible = happy; a.rotation.z = 0; });
+    this.eyes.forEach((e, i) => {
+      e.visible = !happy;
+      const s = i ? 1 : -1;
+      let y = blink, sc = 1;
+      if (f === 'surprised') { y = 1.15; sc = 1.25; }
+      if (f === 'focus') y = Math.min(blink, 0.65);
+      if (f === 'sleepy') y = Math.min(blink, 0.25);
+      if (sad) y = Math.min(blink, 0.85);
+      e.scale.set(sc, y * sc, sc);
+      e.rotation.z = sad ? -s * 0.25 : 0;
+    });
+    this.brows.forEach((b, i) => {
+      const s = i ? 1 : -1;
+      b.visible = f === 'focus' || sad || f === 'surprised';
+      b.position.y = f === 'surprised' ? 0.22 : 0.17;
+      b.rotation.z = Math.PI / 2 + (f === 'focus' ? -s * 0.35 : sad ? s * 0.35 : 0);
+    });
+    const talking = this.mode === 'talk' && Math.sin(this.t * 14) > -0.2;
+    const m = f === 'surprised' || talking ? 'open' : sad || f === 'focus' || f === 'sleepy' ? 'flat' : 'smile';
+    for (const k in this.mouths) this.mouths[k].visible = k === m;
+  }
 
   update(dt) {
     this.t += dt;
@@ -248,8 +299,9 @@ export class Cat {
     this.blinkT -= dt;
     let eyeY = 1;
     if (this.blinkT < 0) { eyeY = 0.1; if (this.blinkT < -0.12) this.blinkT = 2 + Math.random() * 3; }
-    if (this.happyEyes > 0) { this.happyEyes -= dt; eyeY = 0.15; }
-    this.eyes.forEach((e) => (e.scale.y = eyeY));
+    if (this.happyEyes > 0) this.happyEyes -= dt;
+    if (this.faceT > 0) { this.faceT -= dt; if (this.faceT <= 0) this.face = 'normal'; }
+    this.applyFace(eyeY);
 
     const [L, R] = this.arms;
     L.rotation.set(0, 0, -0.25 + Math.sin(t * 2.2) * 0.03);
@@ -264,7 +316,6 @@ export class Cat {
     }
     if (this.mode === 'pet') {
       this.head.rotation.z = Math.sin(t * 2) * 0.15 + 0.15;
-      this.eyes.forEach((e) => (e.scale.y = 0.15));
     }
 
     const a = this.action;
