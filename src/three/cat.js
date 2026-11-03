@@ -85,8 +85,8 @@ export class Cat {
     this.ears = [];
     for (const s of [-1, 1]) {
       const ear = new THREE.Group();
-      ear.position.set(s * 0.26, 0.3, 0);
-      ear.rotation.z = -s * 0.35;
+      ear.position.set(s * 0.29, 0.27, 0);
+      ear.rotation.z = -s * 0.45;
       const outer = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.32, 16), this.mBody);
       outer.position.y = 0.12;
       outer.scale.z = 0.6;
@@ -183,16 +183,31 @@ export class Cat {
   // 衫：hat / neck
   wear({ hat, neck }) {
     this.hatSlot.clear();
+    this.hatSlot.position.y = 0.33;
     this.neckSlot.clear();
     if (hat === 'hat_chef') {
-      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.28, 0.16, 24), mat(0xffffff));
-      band.position.y = 0.02;
-      const puff = new THREE.Group();
-      [[0, 0.22, 0, 0.24], [-0.14, 0.18, 0, 0.17], [0.14, 0.18, 0, 0.17], [0, 0.18, 0.12, 0.17], [0, 0.18, -0.12, 0.17]].forEach(([x, y, z, rr]) => {
-        const p = sph(rr, mat(0xffffff)); p.position.set(x, y, z); puff.add(p);
-      });
-      this.hatSlot.add(band, puff);
-      this.hatSlot.rotation.z = 0.12;
+      // 標準廚師帽：窄帽圈 + 有褶嘅帽身 + 蘑菇頂，企喺兩隻耳中間，唔再同耳仔撞
+      const white = mat(0xffffff, { roughness: 0.85 });
+      const shade = mat(0xe9edf2, { roughness: 0.9 });
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.21, 0.13, 32), white);
+      band.position.y = 0.0;
+      const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.008, 6, 32), shade);
+      stripe.rotation.x = Math.PI / 2; stripe.position.y = 0.05;
+      // 帽身：16 條褶（淺灰細條）
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.2, 0.2, 32, 1, true), mat(0xffffff, { roughness: 0.85, side: THREE.DoubleSide }));
+      body.position.y = 0.16;
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        const f = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.2, 0.008), shade);
+        f.position.set(Math.sin(a) * 0.215, 0.16, Math.cos(a) * 0.215);
+        this.hatSlot.add(f);
+      }
+      const top = sph(0.24, white, 1, 0.62, 1); top.position.y = 0.3;
+      const topRim = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.012, 6, 32), shade);
+      topRim.rotation.x = Math.PI / 2; topRim.position.y = 0.26;
+      this.hatSlot.add(band, stripe, body, top, topRim);
+      this.hatSlot.position.y = 0.34;
+      this.hatSlot.rotation.set(0, 0, 0);
     } else if (hat === 'hat_hachimaki') {
       const t = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.04, 8, 32), mat(0xffffff));
       t.rotation.x = Math.PI / 2; t.position.y = -0.18; t.scale.set(1.08, 1, 1);

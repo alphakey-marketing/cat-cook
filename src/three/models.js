@@ -5,13 +5,81 @@ import { VOCAB } from '../data/vocab.js';
 export const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, ...o });
 const shadow = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
 
-function sph(r, c, sx = 1, sy = 1, sz = 1) {
+export function sph(r, c, sx = 1, sy = 1, sz = 1) {
   const m = shadow(new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), typeof c === 'number' ? mat(c) : c));
   m.scale.set(sx, sy, sz);
   return m;
 }
 function box(w, h, d, c) { return shadow(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), typeof c === 'number' ? mat(c) : c)); }
 function cyl(rt, rb, h, c, seg = 24) { return shadow(new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), typeof c === 'number' ? mat(c) : c)); }
+
+
+// 光澤物料（湯面、蛋黃、叉燒）
+export const glossy = (c, o = {}) => new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.12, ...o });
+
+// 米粒貼圖：白底 + 一粒粒米嘅輕微陰影，用嚟做飯嘅質感
+let _riceTex;
+function riceTexture() {
+  if (_riceTex) return _riceTex;
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fbfaf2'; x.fillRect(0, 0, 256, 256);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 520; i++) {
+    const px = rnd() * 256, py = rnd() * 256, a = rnd() * Math.PI, l = 9 + rnd() * 5, w = 4 + rnd() * 1.5;
+    x.save(); x.translate(px, py); x.rotate(a);
+    x.fillStyle = `rgba(150,140,110,${0.10 + rnd() * 0.1})`;
+    x.beginPath(); x.ellipse(1.2, 1.5, l / 2, w / 2, 0, 0, 7); x.fill();
+    x.fillStyle = `rgb(${252 - rnd() * 6},${251 - rnd() * 6},${243 - rnd() * 10})`;
+    x.beginPath(); x.ellipse(0, 0, l / 2, w / 2, 0, 0, 7); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.8)';
+    x.beginPath(); x.ellipse(-l * 0.1, -w * 0.15, l * 0.3, w * 0.15, 0, 0, 7); x.fill();
+    x.restore();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 2); t.anisotropy = 4;
+  return (_riceTex = t);
+}
+export const riceMat = (o = {}) => new THREE.MeshStandardMaterial({ color: 0xffffff, map: riceTexture(), roughness: 0.75, ...o });
+
+// 隨機但可重現（避免每次 makeDish 都唔同樣）
+function rng(seed = 1) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+
+// 彎曲麵條
+function noodleBundle(r, y, n = 14, seed = 3) {
+  const R = rng(seed), g = new THREE.Group();
+  const m = mat(0xf2d77a, { roughness: 0.45 });
+  for (let i = 0; i < n; i++) {
+    const a0 = R() * Math.PI * 2, rad = r * (0.2 + R() * 0.75), ph = R() * 6;
+    const pts = [];
+    for (let k = 0; k <= 10; k++) {
+      const u = k / 10;
+      pts.push(new THREE.Vector3(
+        Math.cos(a0) * rad * 0.5 + (u - 0.5) * r * 1.4 * Math.cos(a0 + 1.2) + Math.sin(u * 9 + ph) * 0.018,
+        y + Math.sin(u * 7 + ph) * 0.01,
+        Math.sin(a0) * rad * 0.5 + (u - 0.5) * r * 1.4 * Math.sin(a0 + 1.2) + Math.cos(u * 8 + ph) * 0.018));
+    }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.0085, 5), m));
+  }
+  return g;
+}
+
+// 溏心蛋半邊：蛋白 + 流心蛋黃（外橙內黃，帶光澤）
+function ajitama(r = 0.05) {
+  const g = new THREE.Group();
+  const white = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 14), glossy(0xf6dcae, { roughness: 0.3 }));   // 滷過嘅蛋白帶茶色
+  white.scale.set(0.82, 1.15, 0.6); white.castShadow = true;
+  const ring = new THREE.Mesh(new THREE.SphereGeometry(r * 0.99, 24, 14), glossy(0xfff4dc));
+  ring.scale.set(0.8, 1.12, 0.63); ring.position.z = 0.004;
+  const yolkOut = new THREE.Mesh(new THREE.SphereGeometry(r * 0.62, 20, 12), glossy(0xf08a1a, { roughness: 0.08 }));
+  yolkOut.scale.set(0.9, 1.0, 0.6); yolkOut.position.z = r * 0.42;
+  const yolkIn = new THREE.Mesh(new THREE.SphereGeometry(r * 0.38, 16, 10), glossy(0xffc233, { roughness: 0.05 }));
+  yolkIn.scale.set(0.9, 1.0, 0.6); yolkIn.position.z = r * 0.56;
+  const hl = new THREE.Mesh(new THREE.SphereGeometry(r * 0.08, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  hl.position.set(-r * 0.14, r * 0.17, r * 0.84);
+  g.add(white, ring, yolkOut, yolkIn, hl);
+  return g;
+}
 
 // 碗（Lathe）
 function bowl(r = 0.22, h = 0.14, outer = 0x9b1d20, inner = 0x1a1010) {
@@ -54,13 +122,15 @@ function onigiriShape(withNori = true) {
   s.closePath();
   const geo = new THREE.ExtrudeGeometry(s, { depth: 0.08, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.04, bevelSegments: 4, curveSegments: 10 });
   geo.translate(0, 0, -0.04);
-  const rice = shadow(new THREE.Mesh(geo, mat(0xfbfbf4, { roughness: 0.9 })));
+  const rice = shadow(new THREE.Mesh(geo, riceMat()));
   rice.position.y = 0.14;
   g.add(rice);
   if (withNori) {
-    const nori = box(0.13, 0.11, 0.2, mat(0x17261b, { roughness: 0.8 }));
+    const nori = box(0.13, 0.11, 0.2, mat(0x17261b, { roughness: 0.55, metalness: 0.15 }));
     nori.position.set(0, 0.07, 0);
     g.add(nori);
+    const R = rng(11);
+    for (let i = 0; i < 6; i++) { const sm = sph(0.006, 0xf3ecd8, 1, 0.6, 1); sm.position.set((R() - 0.5) * 0.1, 0.07 + 0.056, (R() - 0.5) * 0.14); g.add(sm); }
   }
   return g;
 }
@@ -74,50 +144,107 @@ export function makeDish(id) {
     const o2 = onigiriShape(); o2.position.set(0.1, 0.02, -0.06); o2.rotation.y = 0.5; o2.scale.setScalar(0.85); g.add(o2);
     const ume = sph(0.025, 0xc8283c); ume.position.set(-0.13, 0.04, 0.12); g.add(ume);
   } else if (id === 'misoshiru') {
-    const b = bowl(0.18, 0.13); g.add(b);
-    const soup = new THREE.Mesh(new THREE.CircleGeometry(0.15, 32), mat(0xc58b4a, { roughness: 0.2 }));
-    soup.rotation.x = -Math.PI / 2; soup.position.y = 0.11; g.add(soup);
-    for (let i = 0; i < 6; i++) {
-      const tf = box(0.035, 0.03, 0.035, 0xfffbe8); tf.position.set((Math.random() - 0.5) * 0.18, 0.115, (Math.random() - 0.5) * 0.18); tf.rotation.y = Math.random(); g.add(tf);
-    }
+    const R = rng(21);
+    const b = bowl(0.18, 0.13, 0x1f1a17, 0x8a2a1c); g.add(b);   // 黑漆碗、紅內
+    const soup = new THREE.Mesh(new THREE.CircleGeometry(0.152, 40), glossy(0xb98046, { roughness: 0.12, clearcoat: 0.6 }));
+    soup.rotation.x = -Math.PI / 2; soup.position.y = 0.112; g.add(soup);
+    // 味噌溶開嘅渾濁紋
     for (let i = 0; i < 5; i++) {
-      const w = sph(0.03, 0x2e6b3a, 1, 0.2, 0.6); w.position.set((Math.random() - 0.5) * 0.16, 0.112, (Math.random() - 0.5) * 0.16); g.add(w);
+      const sw = new THREE.Mesh(new THREE.TorusGeometry(0.03 + i * 0.022, 0.004, 5, 24, 4.2), new THREE.MeshBasicMaterial({ color: 0xd9a566, transparent: true, opacity: 0.55 }));
+      sw.rotation.x = -Math.PI / 2; sw.rotation.z = i * 1.3; sw.position.y = 0.1135; g.add(sw);
     }
-    for (let i = 0; i < 8; i++) {
-      const n = cyl(0.012, 0.012, 0.005, 0x7fd04f, 8); n.position.set((Math.random() - 0.5) * 0.15, 0.118, (Math.random() - 0.5) * 0.15); g.add(n);
+    // 豆腐：浮喺面，有少少高低
+    for (let i = 0; i < 6; i++) {
+      const a = i * 1.05 + R() * 0.4, d = 0.03 + R() * 0.085;
+      const tf = box(0.04, 0.034, 0.04, mat(0xfffaea, { roughness: 0.5 }));
+      tf.position.set(Math.cos(a) * d, 0.118, Math.sin(a) * d); tf.rotation.set(R() * 0.3, R() * 3, R() * 0.3); g.add(tf);
+    }
+    // 海帶芽：彎曲深綠片
+    for (let i = 0; i < 6; i++) {
+      const w = sph(0.03, glossy(0x2a6a38, { roughness: 0.3, clearcoat: 0.4 }), 1.4, 0.18, 0.7);
+      const a = R() * 6.28, d = R() * 0.1;
+      w.position.set(Math.cos(a) * d, 0.116, Math.sin(a) * d); w.rotation.set(R() * 0.5, R() * 3, R() * 0.5); g.add(w);
+    }
+    // 蔥花：圈圈
+    for (let i = 0; i < 14; i++) {
+      const n = new THREE.Mesh(new THREE.TorusGeometry(0.009, 0.0035, 5, 10), mat(0x86d44f));
+      const a = R() * 6.28, d = R() * 0.125;
+      n.position.set(Math.cos(a) * d, 0.1175, Math.sin(a) * d); n.rotation.x = Math.PI / 2 + (R() - 0.5) * 0.5; g.add(n);
     }
   } else if (id === 'oyakodon') {
+    const R = rng(33);
     const b = bowl(0.22, 0.15, 0x2c4f8f, 0xf2efe6); g.add(b);
-    const rice = sph(0.19, 0xfbfbf4, 1, 0.3, 1); rice.position.y = 0.13; g.add(rice);
-    const egg = sph(0.19, mat(0xf7c531, { roughness: 0.35 }), 1, 0.16, 1); egg.position.y = 0.17; g.add(egg);
-    for (let i = 0; i < 6; i++) {
-      const w = sph(0.05, 0xfff7d6, 1, 0.25, 0.8); w.position.set((Math.random() - 0.5) * 0.24, 0.19, (Math.random() - 0.5) * 0.24); g.add(w);
+    const rice = sph(0.19, riceMat(), 1, 0.34, 1); rice.position.y = 0.13; g.add(rice);
+    // 蛋：半熟蛋漿，疊成幾片有光澤嘅層
+    const eggM = glossy(0xf8c93a, { roughness: 0.22, clearcoat: 0.8 });
+    const egg = sph(0.195, eggM, 1, 0.17, 1); egg.position.y = 0.175; g.add(egg);
+    for (let i = 0; i < 7; i++) {
+      const a = R() * 6.28, d = R() * 0.12;
+      const w = sph(0.058, glossy(i % 2 ? 0xfff0b0 : 0xffe27a, { roughness: 0.18 }), 1, 0.3, 0.85);
+      w.position.set(Math.cos(a) * d, 0.195 + R() * 0.012, Math.sin(a) * d); w.rotation.y = R() * 3; g.add(w);
     }
+    // 流心蛋黃浮喺中間：橙黃 + 高光
+    const yolk = sph(0.052, glossy(0xf08a1a, { roughness: 0.06 }), 1, 0.55, 1); yolk.position.set(0.015, 0.215, 0.01); g.add(yolk);
+    const yolkTop = sph(0.03, glossy(0xffb92e, { roughness: 0.04 }), 1, 0.6, 1); yolkTop.position.set(0.01, 0.228, 0.005); g.add(yolkTop);
+    const yhl = sph(0.008, new THREE.MeshBasicMaterial({ color: 0xffffff })); yhl.position.set(-0.012, 0.242, 0.018); g.add(yhl);
+    // 雞肉：金黃煮熟，帶光
     for (let i = 0; i < 6; i++) {
-      const c = box(0.05, 0.035, 0.04, 0xc9925a); c.position.set((Math.random() - 0.5) * 0.22, 0.2, (Math.random() - 0.5) * 0.22); c.rotation.y = Math.random() * 3; g.add(c);
+      const a = i * 1.05 + R() * 0.5, d = 0.08 + R() * 0.07;
+      const c = box(0.05, 0.034, 0.04, glossy(0xd6a266, { roughness: 0.35, clearcoat: 0.5 }));
+      c.position.set(Math.cos(a) * d, 0.2, Math.sin(a) * d); c.rotation.set(R() * 0.3, R() * 3, R() * 0.3); g.add(c);
     }
+    // 洋蔥絲（半透明）
+    for (let i = 0; i < 5; i++) {
+      const o = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.005, 5, 12, 2.6), mat(0xf3e0b0, { transparent: true, opacity: 0.8 }));
+      o.rotation.x = Math.PI / 2; o.rotation.z = R() * 6; o.position.set((R() - 0.5) * 0.25, 0.198, (R() - 0.5) * 0.25); g.add(o);
+    }
+    // 三つ葉
     for (let i = 0; i < 3; i++) {
-      const l = sph(0.03, 0x4caf50, 1, 0.15, 1.6); l.position.set((Math.random() - 0.5) * 0.08, 0.22, (Math.random() - 0.5) * 0.08); l.rotation.y = i * 2; g.add(l);
+      const l = sph(0.022, 0x4caf50, 1, 0.12, 1.7); l.position.set(0.03 + (R() - 0.5) * 0.1, 0.226, -0.05 + (R() - 0.5) * 0.1); l.rotation.y = i * 2.1; g.add(l);
     }
   } else if (id === 'ramen') {
-    const b = bowl(0.27, 0.17, 0xb3261e, 0x111111); g.add(b);
-    const broth = new THREE.Mesh(new THREE.CircleGeometry(0.235, 32), mat(0xd29b5b, { roughness: 0.15 }));
-    broth.rotation.x = -Math.PI / 2; broth.position.y = 0.15; g.add(broth);
-    for (let i = 0; i < 7; i++) {
-      const n = new THREE.Mesh(new THREE.TorusGeometry(0.05 + Math.random() * 0.06, 0.008, 6, 20), mat(0xf3d77a));
-      n.rotation.x = Math.PI / 2; n.position.set((Math.random() - 0.5) * 0.12, 0.152, (Math.random() - 0.5) * 0.12); g.add(n);
+    const R = rng(45);
+    const b = bowl(0.27, 0.17, 0xb3261e, 0x151010); g.add(b);
+    // 湯：透亮醬油湯底 + 油花高光
+    const broth = new THREE.Mesh(new THREE.CircleGeometry(0.236, 48), glossy(0xb8742f, { roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0.03, reflectivity: 0.9 }));
+    broth.rotation.x = -Math.PI / 2; broth.position.y = 0.148; g.add(broth);
+    const oilM = new THREE.MeshPhysicalMaterial({ color: 0xffd27a, transparent: true, opacity: 0.55, roughness: 0.02, clearcoat: 1, clearcoatRoughness: 0 });
+    for (let i = 0; i < 16; i++) {
+      const a = R() * 6.28, d = 0.04 + R() * 0.17, rr = 0.008 + R() * 0.018;
+      const o = new THREE.Mesh(new THREE.CircleGeometry(rr, 14), oilM);
+      o.rotation.x = -Math.PI / 2; o.position.set(Math.cos(a) * d, 0.1495, Math.sin(a) * d); g.add(o);
     }
+    // 麵（盤成一堆喺湯面）
+    const nd = noodleBundle(0.2, 0.152, 16, 5); g.add(nd);
+    // 叉燒兩片：粉紅肉 + 焦邊 + 肥膏紋
     for (let i = 0; i < 2; i++) {
-      const c = cyl(0.07, 0.07, 0.02, 0xb5653a); c.position.set(-0.08 + i * 0.05, 0.165, -0.08); c.rotation.x = 0.3; g.add(c);
+      const cs = new THREE.Group();
+      const meat = cyl(0.065, 0.065, 0.016, glossy(0xc98a62, { roughness: 0.3, clearcoat: 0.5 }), 28);
+      const edge = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.007, 6, 28), mat(0x6b3a22, { roughness: 0.5 }));
+      edge.rotation.x = Math.PI / 2;
+      const swirl = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.005, 5, 20, 4.5), mat(0xf6dcc4));
+      swirl.rotation.x = -Math.PI / 2; swirl.position.y = 0.0085;
+      cs.add(meat, edge, swirl);
+      cs.position.set(-0.115 + i * 0.045, 0.172 + i * 0.012, -0.095 + i * 0.01); cs.rotation.set(0.45, 0.4 + i * 0.3, 0.1); g.add(cs);
     }
-    const eggW = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat(0xfffaf0));
-    eggW.scale.set(1, 0.7, 1.3); eggW.position.set(0.1, 0.15, 0.05); g.add(eggW);
-    const yolk = sph(0.028, 0xf08a1a, 1, 0.4, 1.2); yolk.position.set(0.1, 0.183, 0.05); g.add(yolk);
-    const nori = box(0.12, 0.14, 0.005, 0x17261b); nori.position.set(0, 0.2, -0.18); nori.rotation.x = -0.25; g.add(nori);
-    const naruto = cyl(0.035, 0.035, 0.012, 0xffffff); naruto.position.set(0.05, 0.16, 0.13); g.add(naruto);
-    const sw = new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.005, 6, 16), mat(0xff6fa0)); sw.rotation.x = Math.PI / 2; sw.position.set(0.05, 0.167, 0.13); g.add(sw);
+    // 溏心蛋（半隻，流心）
+    const eg = ajitama(0.055); eg.position.set(0.105, 0.18, 0.05); eg.rotation.set(-0.2, -0.5, 0); g.add(eg);
+    // 紫菜：企喺碗邊
+    const nori = box(0.13, 0.15, 0.004, mat(0x17261b, { roughness: 0.5, metalness: 0.15 }));
+    nori.position.set(0.0, 0.215, -0.17); nori.rotation.x = -0.28; g.add(nori);
+    // 鳴門卷
+    const naruto = cyl(0.036, 0.036, 0.012, glossy(0xffffff, { roughness: 0.3 }), 24); naruto.position.set(0.0, 0.17, 0.14); naruto.rotation.x = 0.35; g.add(naruto);
+    const sw = new THREE.Mesh(new THREE.TorusGeometry(0.019, 0.0045, 6, 16, 5), mat(0xff6fa0)); sw.rotation.x = Math.PI / 2 + 0.35; sw.position.set(0.0, 0.1765, 0.1405); g.add(sw);
+    // 筍乾
+    for (let i = 0; i < 3; i++) {
+      const m = box(0.045, 0.01, 0.014, mat(0xd8a85a, { roughness: 0.5 })); m.position.set(-0.12 + i * 0.012, 0.162 + i * 0.006, 0.09 + i * 0.022); m.rotation.y = 0.6 + i * 0.5; g.add(m);
+    }
+    // 蔥花 + 芝麻
+    for (let i = 0; i < 16; i++) {
+      const ng = new THREE.Mesh(new THREE.TorusGeometry(0.01, 0.004, 5, 10), mat(0x7fd04f)); ng.position.set(-0.05 + R() * 0.16, 0.168 + R() * 0.01, 0.0 + R() * 0.18); ng.rotation.x = Math.PI / 2 + (R() - 0.5) * 0.6; g.add(ng);
+    }
     for (let i = 0; i < 10; i++) {
-      const ng = cyl(0.01, 0.01, 0.005, 0x7fd04f, 8); ng.position.set(-0.1 + Math.random() * 0.1, 0.158, 0.05 + Math.random() * 0.1); g.add(ng);
+      const sm = sph(0.0055, 0xf3ecd8, 1, 0.6, 1); sm.position.set((R() - 0.5) * 0.3, 0.164, (R() - 0.5) * 0.3); g.add(sm);
     }
   } else if (id === 'ocha') {
     const cup = cyl(0.06, 0.05, 0.12, 0x6a8f4e); cup.position.y = 0.06; g.add(cup);
@@ -157,10 +284,10 @@ export function makeProp(name) {
   switch (name) {
     case 'onigiri_raw': { const o = onigiriShape(false); g.add(o); break; }
     case 'tofu_cubes':
-      for (let i = 0; i < 9; i++) { const c = box(0.06, 0.06, 0.06, 0xfffbe8); c.position.set((i % 3) * 0.07 - 0.07, 0.03, Math.floor(i / 3) * 0.07 - 0.07); g.add(c); }
+      for (let i = 0; i < 9; i++) { const c = box(0.06, 0.06, 0.06, mat(0xfffbe8, { roughness: 0.45 })); c.position.set((i % 3) * 0.07 - 0.07, 0.03, Math.floor(i / 3) * 0.07 - 0.07); g.add(c); }
       break;
     case 'chicken_pieces':
-      for (let i = 0; i < 8; i++) { const c = box(0.06, 0.04, 0.05, 0xf2c9a0); c.position.set((Math.random() - 0.5) * 0.25, 0.02, (Math.random() - 0.5) * 0.15); c.rotation.y = Math.random() * 3; g.add(c); }
+      for (let i = 0; i < 8; i++) { const c = box(0.06, 0.04, 0.05, glossy(0xf4b9a4, { roughness: 0.35, clearcoat: 0.6 })); c.position.set((Math.random() - 0.5) * 0.25, 0.02, (Math.random() - 0.5) * 0.15); c.rotation.y = Math.random() * 3; g.add(c); }
       break;
   }
   return g;
@@ -229,8 +356,42 @@ export function makeCustomer(c) {
     const bell = sph(0.05, mat(0xf5c542, { metalness: 0.8, roughness: 0.2 })); bell.position.set(0, 0.8, 0.2); g.add(bell);
     const koban = cyl(0.12, 0.12, 0.02, mat(0xf5c542, { metalness: 0.8, roughness: 0.2 })); koban.scale.set(0.7, 1, 1.2); koban.rotation.x = Math.PI / 2; koban.position.set(-0.15, 0.55, 0.3); g.add(koban);
   }
+  g.add(makeTail(c, col));
   g.userData.head = head;
   return g;
+}
+
+// 客人尾巴：每種動物一款，側身都睇得清
+function makeTail(c, col) {
+  const t = new THREE.Group();
+  t.position.set(0.04, 0.38, -0.28);
+  const cream = 0xfff3e0;
+  const tube = (pts, r, m) => shadow(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p))), 36, r, 12, false), m));
+  if (c.id === 'shiba') {
+    // 柴犬捲尾：由背後向上、向外捲成一個大圈（側面睇一個「6」字），尾底白毛
+    t.add(tube([[0, 0, 0], [0.04, 0.14, -0.08], [0.12, 0.3, -0.12], [0.26, 0.45, -0.08], [0.3, 0.6, 0.02], [0.2, 0.68, 0.06], [0.1, 0.6, 0.03], [0.14, 0.5, -0.02]], 0.07, mat(col)));
+    const tip = sph(0.075, cream); tip.position.set(0.14, 0.5, -0.02); t.add(tip);
+  } else if (c.id === 'kitsune') {
+    // 狐狸：蓬鬆大尾，尾尖白
+    const f = sph(0.16, col, 0.95, 2.2, 0.95); f.position.set(0.1, 0.28, -0.22); f.rotation.set(-0.6, 0, -0.5); t.add(f);
+    const tip = sph(0.12, 0xffffff, 0.95, 1.4, 0.95); tip.position.set(0.27, 0.58, -0.38); tip.rotation.set(-0.6, 0, -0.5); t.add(tip);
+  } else if (c.id === 'tanuki') {
+    // 狸貓：粗短尾 + 深色環紋
+    const f = sph(0.14, col, 1, 1.9, 1); f.position.set(0.1, 0.22, -0.2); f.rotation.set(-0.7, 0, -0.5); t.add(f);
+    [[0.04, 0.12, -0.12], [0.1, 0.24, -0.2], [0.16, 0.36, -0.28]].forEach(([x, y, z], i) => {
+      const r = new THREE.Mesh(new THREE.TorusGeometry(0.115 - i * 0.012, 0.022, 6, 16), mat(0x3a3028));
+      r.position.set(x, y, z); r.rotation.set(-0.7 + Math.PI / 2, 0, -0.5); t.add(r);
+    });
+  } else if (c.id === 'usagi') {
+    const p = sph(0.12, 0xffffff); p.position.set(0.04, 0.12, -0.12); t.add(p);   // 圓毛球尾
+  } else if (c.id === 'kuma') {
+    const p = sph(0.09, col); p.position.set(0.03, 0.06, -0.1); t.add(p);
+  } else {
+    // 招財貓：長尾向上彎
+    t.add(tube([[0, 0, 0], [0.06, 0.1, -0.22], [0.18, 0.3, -0.3], [0.26, 0.52, -0.2]], 0.055, mat(col)));
+  }
+  t.userData.tailSway = true;
+  return t;
 }
 
 // ===== 裝修 =====
@@ -278,4 +439,27 @@ export function emojiTexture(e, size = 128) {
   x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText(e, size / 2, size / 2 + size * 0.05);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+
+// ===== 煮食中嘅鍋內容物（會由生變熟） =====
+// 回傳 group；userData.items 係一組 { mesh, raw, cooked } 畀 world 做顏色過渡
+export function makePotContents(kind) {
+  const g = new THREE.Group();
+  const items = [];
+  const R = rng(77);
+  const add = (mesh, raw, cooked) => { mesh.material = mesh.material.clone(); mesh.material.color.setHex(raw); items.push({ mesh, raw: new THREE.Color(raw), cooked: new THREE.Color(cooked) }); g.add(mesh); return mesh; };
+  if (kind === 'miso_soup') {
+    for (let i = 0; i < 6; i++) { const a = i * 1.05, d = 0.04 + R() * 0.09; const t = box(0.045, 0.04, 0.045, mat(0xfffbe8, { roughness: 0.5 })); t.position.set(Math.cos(a) * d, 0, Math.sin(a) * d); t.rotation.y = R() * 3; add(t, 0xfffbe8, 0xf0d8a8); }
+    for (let i = 0; i < 5; i++) { const w = sph(0.03, mat(0x2a6a38), 1.4, 0.2, 0.7); const a = R() * 6.28, d = R() * 0.12; w.position.set(Math.cos(a) * d, 0.005, Math.sin(a) * d); w.rotation.y = R() * 3; add(w, 0x3d3a2a, 0x2a6a38); }
+  } else if (kind === 'ramen_boil') {
+    const nd = noodleBundle(0.14, 0, 12, 9);
+    nd.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.setHex(0xf6f1e4); items.push({ mesh: o, raw: new THREE.Color(0xf6f1e4), cooked: new THREE.Color(0xf2d77a) }); } });
+    g.add(nd);
+  } else if (kind === 'pan_simmer') {
+    for (let i = 0; i < 8; i++) { const a = i * 0.8, d = 0.03 + R() * 0.09; const c = box(0.05, 0.034, 0.04, glossy(0xf4b9a4, { roughness: 0.4, clearcoat: 0.5 })); c.position.set(Math.cos(a) * d, 0.012, Math.sin(a) * d); c.rotation.set(0, R() * 3, 0); add(c, 0xf4b9a4, 0xd2a064); }
+    for (let i = 0; i < 6; i++) { const o = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.005, 5, 12, 2.6), mat(0xfff4d0, { transparent: true, opacity: 0.9 })); o.rotation.x = Math.PI / 2; o.rotation.z = R() * 6; o.position.set((R() - 0.5) * 0.22, 0.01, (R() - 0.5) * 0.22); add(o, 0xfff4d0, 0xe8c070); }
+  }
+  g.userData.items = items;
+  return g;
 }

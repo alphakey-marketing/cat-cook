@@ -1,7 +1,7 @@
 // 3D 世界：廚房 + 餐廳，鏡頭，粒子
 import * as THREE from 'three';
 import { Cat } from './cat.js';
-import { makeBoard, makePot, makePan, makeDish, makeIngredient, makeProp, makeCustomer, makeDeco, circleTexture, emojiTexture, mat } from './models.js';
+import { makeBoard, makePot, makePan, makeDish, makeIngredient, makeProp, makePotContents, makeCustomer, glossy, sph, makeDeco, circleTexture, emojiTexture, mat } from './models.js';
 
 const REST_X = 40;
 
@@ -129,7 +129,7 @@ export class World {
     // 上菜位
     this.servePos = new THREE.Vector3(0.75, this.counterY, 0.25);
     // 客人位
-    this.customerPos = new THREE.Vector3(1.1, 0, 1.0);
+    this.customerPos = new THREE.Vector3(0.8, 0, 1.0);
     this.customerSpawn = new THREE.Vector3(3.5, 0, 1.6);
     // 裝修位
     this.decoSlots = {
@@ -262,7 +262,7 @@ export class World {
     this.stations.pan.visible = name === 'pan';
     this.station = name;
   }
-  clearWork() { this.workItems.clear(); this.stations.pot.userData.liquid.visible = false; this.stations.pan.userData.liquid.visible = false; this.flame.visible = false; this.steamOn = null; }
+  clearWork() { this.workItems.clear(); this.stations.pot.userData.liquid.visible = false; this.stations.pan.userData.liquid.visible = false; this.flame.visible = false; this.steamOn = null; this.cookMode = null; if (this.contents) { this.contents.parent?.remove(this.contents); this.contents = null; } }
   placeIngredient(id, i, n) {
     const m = makeIngredient(id);
     const onBoard = this.station === 'board';
@@ -272,15 +272,51 @@ export class World {
     this.workItems.add(m);
     return m;
   }
+  // 顏色漸變（生 → 熟）
+  cookLerp(items, dur = 2.2) {
+    return this.tween({ k: 0 }, { k: 1 }, dur, (o) => items.forEach((it) => it.mesh.material.color.copy(it.raw).lerp(it.cooked, o.k)), 'out');
+  }
   showProp(name) {
-    const liquidCol = { miso_soup: 0xc58b4a, ramen_boil: 0xf3e3b8, pan_simmer: 0xb87a3a, oyako_egg: 0xf7c531 };
+    const liquidCol = {
+      miso_soup: [0xe9d9a0, 0xc58b4a], ramen_boil: [0xdfe9ee, 0xf3e3b8], pan_simmer: [0xd9a864, 0xb87a3a], oyako_egg: [0xfbe9a0, 0xf7c531],
+    };
     if (liquidCol[name]) {
       const st = this.stations[this.station === 'pan' ? 'pan' : 'pot'];
-      st.userData.liquid.visible = true;
-      st.userData.liquid.material.color.setHex(liquidCol[name]);
+      const liq = st.userData.liquid;
+      const [from, to] = liquidCol[name];
+      liq.visible = true;
+      liq.material.transparent = true;
+      const c0 = new THREE.Color(from), c1 = new THREE.Color(to);
+      liq.material.color.copy(c0);
+      this.tween({ k: 0 }, { k: 1 }, 1.8, (o) => liq.material.color.copy(c0).lerp(c1, o.k));
       this.flame.visible = true;
       this.steamOn = st;
+      this.cookMode = name;           // 控制蒸氣 / 氣泡 / 油爆
+      this.cookStart = this.clock.elapsedTime;
       this.workItems.children.forEach((c) => this.tween(c.scale, { x: 0.01, y: 0.01, z: 0.01 }, 0.25));
+      // 鍋內容物
+      if (this.contents) { this.contents.parent?.remove(this.contents); this.contents = null; }
+      if (name !== 'oyako_egg') {
+        const pc = makePotContents(name);
+        pc.position.set(st.position.x, st.position.y + (name === 'pan_simmer' ? 0.045 : 0.165), st.position.z);
+        this.popIn(pc);
+        this.kitchen.add(pc);
+        this.contents = pc;
+        this.cookLerp(pc.userData.items, name === 'ramen_boil' ? 1.6 : 2.6);
+      } else {
+        // 蛋液淋落去：金黃蛋漿由半透明變半熟，面頭見到流心
+        liq.material.opacity = 0.75;
+        this.tween(liq.material, { opacity: 1 }, 1.6);
+        if (this.contents) this.contents.parent?.remove(this.contents);
+        const eg = new THREE.Group();
+        for (let i = 0; i < 5; i++) {
+          const w = sph(0.045, glossy(0xfff0b0, { roughness: 0.2 }), 1, 0.25, 0.85);
+          w.position.set(Math.cos(i * 1.3) * 0.08, 0, Math.sin(i * 1.3) * 0.08); eg.add(w);
+        }
+        eg.position.set(st.position.x, st.position.y + 0.06, st.position.z);
+        this.popIn(eg); this.kitchen.add(eg); this.contents = eg;
+        this.burst(st.position.clone().add(new THREE.Vector3(0, 0.15, 0)), this.texSpark, 10, 0.05);
+      }
       return;
     }
     const p = makeProp(name);
@@ -290,7 +326,7 @@ export class World {
     this.popIn(p);
     this.workItems.add(p);
   }
-  heat(on) { this.flame.visible = on; if (on) this.steamOn = this.stations[this.station === 'pan' ? 'pan' : 'pot']; }
+  heat(on) { this.flame.visible = on; if (on) this.steamOn = this.stations[this.station === 'pan' ? 'pan' : 'pot']; else this.steamOn = null; }
 
   // 成品出現
   showDish(id) {
@@ -324,7 +360,7 @@ export class World {
     this.kitchen.add(m);
     this.customer = m;
     await this.walk(m, this.customerPos, 1.1);
-    this.tween(m.rotation, { y: -0.9 }, 0.3);
+    this.tween(m.rotation, { y: -0.45 }, 0.3); // 轉少少身，尾巴睇得清
     return m;
   }
   async customerOut(instant = false) {
@@ -382,6 +418,34 @@ export class World {
       }
     });
     this.burst(new THREE.Vector3(REST_X, this.tableY + 0.4, 0.4), this.texSpark, 20, 0.07);
+  }
+
+  // 煮食特效：滾水氣泡 / 煎炒油爆
+  cookFx(dt, st) {
+    const m = this.cookMode;
+    const p = new THREE.Vector3(); st.getWorldPosition(p);
+    if (m === 'ramen_boil' || m === 'miso_soup') {
+      if (Math.random() < dt * (m === 'ramen_boil' ? 22 : 6)) {
+        const a = Math.random() * 6.28, d = Math.random() * 0.14;
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.texSteam, transparent: true, opacity: 0.85, depthWrite: false }));
+        s.position.set(p.x + Math.cos(a) * d, p.y + 0.165, p.z + Math.sin(a) * d);
+        s.scale.setScalar(0.025 + Math.random() * 0.03);
+        s.userData = { v: new THREE.Vector3(0, 0.12, 0), life: 0.45, g: 0, grow: 0.12 };
+        this.scene.add(s); this.particles.push(s);
+      }
+    }
+    if (m === 'pan_simmer' || m === 'oyako_egg') {
+      // 油爆：細金色火星彈出
+      if (Math.random() < dt * (m === 'pan_simmer' ? 14 : 8)) {
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.texSpark, transparent: true, depthWrite: false }));
+        s.position.set(p.x + (Math.random() - 0.5) * 0.25, p.y + 0.07, p.z + (Math.random() - 0.5) * 0.25);
+        s.scale.setScalar(0.03 + Math.random() * 0.03);
+        s.userData = { v: new THREE.Vector3((Math.random() - 0.5) * 0.6, 0.7 + Math.random() * 0.6, (Math.random() - 0.5) * 0.6), life: 0.55, g: -3.2 };
+        this.scene.add(s); this.particles.push(s);
+      }
+    }
+    // 鍋內容物輕微浮動
+    if (this.contents) this.contents.rotation.y += dt * (m === 'ramen_boil' ? 0.5 : 0.15);
   }
 
   // ===== 粒子 / tween =====
@@ -454,12 +518,19 @@ export class World {
     const t = this.clock.elapsedTime;
     if (this.customer) {
       this.customer.userData.head.rotation.z = Math.sin(t * 2) * 0.08;
+      this.customer.children.forEach((ch) => { if (ch.userData.tailSway) ch.rotation.z = Math.sin(t * 3) * 0.12; });
       if (this.customer.userData.wave) this.customer.userData.wave.rotation.z = -0.3 + Math.sin(t * 6) * 0.4;
     }
     if (this.decoObjs.deco_maneki?.userData.wave) this.decoObjs.deco_maneki.userData.wave.rotation.z = -0.3 + Math.sin(t * 4) * 0.4;
     if (this.decoObjs.deco_lantern) this.decoObjs.deco_lantern.rotation.z = Math.sin(t * 0.8) * 0.05;
     if (this.flame.visible) this.flame.scale.setScalar(1 + Math.sin(t * 30) * 0.05);
-    if (this.steamOn && Math.random() < dt * 8) this.steamPuff(this.steamOn);
+    if (this.steamOn) {
+      // 蒸氣：煮越耐越濃（拉麵滾水最猛）
+      const heatK = Math.min(1, (t - (this.cookStart || t)) / 2.5);
+      const rate = (this.cookMode === 'ramen_boil' ? 16 : 8) * (0.4 + heatK);
+      if (Math.random() < dt * rate) this.steamPuff(this.steamOn);
+      this.cookFx(dt, this.steamOn);
+    }
 
     // tweens
     for (let i = this.tweens.length - 1; i >= 0; i--) {
