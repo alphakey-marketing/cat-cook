@@ -8,13 +8,23 @@ const REST_X = 40;
 export class World {
   constructor(canvas) {
     this.canvas = canvas;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // 手機：細啲 pixel ratio，高 DPR 唔開 MSAA（慳 GPU）
+    this.mobile = matchMedia('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 700;
+    this.dprMax = Math.min(window.devicePixelRatio || 1, this.mobile ? 1.5 : 2);
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !(this.mobile && window.devicePixelRatio >= 2), powerPreference: 'high-performance' });
+    this.renderer.setPixelRatio(this.dprMax);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = this.mobile ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+    this.quality = 2;        // 2 全開 / 1 降解像 / 0 連影子都熄
+    this.perfN = 0; this.perfT = 0; this.perfCool = 3;
+    this.trauma = 0; this.fovKick = 0; this.baseFov = 42;
+    this.reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.shakeOn = true;
+    this.springs = [];
+    this._v = new THREE.Vector3();
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xf6e3c8);
@@ -51,6 +61,11 @@ export class World {
     window.addEventListener('resize', () => this.resize());
     canvas.addEventListener('pointerdown', (e) => this.tap(e));
     this.renderer.setAnimationLoop(() => this.frame());
+    // 背景分頁 / 鎖屏：停止渲染，慳電
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.renderer.setAnimationLoop(null);
+      else { this.clock.getDelta(); this.renderer.setAnimationLoop(() => this.frame()); }
+    });
   }
 
   lights() {
@@ -59,7 +74,7 @@ export class World {
     const sun = new THREE.DirectionalLight(0xffe6c0, 2.0);
     sun.position.set(3, 6, 4);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(this.mobile ? 512 : 1024, this.mobile ? 512 : 1024);
     sun.shadow.camera.left = -4; sun.shadow.camera.right = 4; sun.shadow.camera.top = 4; sun.shadow.camera.bottom = -2;
     sun.shadow.bias = -0.0005;
     sun.shadow.radius = 4;
@@ -207,6 +222,7 @@ export class World {
 
   // ===== 鏡頭 =====
   setView(name, instant = false) {
+    const prev = this.view;
     this.view = name;
     if (name === 'kitchen') { this.camTargetPos.set(0.2, 2.75, 5.0); this.camTargetLook.set(0.2, 1.55, 0); }
     if (name === 'cook') { this.camTargetPos.set(-0.3, 2.9, 3.6); this.camTargetLook.set(-0.4, 1.35, -0.1); }
@@ -215,6 +231,8 @@ export class World {
     if (name === 'restTable') { this.camTargetPos.set(REST_X, 2.75, 3.1); this.camTargetLook.set(REST_X, 0.75, 0.3); }
     this.fitAspect();
     if (instant) { this.camPos.copy(this.camTargetPos); this.camLook.copy(this.camTargetLook); }
+    else if (prev !== name) this.fovKick = 7;   // 轉場：鏡頭輕輕「彈」一下
+    this.onView?.(name, instant);
   }
   fitAspect() {
     // 窄身手機：鏡頭拉後啲
@@ -302,6 +320,7 @@ export class World {
     this.kitchen.add(d);
     this.dish = d;
     this.burst(d.position.clone().add(new THREE.Vector3(0, 0.3, 0)), this.texSpark, 24, 0.08);
+    setTimeout(() => this.punch(d, -0.18), 350);
     return d;
   }
   slideDishToCustomer() {
@@ -324,6 +343,7 @@ export class World {
     this.kitchen.add(m);
     this.customer = m;
     await this.walk(m, this.customerPos, 1.1);
+    this.punch(m, -0.22);   // 企定個下壓扁一下
     this.tween(m.rotation, { y: -0.9 }, 0.3);
     return m;
   }
@@ -345,7 +365,9 @@ export class World {
   }
   customerJump() {
     const m = this.customer; if (!m) return;
-    this.tween({ k: 0 }, { k: 1 }, 0.6, (o) => { m.position.y = Math.abs(Math.sin(o.k * Math.PI * 2)) * 0.25; });
+    this.punch(m, 0.3);
+    this.tween({ k: 0 }, { k: 1 }, 0.6, (o) => { m.position.y = Math.abs(Math.sin(o.k * Math.PI * 2)) * 0.25; }).then(() => this.punch(m, -0.25));
+    this.shake(0.25);
     this.burst(m.position.clone().add(new THREE.Vector3(0, 1.5, 0)), this.texHeart, 6, 0.05, 0.25);
   }
   coinsFromCustomer() {
@@ -384,8 +406,48 @@ export class World {
     this.burst(new THREE.Vector3(REST_X, this.tableY + 0.4, 0.4), this.texSpark, 20, 0.07);
   }
 
+  // ===== 手感：鏡頭微震 / 擠壓拉伸 =====
+  shake(amount = 0.3) {
+    if (!this.shakeOn || this.reduceMotion) return;
+    this.trauma = Math.min(1, this.trauma + amount);
+  }
+  // 擠壓拉伸：amt>0 拉長（Y 變高 X/Z 變窄），amt<0 壓扁
+  punch(obj, amt = 0.2) {
+    if (!obj || this.reduceMotion) return;
+    let sp = this.springs.find((x) => x.obj === obj);
+    if (!sp) { sp = { obj, base: obj.scale.clone(), x: 0, v: 0 }; this.springs.push(sp); }
+    sp.v += amt * 22;
+  }
+  updateSprings(dt) {
+    for (let i = this.springs.length - 1; i >= 0; i--) {
+      const sp = this.springs[i];
+      sp.v += (-180 * sp.x - 12 * sp.v) * dt;
+      sp.x += sp.v * dt;
+      const o = sp.obj;
+      if (Math.abs(sp.x) < 0.001 && Math.abs(sp.v) < 0.01) { o.scale.copy(sp.base); this.springs.splice(i, 1); continue; }
+      o.scale.set(sp.base.x * (1 - sp.x * 0.5), sp.base.y * (1 + sp.x), sp.base.z * (1 - sp.x * 0.5));
+    }
+  }
+  // 自動降質：連續一段時間低於 ~40fps 就降 DPR，再唔掂就熄影子
+  perfWatch(dt) {
+    if (dt > 0.05) return; // 切 tab 回來嗰下唔計
+    this.perfT += dt; this.perfN++;
+    if (this.perfN < 90) return;
+    const avg = this.perfT / this.perfN;
+    this.perfT = 0; this.perfN = 0;
+    if (this.perfCool > 0) { this.perfCool--; return; }
+    if (avg > 0.026 && this.quality > 0) {
+      this.quality--;
+      if (this.quality === 1) { this.dprMax = Math.max(1, this.dprMax * 0.75); this.renderer.setPixelRatio(this.dprMax); this.resize(); }
+      else { this.sun.castShadow = false; this.renderer.shadowMap.enabled = false; this.scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); }
+      this.perfCool = 2;
+    }
+  }
+
   // ===== 粒子 / tween =====
   burst(pos, tex, n = 12, size = 0.08, speed = 0.35) {
+    if (this.quality < 2) n = Math.ceil(n / 2);
+    n = Math.min(n, Math.max(0, 70 - this.particles.length));
     for (let i = 0; i < n; i++) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
       s.position.copy(pos);
@@ -402,7 +464,8 @@ export class World {
     this.burst(p.add(new THREE.Vector3(0, 0.4, 0)), this.texHeart, 4, 0.05, 0.15);
   }
   steamPuff(st) {
-    const p = new THREE.Vector3(); st.getWorldPosition(p);
+    if (this.particles.length > 60) return;
+    const p = this._v; st.getWorldPosition(p);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.texSteam, transparent: true, opacity: 0.5, depthWrite: false }));
     s.position.copy(p).add(new THREE.Vector3((Math.random() - 0.5) * 0.2, 0.25, (Math.random() - 0.5) * 0.2));
     s.scale.setScalar(0.15);
@@ -430,7 +493,7 @@ export class World {
 
   // 3D → 螢幕座標（對白泡泡用）
   screenOf(obj, offsetY = 0) {
-    const p = new THREE.Vector3();
+    const p = this._v;
     obj.getWorldPosition(p);
     p.y += offsetY;
     p.project(this.camera);
@@ -447,10 +510,24 @@ export class World {
     this.camLook.lerp(this.camTargetLook, k);
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
+    if (this.trauma > 0) {
+      const a = this.trauma * this.trauma;
+      this.camera.position.x += (Math.random() - 0.5) * 0.16 * a;
+      this.camera.position.y += (Math.random() - 0.5) * 0.16 * a;
+      this.camera.rotation.z += (Math.random() - 0.5) * 0.035 * a;
+      this.trauma = Math.max(0, this.trauma - dt * 1.8);
+    }
+    if (this.fovKick > 0.01) {
+      this.fovKick *= Math.pow(0.004, dt);
+      this.camera.fov = this.baseFov + this.fovKick;
+      this.camera.updateProjectionMatrix();
+    } else if (this.camera.fov !== this.baseFov) { this.camera.fov = this.baseFov; this.camera.updateProjectionMatrix(); }
     this.sun.position.set(this.camLook.x + 3, 6, 4);
     this.sun.target.position.set(this.camLook.x, 0, 0);
 
     this.cat.update(dt);
+    this.updateSprings(dt);
+    this.perfWatch(dt);
     const t = this.clock.elapsedTime;
     if (this.customer) {
       this.customer.userData.head.rotation.z = Math.sin(t * 2) * 0.08;
@@ -483,7 +560,7 @@ export class World {
       if (u.life <= 0) { this.scene.remove(p); p.material.dispose(); this.particles.splice(i, 1); }
     }
     // 對白泡泡跟住 3D 物件
-    for (const a of this.anchors) {
+    if (this.anchors.length) for (const a of this.anchors) {
       const o = a.getObj();
       if (!o) { a.el.style.opacity = 0; continue; }
       const s = this.screenOf(o, a.offsetY);

@@ -5,7 +5,7 @@ const BLACK = 0x1c1c24;
 const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, metalness: 0.0, ...o });
 
 function sph(r, m, sx = 1, sy = 1, sz = 1) {
-  const g = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 20), m);
+  const g = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), m);
   g.scale.set(sx, sy, sz);
   g.castShadow = true;
   return g;
@@ -22,6 +22,7 @@ export class Cat {
     this.action = null;     // { name, t, dur }
     this.mode = 'idle';     // 長時間嘅模式：idle / stir / talk
     this.blinkT = 2;
+    this.sq = 0; this.sqV = 0;   // 擠壓拉伸彈簧
     this.happyEyes = 0;
     this.build();
   }
@@ -224,7 +225,9 @@ export class Cat {
     }
   }
 
-  play(name, dur = 0.35) { this.action = { name, t: 0, dur }; }
+  play(name, dur = 0.35) { this.action = { name, t: 0, dur }; if (name === 'chop' || name === 'press') this.squash(-0.1); }
+  // amt<0 壓扁，amt>0 拉高
+  squash(amt) { this.sqV += amt * 22; }
   setMode(m) { this.mode = m; }
   happy() { this.play('happy', 1.0); this.happyEyes = 1.2; }
 
@@ -232,7 +235,9 @@ export class Cat {
     this.t += dt;
     const t = this.t;
     // 呼吸
-    this.body.scale.y = 1 + Math.sin(t * 2.2) * 0.012;
+    this.sqV += (-170 * this.sq - 11 * this.sqV) * dt;
+    this.sq += this.sqV * dt;
+    let stretch = this.sq;
     this.body.position.y = 0;
     this.head.rotation.set(Math.sin(t * 0.7) * 0.04, Math.sin(t * 0.5) * 0.08, Math.sin(t * 0.9) * 0.05);
     // 尾
@@ -276,13 +281,18 @@ export class Cat {
         case 'wrap': L.rotation.x = R.rotation.x = -1.0 - sw * 0.4; break;
         case 'pour': R.rotation.x = -1.2; R.rotation.y = -sw * 0.6; break;
         case 'wave': R.rotation.z = 2.4 + Math.sin(a.t * 14) * 0.3; break;
-        case 'happy':
-          this.body.position.y = Math.abs(Math.sin(k * Math.PI * 2)) * 0.18;
+        case 'happy': {
+          const p = Math.abs(Math.sin(k * Math.PI * 2));
+          this.body.position.y = p * 0.18;
+          stretch += (p - 0.35) * 0.22;   // 起跳拉長、落地壓扁
+          }
           L.rotation.z = -2.3; R.rotation.z = 2.3;
           break;
         case 'sad': this.head.rotation.x = 0.3 * sw; this.ears.forEach((e) => (e.rotation.x = -0.6 * sw)); break;
       }
       if (k >= 1) this.action = null;
     }
+    const breath = 1 + Math.sin(t * 2.2) * 0.012;
+    this.body.scale.set(1 - stretch * 0.5, breath * (1 + stretch), 1 - stretch * 0.5);
   }
 }

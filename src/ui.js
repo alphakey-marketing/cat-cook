@@ -172,7 +172,7 @@ export function closeModal() { $('#modal').classList.remove('show'); }
 export function fade(fn) {
   const f = $('#fade');
   f.classList.add('on');
-  return wait(400).then(async () => { await fn(); await wait(80); f.classList.remove('on'); await wait(400); });
+  return wait(520).then(async () => { await fn(); await wait(80); f.classList.remove('on'); await wait(520); });
 }
 
 export function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }

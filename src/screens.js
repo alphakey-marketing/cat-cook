@@ -142,12 +142,12 @@ export function apply(world) {
 }
 
 // ===== 設定 =====
-export function openSettings() {
+export function openSettings(world) {
   const s = S().settings;
   const row = (label, key, desc) => {
     const inp = h('input', { type: 'checkbox' });
     inp.checked = !!s[key];
-    inp.onchange = () => { s[key] = inp.checked; save(); applySettings(); if (key === 'bgm') setBGM(inp.checked); sfx('tap'); };
+    inp.onchange = () => { s[key] = inp.checked; save(); applySettings(); if (key === 'bgm') setBGM(inp.checked); if (key === 'shake') world.shakeOn = inp.checked; sfx('tap'); };
     return h('label', { class: 'set-row' }, h('div', {}, h('b', {}, label), h('div', { class: 'sub' }, desc)), inp);
   };
   const subs = h('input', { type: 'checkbox' });
@@ -161,6 +161,7 @@ export function openSettings() {
     h('label', { class: 'set-row' }, h('div', {}, h('b', {}, '🎧 聽力挑戰'), h('div', { class: 'sub' }, '客人落單嘅字幕要撳先見，答啱有雙倍貼士')), subs),
     row('背景音樂', 'bgm', ''),
     row('音效', 'sfx', ''),
+    row('畫面震動', 'shake', '切菜、答錯、升級時鏡頭輕震'),
     h('p', { class: 'credits' }, `🎙️ 語音：${credits}`),
     h('button', { class: 'btn danger', onclick: () => { if (confirm('真係要清除全部進度？')) { reset(); location.reload(); } } }, '清除進度'),
   );
