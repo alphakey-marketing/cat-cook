@@ -488,11 +488,23 @@ export class World {
       if (u.life <= 0) { this.scene.remove(p); p.material.dispose(); this.particles.splice(i, 1); }
     }
     // 對白泡泡跟住 3D 物件
+    const hud = this.anchors.length ? document.getElementById('hud') : null;
+    const topLimit = hud && hud.classList.contains('show') ? hud.getBoundingClientRect().bottom + 4 : 8;
     for (const a of this.anchors) {
       const o = a.getObj();
       if (!o) { a.el.style.opacity = 0; continue; }
       const s = this.screenOf(o, a.offsetY);
-      a.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
+      // 泡泡唔可以出屏幕：左右、上面都要夾返入嚟，尖角就繼續指住講嘢嗰個
+      const inner = a.el.firstElementChild;
+      const bw = inner ? inner.offsetWidth : 0, bh = inner ? inner.offsetHeight : 0;
+      const m = 10, W = window.innerWidth;
+      const x = bw ? Math.min(Math.max(s.x, m + bw / 2), W - m - bw / 2) : s.x;
+      const y = Math.max(s.y, topLimit + bh + 12);
+      a.el.style.transform = `translate(${x}px, ${y}px)`;
+      if (inner) {
+        const tail = Math.max(-(bw / 2 - 26), Math.min(bw / 2 - 26, s.x - x));
+        inner.style.setProperty('--tail', `${tail}px`);
+      }
     }
     this.outline.render(this.scene, this.camera);
   }
