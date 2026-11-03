@@ -2,6 +2,7 @@
 import { toHTML, toRomaji } from './jp.js';
 import { say, sfx } from './audio.js';
 import { S, xpForLevel } from './save.js';
+import { icon } from './icons.js';
 
 export const $ = (s, r = document) => r.querySelector(s);
 export function h(tag, attrs = {}, ...kids) {
@@ -32,7 +33,8 @@ export function jpLine(jp, { yue = '', voice = 'word', size = '', hidden = false
   const text = h('div', { class: 'jp-text', html: toHTML(jp) });
   const roma = h('div', { class: 'jp-roma' }, toRomaji(jp));
   const y = yue ? h('div', { class: 'jp-yue' }, yue) : null;
-  const btn = h('button', { class: 'spk', 'aria-label': '再聽', onclick: (e) => { e.stopPropagation(); sfx('tap'); say(jp, voice); } }, '🔊');
+  const btn = h('button', { class: 'spk', 'aria-label': '再聽', onclick: (e) => { e.stopPropagation(); sfx('tap'); say(jp, voice); } });
+  btn.innerHTML = icon('speaker', 22);
   const body = h('div', { class: 'jp-body' }, text, roma, y);
   el.append(body, btn);
   if (hidden) {
@@ -41,6 +43,11 @@ export function jpLine(jp, { yue = '', voice = 'word', size = '', hidden = false
   }
   if (autoplay) say(jp, voice);
   return el;
+}
+
+// 將 <i data-ic="coin"> 換成 SVG
+export function hydrateIcons(root = document) {
+  root.querySelectorAll('i[data-ic]').forEach((el) => { el.outerHTML = `<span class="ic-wrap">${icon(el.dataset.ic, +el.dataset.size || 22)}</span>`; });
 }
 
 // ===== HUD =====
@@ -139,7 +146,7 @@ export function coinFly(n, from = { x: innerWidth / 2, y: innerHeight * 0.4 }) {
   const target = $('#coins').getBoundingClientRect();
   const count = Math.min(12, Math.max(3, Math.round(n / 15)));
   for (let i = 0; i < count; i++) {
-    const c = h('div', { class: 'flycoin' }, '🪙');
+    const c = h('div', { class: 'flycoin', html: icon('coin', 24) });
     c.style.left = from.x + 'px'; c.style.top = from.y + 'px';
     document.body.append(c);
     const dx = (Math.random() - 0.5) * 120, dy = -40 - Math.random() * 60;

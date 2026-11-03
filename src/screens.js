@@ -7,6 +7,7 @@ import { VOICES } from './data/voices.js';
 import { S, save, reset, learnedCount, seenCount, msToMidnight } from './save.js';
 import { say, sfx, setBGM } from './audio.js';
 import { toHTML } from './jp.js';
+import { icon, illus } from './icons.js';
 
 export function isUnlocked(r) {
   const s = S();
@@ -30,13 +31,14 @@ const stars = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
 export function recipeCard(r, { onStart = null } = {}) {
   const d = vocab(r.dish);
   const body = h('div', { class: 'recipe' },
-    h('div', { class: 'recipe-hero' }, h('div', { class: 'big-emo' }, d.emoji), jpLine(d.jp, { yue: d.yue, voice: 'word', size: 'big', autoplay: true })),
+    h('div', { class: 'recipe-art', html: illus(r.dish) || `<div class="big-emo">${d.emoji}</div>` }),
+    h('div', { class: 'recipe-hero' }, jpLine(d.jp, { yue: d.yue, voice: 'word', size: 'big', autoplay: true })),
     h('div', { class: 'recipe-meta' }, `🍽️ ${r.serves}　⏱️ ${r.time}　${S().stars[r.id] ? stars(S().stars[r.id]) : ''}`),
     h('h3', {}, '材料'),
     h('ul', { class: 'ing-list' }, r.ingredients.map(([id, amt]) => {
       const v = vocab(id);
       return h('li', {},
-        h('button', { class: 'mini-spk', onclick: () => say(v.jp, 'word') }, '🔊'),
+        h('button', { class: 'mini-spk', html: icon('speaker', 16), onclick: () => say(v.jp, 'word') }),
         h('span', { class: 'emo' }, v.emoji),
         h('span', { class: 'jp-inline', html: toHTML(v.jp) }),
         h('span', { class: 'amt' }, amt));
@@ -45,7 +47,7 @@ export function recipeCard(r, { onStart = null } = {}) {
     h('ol', { class: 'howto' }, r.howto.map((t) => h('li', {}, t))),
   );
   if (onStart) body.append(h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); m.close(); } }, '🔥 開始煮！'));
-  const m = modal('📖 食譜', body, { onClose: onStart, wide: true });
+  const m = modal(`${icon('book', 22)} 食譜`, body, { onClose: onStart, wide: true });
   return m;
 }
 
@@ -53,7 +55,7 @@ export function recipeCard(r, { onStart = null } = {}) {
 export function openBook(tab = 'recipes') {
   const tabs = h('div', { class: 'tabs' });
   const content = h('div', { class: 'tab-content' });
-  const T = { recipes: '🍳 食譜', words: '📝 單詞', stats: '📊 紀錄' };
+  const T = { recipes: '食譜', words: '單詞', stats: '紀錄' };
   const show = (t) => {
     tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
     content.innerHTML = '';
@@ -63,7 +65,7 @@ export function openBook(tab = 'recipes') {
         const d = vocab(r.dish);
         const ok = isUnlocked(r);
         const c = h('div', { class: `book-card ${ok ? '' : 'locked'}` },
-          h('div', { class: 'big-emo' }, ok ? d.emoji : '🔒'),
+          h('div', ok ? { class: 'book-art', html: illus(r.dish) || d.emoji } : { class: 'book-art lock', html: icon('lock', 34) }),
           h('div', { class: 'jp-inline', html: ok ? toHTML(d.jp) : '？？？' }),
           h('div', { class: 'sub' }, ok ? (S().stars[r.id] ? stars(S().stars[r.id]) : '未煮過') : unlockText(r)));
         if (ok) c.onclick = () => { sfx('tap'); recipeCard(r); };
@@ -93,7 +95,7 @@ export function openBook(tab = 'recipes') {
   };
   for (const [k, v] of Object.entries(T)) tabs.append(h('button', { 'data-t': k, onclick: () => { sfx('tap'); show(k); } }, v));
   show(tab);
-  modal('📚 圖鑑', h('div', {}, tabs, content), { wide: true });
+  modal(`${icon('book', 22)} 圖鑑`, h('div', {}, tabs, content), { wide: true });
 }
 
 // ===== 商店 =====
@@ -102,21 +104,22 @@ export function openShop(world) {
   const head = h('div', { class: 'shop-coins' });
   const draw = () => {
     const s = S();
-    head.innerHTML = `🪙 <b>${s.coins}</b>`;
+    head.innerHTML = `${icon('coin', 26)}<b>${s.coins}</b>`;
     grid.innerHTML = '';
     SHOP.forEach((it) => {
       const owned = s.owned.includes(it.id) || s.deco.includes(it.id);
       const worn = it.slot === 'deco' ? s.deco.includes(it.id) : s.wear[it.slot] === it.id;
       let btn;
       if (!owned) {
-        btn = h('button', { class: `btn ${s.coins >= it.price ? 'primary' : 'disabled'}` }, `🪙 ${it.price}`);
+        btn = h('button', { class: `btn ${s.coins >= it.price ? 'primary' : 'disabled'}` });
+        btn.innerHTML = `${icon('coin', 16)} ${it.price}`;
         btn.onclick = () => {
           if (s.coins < it.price) { sfx('bad'); toast('金幣唔夠，再招呼多啲客人啦！'); return; }
           s.coins -= it.price; sfx('coin'); sfx('perfect');
           if (it.slot === 'deco') s.deco.push(it.id); else { s.owned.push(it.id); s.wear[it.slot] = it.id; }
           save(); apply(world); renderHUD(); draw();
           say(it.jp, 'word');
-          toast(`買咗 ${it.emoji} ${it.yue}！`);
+          toast(`買咗 ${icon(it.id, 20)} ${it.yue}！`);
         };
       } else if (it.slot === 'deco') {
         btn = h('button', { class: 'btn ghost' }, '✔ 已擺');
@@ -125,7 +128,7 @@ export function openShop(world) {
         btn.onclick = () => { sfx('tap'); s.wear[it.slot] = worn ? (it.slot === 'hat' ? null : null) : it.id; save(); apply(world); draw(); world.cat.happy(); };
       }
       grid.append(h('div', { class: `shop-item ${worn ? 'worn' : ''}` },
-        h('div', { class: 'big-emo' }, it.emoji),
+        h('div', { class: 'shop-icon', html: icon(it.id, 52) }),
         h('div', { class: 'jp-inline', html: toHTML(it.jp), onclick: () => say(it.jp, 'word') }),
         h('div', { class: 'sub' }, it.yue),
         btn));
@@ -133,7 +136,7 @@ export function openShop(world) {
   };
   draw();
   world.setView('kitchen');
-  modal('🛍️ 商店', h('div', {}, head, grid), { wide: true });
+  modal(`${icon('bag', 22)} 商店`, h('div', {}, head, grid), { wide: true });
 }
 export function apply(world) {
   const s = S();
@@ -164,7 +167,7 @@ export function openSettings() {
     h('p', { class: 'credits' }, `🎙️ 語音：${credits}`),
     h('button', { class: 'btn danger', onclick: () => { if (confirm('真係要清除全部進度？')) { reset(); location.reload(); } } }, '清除進度'),
   );
-  modal('⚙️ 設定', body);
+  modal(`${icon('gear', 22)} 設定`, body);
 }
 
 // ===== 收工總結 =====

@@ -234,30 +234,80 @@ export function makeCustomer(c) {
 }
 
 // ===== 裝修 =====
+// 布紋貼圖（門簾用）：深藍底 + 白色爪印 + 邊
+function norenTexture() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 192;
+  const x = c.getContext('2d');
+  x.fillStyle = '#1d3557'; x.fillRect(0, 0, 128, 192);
+  x.strokeStyle = 'rgba(255,255,255,.07)'; x.lineWidth = 1;
+  for (let i = 0; i < 192; i += 4) { x.beginPath(); x.moveTo(0, i); x.lineTo(128, i); x.stroke(); }
+  x.fillStyle = '#f6efe0';
+  x.beginPath(); x.ellipse(64, 104, 16, 13, 0, 0, 7); x.fill();
+  [[38, 80], [54, 66], [74, 66], [90, 80]].forEach(([a, b2]) => { x.beginPath(); x.ellipse(a, b2, 7, 9, 0, 0, 7); x.fill(); });
+  x.fillStyle = '#c9a25a'; x.fillRect(0, 176, 128, 6);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+// 提燈紙紋
+function lanternTexture() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  const x = c.getContext('2d');
+  x.fillStyle = '#e03a2f'; x.fillRect(0, 0, 256, 128);
+  const g = x.createLinearGradient(0, 0, 0, 128); g.addColorStop(0, 'rgba(255,200,120,.45)'); g.addColorStop(.5, 'rgba(255,200,120,0)'); g.addColorStop(1, 'rgba(255,200,120,.35)');
+  x.fillStyle = g; x.fillRect(0, 0, 256, 128);
+  x.strokeStyle = 'rgba(110,15,10,.55)'; x.lineWidth = 3;
+  for (let i = 1; i < 8; i++) { x.beginPath(); x.moveTo(0, i * 16); x.lineTo(256, i * 16); x.stroke(); }
+  x.fillStyle = '#fff3d6'; x.font = 'bold 74px "Noto Serif JP","Yu Mincho",serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText('猫', 64, 68); x.fillText('猫', 192, 68);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; return t;
+}
+
 export function makeDeco(id) {
   const g = new THREE.Group();
   if (id === 'deco_lantern') {
-    const l = sph(0.2, mat(0xe03a2f, { emissive: 0x801010, emissiveIntensity: 0.6 }), 1, 1.3, 1);
-    const top = cyl(0.1, 0.1, 0.05, 0x222222); top.position.y = 0.27;
-    const bot = cyl(0.1, 0.1, 0.05, 0x222222); bot.position.y = -0.27;
-    const cord = cyl(0.005, 0.005, 0.5, 0x222222); cord.position.y = 0.5;
-    const light = new THREE.PointLight(0xff8040, 0.8, 3);
-    g.add(l, top, bot, cord, light);
+    // 提燈：紙燈身（有字）+ 上下漆蓋 + 吊繩 + 流蘇
+    const body = shadow(new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16), mat(0xffffff, { map: lanternTexture(), emissive: 0xff5a2a, emissiveIntensity: 0.55, roughness: 0.8 })));
+    body.scale.set(1, 1.3, 1);
+    const top = cyl(0.11, 0.1, 0.06, 0x1d1613); top.position.y = 0.27;
+    const bot = cyl(0.1, 0.11, 0.06, 0x1d1613); bot.position.y = -0.27;
+    const ring1 = cyl(0.125, 0.125, 0.015, 0xc9a25a); ring1.position.y = 0.235;
+    const ring2 = cyl(0.125, 0.125, 0.015, 0xc9a25a); ring2.position.y = -0.235;
+    const cord = cyl(0.005, 0.005, 0.5, 0x222222); cord.position.y = 0.55;
+    const tassel = cyl(0.004, 0.025, 0.12, 0xd7263d, 8); tassel.position.y = -0.38;
+    const light = new THREE.PointLight(0xff8040, 0.9, 3.2);
+    g.add(body, top, bot, ring1, ring2, cord, tassel, light);
+    g.userData.glow = light;
   } else if (id === 'deco_noren') {
-    const rod = cyl(0.015, 0.015, 1.4, 0x6b3f1d); rod.rotation.z = Math.PI / 2; g.add(rod);
+    // 門簾：橫桿 + 三塊有布紋嘅簾（中間開縫）
+    const rod = cyl(0.016, 0.016, 1.5, 0x6b3f1d); rod.rotation.z = Math.PI / 2; g.add(rod);
+    const capL = sph(0.03, 0x3a2a22); capL.position.x = -0.75; const capR = sph(0.03, 0x3a2a22); capR.position.x = 0.75; g.add(capL, capR);
+    const tex = norenTexture();
+    const panelMat = mat(0xffffff, { map: tex, side: THREE.DoubleSide, roughness: 1 });
+    g.userData.panels = [];
     for (let i = 0; i < 3; i++) {
-      const p = box(0.44, 0.55, 0.01, mat(0x1d3557, { side: THREE.DoubleSide })); p.position.set(-0.46 + i * 0.46, -0.28, 0); g.add(p);
-      const cat = sph(0.06, 0xffffff, 1, 1, 0.2); cat.position.set(-0.46 + i * 0.46, -0.3, 0.01); g.add(cat);
+      const pivot = new THREE.Group(); pivot.position.set(-0.47 + i * 0.47, -0.02, 0);
+      const p = box(0.44, 0.66, 0.01, panelMat); p.position.y = -0.33; pivot.add(p);
+      g.add(pivot); g.userData.panels.push(pivot);
     }
   } else if (id === 'deco_bonsai') {
-    const pot = cyl(0.12, 0.09, 0.08, 0x2f4f6f); pot.position.y = 0.04; g.add(pot);
-    const trunk = cyl(0.02, 0.03, 0.18, 0x5b3a1e); trunk.position.y = 0.17; trunk.rotation.z = 0.3; g.add(trunk);
-    [[0, 0.3, 0, 0.1], [-0.08, 0.26, 0.02, 0.07], [0.08, 0.32, -0.02, 0.07]].forEach(([x, y, z, r]) => { const f = sph(r, 0x3f8f3f, 1.3, 0.7, 1); f.position.set(x, y, z); g.add(f); });
+    // 盆栽：釉面長方盆 + 彎曲樹幹 + 多層雲狀樹葉 + 苔 + 石
+    const pot = box(0.3, 0.09, 0.2, mat(0x2f5f8f, { roughness: 0.3 })); pot.position.y = 0.045; g.add(pot);
+    const rim = box(0.32, 0.02, 0.22, mat(0xd9c7a4, { roughness: 0.4 })); rim.position.y = 0.095; g.add(rim);
+    const moss = box(0.28, 0.02, 0.18, 0x4a7a3a); moss.position.y = 0.1; g.add(moss);
+    const trunkPts = [new THREE.Vector3(-0.04, 0.1, 0), new THREE.Vector3(0.03, 0.2, 0.02), new THREE.Vector3(-0.05, 0.3, 0), new THREE.Vector3(0.02, 0.4, 0)];
+    const trunk = shadow(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(trunkPts), 14, 0.022, 8), mat(0x5b3a1e, { roughness: 1 }))); g.add(trunk);
+    [[0.02, 0.43, 0, 0.12, 0.7], [-0.11, 0.33, 0.02, 0.09, 0.65], [0.12, 0.28, -0.02, 0.085, 0.65], [0.0, 0.34, 0.1, 0.07, 0.6]].forEach(([x, y, z, r, sy], i) => {
+      const f = sph(r, i % 2 ? 0x3f8f3f : 0x4aa050, 1.3, sy, 1.1); f.position.set(x, y, z); g.add(f);
+    });
+    const rock = sph(0.045, 0x8a8a8a, 1.2, 0.7, 1); rock.position.set(0.1, 0.115, 0.05); g.add(rock);
   } else if (id === 'deco_maneki') {
+    // 招財貓：座台 + 貓 + 金小判 + 揮手
+    const base = box(0.4, 0.05, 0.3, mat(0x6e4429)); base.position.y = -0.025; g.add(base);
     const m = makeCustomer({ id: 'maneki', color: 0xffffff, ear: 'pointy' });
     m.scale.setScalar(0.35);
     g.add(m);
     g.userData.wave = m.userData.wave;
+    const koban = sph(0.06, mat(0xf5b82e, { metalness: 0.7, roughness: 0.3 }), 1, 1.35, 0.25); koban.position.set(0, 0.2, 0.17); g.add(koban);
+    const bib = box(0.16, 0.035, 0.02, 0xd7263d); bib.position.set(0, 0.34, 0.2); g.add(bib);
   }
   return g;
 }

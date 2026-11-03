@@ -1,6 +1,6 @@
 import './style.css';
 import { World } from './three/world.js';
-import { $, h, panel, hidePanel, choose, next, bubble, clearBubble, hint, hideHint, toast, pop, coinFly, renderHUD, showHUD, applySettings, jpLine, fade, wait, shuffle, pick, modal, closeModal } from './ui.js';
+import { $, h, panel, hidePanel, choose, next, bubble, clearBubble, hint, hideHint, toast, pop, coinFly, renderHUD, showHUD, applySettings, jpLine, hydrateIcons, fade, wait, shuffle, pick, modal, closeModal } from './ui.js';
 import { unlockAudio, say, sfx, preload } from './audio.js';
 import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './save.js';
 import { RECIPES, recipe } from './data/recipes.js';
@@ -17,6 +17,7 @@ let busy = false;
 if (import.meta.env.DEV) window.__world = world; // 測試用
 
 // ===== 開始畫面 =====
+hydrateIcons();
 applySettings();
 renderHUD();
 apply(world);
@@ -101,7 +102,7 @@ async function returning(ci) {
   bubble(world, 'cat', 'おかえりにゃ！', '你返嚟喇喵！', 'cat');
   if (ci.gift) {
     await new Promise((res) => {
-      modal('🎁 每日禮物', h('div', { class: 'summary' },
+      modal('每日禮物', h('div', { class: 'summary' },
         h('div', { class: 'sum-big' }, '🎁'),
         h('div', { class: 'gift-amt' }, `+${ci.gift} 🪙`),
         h('div', { class: 'streak-row' }, ...Array.from({ length: 7 }, (_, i) => h('div', { class: `sd ${i < Math.min(s.streak, 7) ? 'on' : ''}` }, i < Math.min(s.streak, 7) ? '🔥' : i + 1))),
