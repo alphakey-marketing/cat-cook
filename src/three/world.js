@@ -1,6 +1,8 @@
 // 3D 世界：廚房 + 餐廳，鏡頭，粒子
 import * as THREE from 'three';
+import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import { Cat } from './cat.js';
+import { PALETTE, MAX_DPR, OUTLINE_DEFAULT, basicMat, plasterTexture } from './style.js';
 import { makeBoard, makePot, makePan, makeDish, makeIngredient, makeProp, makeCustomer, makeDeco, circleTexture, emojiTexture, mat } from './models.js';
 
 const REST_X = 40;
@@ -9,16 +11,18 @@ export class World {
   constructor(canvas) {
     this.canvas = canvas;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_DPR));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    // 卡通渲染唔要 ACES：佢會將色洗淡
+    this.renderer.toneMapping = THREE.NoToneMapping;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // 描邊：每件物件反轉外殼再畫一次（粗幼按螢幕計，手機大細都一致）
+    this.outline = new OutlineEffect(this.renderer, OUTLINE_DEFAULT);
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xf6e3c8);
-    this.scene.fog = new THREE.Fog(0xf6e3c8, 12, 30);
+    this.scene.background = new THREE.Color(PALETTE.sky);
+    this.scene.fog = new THREE.Fog(PALETTE.sky, 12, 30);
     this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
     this.camPos = new THREE.Vector3();
     this.camLook = new THREE.Vector3();
@@ -54,18 +58,19 @@ export class World {
   }
 
   lights() {
-    const hemi = new THREE.HemisphereLight(0xfff4e0, 0x8a6a50, 1.1);
+    // 環境光負責「影」嘅顏色：地面反射暖褐色，影就唔會死黑
+    const hemi = new THREE.HemisphereLight(PALETTE.ambientTop, PALETTE.ambientBottom, 1.05);
     this.scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xffe6c0, 2.0);
+    const sun = new THREE.DirectionalLight(PALETTE.sun, 1.9);
     sun.position.set(3, 6, 4);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = -4; sun.shadow.camera.right = 4; sun.shadow.camera.top = 4; sun.shadow.camera.bottom = -2;
-    sun.shadow.bias = -0.0005;
-    sun.shadow.radius = 4;
+    sun.shadow.bias = -0.0008;
+    sun.shadow.normalBias = 0.02;
     this.sun = sun;
     this.scene.add(sun, sun.target);
-    const fill = new THREE.DirectionalLight(0xc0d8ff, 0.5);
+    const fill = new THREE.DirectionalLight(0xd8c8ff, 0.35); // 冷色補光，令暗面帶少少紫
     fill.position.set(-4, 3, 2);
     this.scene.add(fill);
   }
@@ -79,17 +84,17 @@ export class World {
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; k.add(floor);
     for (let i = -6; i < 7; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(0.02, 10), mat(0xa47c52)); l.rotation.x = -Math.PI / 2; l.position.set(i * 0.6, 0.002, 0); k.add(l); }
     // 牆
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(14, 6), mat(0xf7ead2, { roughness: 1 }));
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(14, 6), mat(0xffffff, { map: plasterTexture(), rim: 0 }));
     wall.position.set(0, 3, -2.2); wall.receiveShadow = true; k.add(wall);
     const wainscot = new THREE.Mesh(new THREE.BoxGeometry(14, 1.0, 0.05), mat(0x8b5a3c));
     wainscot.position.set(0, 0.5, -2.17); k.add(wainscot);
     // 窗
     const win = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.0), new THREE.MeshBasicMaterial({ map: this.skyTexture() }));
-    win.position.set(1.4, 2.4, -2.18); k.add(win);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 0.04), mat(0x6b4226));
-    frame.position.set(1.4, 2.4, -2.2); k.add(frame);
-    const bar1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.0, 0.06), mat(0x6b4226)); bar1.position.set(1.4, 2.4, -2.16); k.add(bar1);
-    const bar2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.04, 0.06), mat(0x6b4226)); bar2.position.set(1.4, 2.4, -2.16); k.add(bar2);
+    win.position.set(1.4, 2.4, -2.165); k.add(win); // 要喺窗框描邊前面
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 0.02), mat(0x6b4226, { outline: false }));
+    frame.position.set(1.4, 2.4, -2.19); k.add(frame);
+    const bar1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.0, 0.06), mat(0x6b4226)); bar1.position.set(1.4, 2.4, -2.13); k.add(bar1);
+    const bar2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.04, 0.06), mat(0x6b4226)); bar2.position.set(1.4, 2.4, -2.13); k.add(bar2);
     // 餐牌板
     this.menuBoard = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), new THREE.MeshBasicMaterial({ map: this.menuTexture([]) }));
     this.menuBoard.position.set(-1.3, 2.45, -2.17); k.add(this.menuBoard);
@@ -103,7 +108,7 @@ export class World {
     // 吊燈
     const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.25, 24, 1, true), mat(0x2c2c2c, { side: THREE.DoubleSide }));
     lampShade.position.set(-0.3, 3.0, -0.4); k.add(lampShade);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshBasicMaterial({ color: 0xfff1c0 }));
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.08), basicMat({ color: 0xfff1c0 }));
     bulb.position.set(-0.3, 2.88, -0.4); k.add(bulb);
     const lampLight = new THREE.PointLight(0xffd59a, 3, 5, 1.5); lampLight.position.set(-0.3, 2.8, -0.4); k.add(lampLight);
     // 櫃台
@@ -115,7 +120,7 @@ export class World {
     // 爐
     const stove = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.5), mat(0x333333)); stove.position.set(-1.1, this.counterY + 0.02, -0.1); k.add(stove);
     const burner = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.02, 6, 24), mat(0x111111)); burner.rotation.x = Math.PI / 2; burner.position.set(-1.1, this.counterY + 0.05, -0.1); k.add(burner);
-    this.flame = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.02, 6, 24), new THREE.MeshBasicMaterial({ color: 0x4aa3ff }));
+    this.flame = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.02, 6, 24), basicMat({ color: 0x4aa3ff }));
     this.flame.rotation.x = Math.PI / 2; this.flame.position.set(-1.1, this.counterY + 0.07, -0.1); this.flame.visible = false; k.add(this.flame);
 
     // 工作位：砧板 / 煲 / 鑊
@@ -150,7 +155,7 @@ export class World {
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; r.add(floor);
     // 疊蓆紋
     for (let i = -4; i < 5; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 10), mat(0x6b5a3a)); l.rotation.x = -Math.PI / 2; l.position.set(i * 0.9, 0.002, 0); r.add(l); }
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), mat(0xefe2c4, { roughness: 1 })); wall.position.set(0, 3, -2.5); r.add(wall);
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), mat(0xffffff, { map: plasterTexture('#dcc196', '#f3e6c9', 3), rim: 0 })); wall.position.set(0, 3, -2.5); r.add(wall);
     // 木格
     for (let i = -5; i <= 5; i++) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 6, 0.06), mat(0x5b3a1e)); p.position.set(i * 0.9, 3, -2.45); r.add(p); }
     // 餐牌（木牌）
@@ -489,6 +494,6 @@ export class World {
       const s = this.screenOf(o, a.offsetY);
       a.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
     }
-    this.renderer.render(this.scene, this.camera);
+    this.outline.render(this.scene, this.camera);
   }
 }

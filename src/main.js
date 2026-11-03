@@ -13,6 +13,7 @@ import { isUnlocked, recipeCard, openBook, openShop, openSettings, shiftSummary,
 import { hash, toHTML } from './jp.js';
 
 const world = new World($('#c'));
+if (import.meta.env.DEV) window.__world = world; // 截圖 / debug 用
 let busy = false;
 if (import.meta.env.DEV) window.__world = world; // 測試用
 

@@ -1,8 +1,9 @@
 // 小黑：黑貓廚師（用基本形狀砌，唔使外部模型）
 import * as THREE from 'three';
+import { toonMat, basicMat } from './style.js';
 
-const BLACK = 0x1c1c24;
-const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, metalness: 0.0, ...o });
+const BLACK = 0x26263a; // 唔用純黑：帶少少藍紫，卡通光影先睇到層次
+const mat = (c, o = {}) => toonMat(c, { soft: true, ...o });
 
 function sph(r, m, sx = 1, sy = 1, sz = 1) {
   const g = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 20), m);
@@ -15,7 +16,7 @@ export class Cat {
   constructor() {
     this.root = new THREE.Group();
     this.root.name = 'cat';
-    this.mBody = mat(BLACK, { roughness: 0.45 });
+    this.mBody = mat(BLACK, { rim: 0.55 });
     this.mDark = mat(0x34343f);
     this.parts = [];
     this.t = 0;
@@ -59,7 +60,7 @@ export class Cat {
     nose.position.set(0, -0.06, 0.44);
     this.head.add(nose);
     // 口（細 ω）
-    const mouthMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0e });
+    const mouthMat = basicMat({ color: 0x0a0a0e });
     for (const s of [-1, 1]) {
       const m = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.008, 6, 12, Math.PI), mouthMat);
       m.position.set(s * 0.034, -0.13, 0.43);
@@ -72,10 +73,10 @@ export class Cat {
       const eye = new THREE.Group();
       eye.position.set(s * 0.17, 0.03, 0.33);
       eye.rotation.y = s * 0.35;
-      const iris = sph(0.1, mat(0xc8e04a, { emissive: 0x3a4a00, roughness: 0.2 }), 1, 1.1, 0.55);
-      const pupil = sph(0.05, new THREE.MeshBasicMaterial({ color: 0x050505 }), 0.6, 1.5, 0.5);
+      const iris = sph(0.1, mat(0xc8e04a, { emissive: 0x3a4a00, rim: 0, outline: false }), 1, 1.1, 0.55);
+      const pupil = sph(0.05, basicMat({ color: 0x050505 }), 0.6, 1.5, 0.5);
       pupil.position.z = 0.04;
-      const hi = sph(0.022, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      const hi = sph(0.022, basicMat({ color: 0xffffff }));
       hi.position.set(0.03, 0.045, 0.07);
       eye.add(iris, pupil, hi);
       this.head.add(eye);
@@ -91,7 +92,7 @@ export class Cat {
       outer.position.y = 0.12;
       outer.scale.z = 0.6;
       outer.castShadow = true;
-      const inner = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.22, 12), mat(0xff9fb5));
+      const inner = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.22, 12), mat(0xff9fb5, { outline: false }));
       inner.position.set(0, 0.1, 0.05);
       inner.scale.z = 0.4;
       ear.add(outer, inner);
@@ -136,7 +137,7 @@ export class Cat {
     // 工具（右手）
     this.tools = {};
     const knife = new THREE.Group();
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.012), mat(0xdfe6ee, { metalness: 0.8, roughness: 0.2 }));
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.012), mat(0xdfe6ee, { gloss: true }));
     blade.position.y = -0.17;
     const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.12), mat(0x6b3f1d));
     knife.add(blade, handle);
@@ -189,7 +190,8 @@ export class Cat {
       band.position.y = 0.02;
       const puff = new THREE.Group();
       [[0, 0.22, 0, 0.24], [-0.14, 0.18, 0, 0.17], [0.14, 0.18, 0, 0.17], [0, 0.18, 0.12, 0.17], [0, 0.18, -0.12, 0.17]].forEach(([x, y, z, rr]) => {
-        const p = sph(rr, mat(0xffffff)); p.position.set(x, y, z); puff.add(p);
+        // 只描最大嗰粒，細粒重疊位描邊會出雜點
+        const p = sph(rr, mat(0xffffff, { outline: rr > 0.2 })); p.position.set(x, y, z); puff.add(p);
       });
       this.hatSlot.add(band, puff);
       this.hatSlot.rotation.z = 0.12;
@@ -212,7 +214,7 @@ export class Cat {
     if (neck === 'neck_bell') {
       const c = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.03, 8, 32), mat(0xd7263d));
       c.rotation.x = Math.PI / 2;
-      const b = sph(0.06, mat(0xf5c542, { metalness: 0.7, roughness: 0.25 }));
+      const b = sph(0.06, mat(0xf5c542, { gloss: true }));
       b.position.set(0, -0.07, 0.25);
       this.neckSlot.add(c, b);
     } else if (neck === 'neck_scarf') {
