@@ -239,7 +239,11 @@ export class World {
   fitAspect() {
     // 窄身手機：鏡頭拉後啲
     const a = this.camera.aspect || 0.5;
-    const pull = Math.max(0, (0.9 / a - 1) * 1.15);
+    if (a < 0.9 && this.view === 'cook') {
+      this.camTargetPos.x += 0.9;
+      this.camTargetLook.x += 0.9;
+    }
+    const pull = Math.max(this.view === 'cook' ? 0.45 : 0, (0.9 / a - 1) * 1.15);
     const dir = this.camTargetPos.clone().sub(this.camTargetLook);
     this.camTargetPos.copy(this.camTargetLook).add(dir.multiplyScalar(1 + pull));
   }

@@ -23,7 +23,7 @@ with sync_playwright() as p:
     }""")
     for (width, height), view in itertools.product(
         [(320,568),(375,667),(390,844),(430,932),(768,1024),(844,390),(1280,800)],
-        ['kitchen','serve']
+        ['kitchen','serve','cook']
     ):
         page.set_viewport_size({'width':width,'height':height})
         page.evaluate("""view => {
