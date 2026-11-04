@@ -93,7 +93,7 @@ with sync_playwright() as p:
             if choices.count():
                 if '客人要' in text:
                     wanted=page.evaluate("async id=>(await import('/src/data/vocab.js')).vocab(id).yue",dish)
-                    target=choices.filter(has=page.locator(f'[aria-label="{wanted}"]')).first
+                    target=choices.filter(has=page.locator(f'[aria-label="{wanted}"], img[alt="{wanted}"]')).first
                 elif '揀餐具' in text: target=choices.nth(2)
                 elif '擺盤' in text: target=choices.nth(1)
                 elif '改菜名' in text: target=choices.nth(0 if honest else 1)

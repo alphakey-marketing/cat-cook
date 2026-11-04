@@ -1,0 +1,244 @@
+{
+  "generator": "Codex built-in image_gen",
+  "date": "2026-11-04",
+  "style": "Use case: stylized-concept. Individual transparent PNG game icon, square canvas, isolated centered subject fills 80% with even padding, readable at 48px. Input images are STYLE REFERENCES ONLY. Match the existing Cat-Cook Japanese picture-book illustrations: flat gouache and colored-pencil grain within objects, thick soft wobbly dark-brown #2b211b outline, chunky rounded silhouette, muted warm cream #fff8ec, red #d7263d, gold #f5b82e, green #3fa66b, simple flat base + one shadow shape + cream highlight, slight three-quarter top-down view. Genuine transparent background. No text, letters, numbers, brand logos, food faces, background, tile, cast shadow, gradients, gloss, 3D or emoji style. Ceramic dishes may use the same small cream blossom decoration as the reference. ",
+  "references": [
+    "dish_onigiri.png",
+    "ing_shoyu.png",
+    "dish_oyakodon.png"
+  ],
+  "assets": [
+    {
+      "id": "dish_edamame",
+      "subject": "A small red-and-cream ceramic dish of several green edamame pods, one open pod showing three beans.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_yakitori",
+      "subject": "Two bamboo skewers of grilled golden-brown boneless chicken chunks alternating with thick green-and-white scallion pieces, light dark sauce marks, on a small cream rectangular plate. Not dango or oden.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_karaage",
+      "subject": "Five irregular bite-size golden crispy Japanese fried boneless chicken pieces on a small cream plate with one small lemon wedge. No whole drumstick or chicken leg.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_agedashi",
+      "subject": "Japanese agedashi tofu: three lightly fried tofu cubes with white interiors in a shallow cream ceramic bowl with amber dashi sauce, scallions and ginger.",
+      "promptOverride": "Use case: stylized-concept. Asset type: individual transparent PNG menu icon for Cat-Cook. Reference images are STYLE REFERENCES ONLY: match their existing warm hand-drawn Japanese picture-book gouache/colored-pencil style, chunky silhouette, soft wobbly dark-brown outline #2b211b, paper grain INSIDE object, flat base + one shadow shape + tiny cream highlight, muted cream/red/gold/green. Subject: Japanese agedashi tofu, three golden lightly fried tofu cubes with white interiors in a shallow warm cream ceramic bowl with a visible small pool of amber dashi sauce, green scallion garnish and tiny ginger mound. Recognizably tofu, NOT a plain white square. Slight three-quarter top view, centered single dish filling 80% of square canvas, readable at 48px. Genuine transparent background. No text, logos, faces on food, backdrop, border tile, drop shadow, glossy 3D or emoji look. Match illustrated reference food and red/cream ceramics without copying rice or soy sauce.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_okonomiyaki",
+      "subject": "ONE savory Osaka-style cabbage pancake, irregular thick golden disk with dark brown sauce, thin cream mayonnaise zigzags, green aonori flakes and a few pale bonito flakes, on a cream plate. No butter, maple syrup or sweet pancake stack.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_yakisoba",
+      "subject": "Japanese stir-fried brown thin wavy noodles with pale-green cabbage and little browned meat strips, small red pickled ginger garnish, on a cream oval plate. No tomato sauce, fork, meatballs or spaghetti.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_instant_coffee",
+      "subject": "A cream ceramic cup of warm brown instant coffee on a red-edged saucer, with one SMALL unbranded torn brown coffee sachet resting beside the cup. No espresso machine or coffee beans.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_black_tea",
+      "subject": "A cream ceramic tea cup containing clear amber black tea, on matching red-edged saucer, with a single tiny curled dark tea leaf beside it. No milk, coffee beans or teapot dominating the icon.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_matcha_latte",
+      "subject": "A cream ceramic mug of muted matcha-green milk drink, simple cream foam swirl, on matching small saucer. Distinct green drink, no coffee or brown topping.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_pudding",
+      "subject": "One small upside-down Japanese custard pudding, pale golden truncated dome with warm dark caramel top and a small caramel pool on a cream plate. No face, cherries or whipped cream.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_thick_toast",
+      "subject": "ONE thick square Japanese butter toast, browned crust and scored golden grid surface, one small melting butter square, on a cream plate. Clearly thick bread with white interior side, no sandwich filling.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_pancakes",
+      "subject": "A stack of TWO fluffy golden Japanese hotcakes, a small square of butter and restrained amber syrup drizzle, on a cream plate. No savory toppings.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_dark_ding",
+      "subject": "A neatly plated convenience meal on a large cream plate: one brown hamburger patty with brown sauce, a pale mashed-potato mound and three small green broccoli florets with tiny carrot pieces, clearly separated portions. No raw meat.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_dark_beef",
+      "subject": "A little round earthenware clay casserole with TWO short handles, brown premade beef stew with visible chunky beef and carrots, ONE small green herb sprig, simple cream lid propped behind. No flames.",
+      "group": "dishes",
+      "editPrompt": "Edit target: the attached hand-drawn beef stew game icon. Change only the background: remove all stray background pixels, especially at the four canvas corners. Background must be truly fully transparent alpha=0 with a clean generous transparent margin on all sides. Preserve the warm gouache and pencil texture, brown outline, red floral clay pot, lid, beef, carrots and herb composition. No text, no added objects, no shadows outside the icon."
+    },
+    {
+      "id": "dish_dark_milk_tea",
+      "subject": "A tall transparent drinking glass with pale milky-green tea and three clearly outlined ice cubes, a small plain green-capped bottled-tea bottle peeking behind the glass as a subtle source clue. No matcha whisk or leaves floating in drink.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_dark_coffee",
+      "subject": "A tall transparent glass of iced caramel instant milk coffee: light milk base, brown coffee layer, tiny caramel drizzle and three ice cubes. A small plain torn brown instant coffee sachet peeks behind the glass. No espresso tools.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_dark_soda",
+      "subject": "A tall transparent glass of pale coral fruit-syrup soda, three ice cubes, a few simple bubbles and ONE lemon slice on the rim. No fruit chunks inside the drink, no smoothie or fresh fruit pile.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_dark_soup",
+      "subject": "A small cream ceramic soup bowl filled with smooth golden instant broth, two simple pale steam curls, no meat or elaborate solid ingredients. A tiny plain concentrate container peeks from behind the bowl. No eight-hour cooking imagery.",
+      "group": "dishes"
+    },
+    {
+      "id": "dish_dark_rice",
+      "subject": "A small cream plate of domed golden egg fried rice with visible rice grains, tiny yellow egg pieces and green scallions. A small plain red-capped seasoning shaker next to plate, no explosion, radiation symbol or hazard imagery.",
+      "group": "dishes"
+    },
+    {
+      "id": "ing_edamame_raw",
+      "subject": "Three fresh uncooked green edamame pods, one slightly open showing plump green beans. No serving plate or cooked seasoning.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_abura",
+      "subject": "A small clear cooking-oil bottle with rounded shoulders and a warm gold cap, pale golden liquid and one tiny oil droplet next to it. No branding or writing.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_katakuriko",
+      "subject": "A small open cream paper pouch of bright white potato/corn starch, tiny wooden scoop with a little white powder. One pale potato-shaped pictogram without text on pouch, no flour wheat stalk.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_komugiko",
+      "subject": "A small open warm-cream flour bag with a little ivory flour mound and TWO wheat heads leaning against it. No writing. Distinct from bright white starch pouch.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_kyabetsu",
+      "subject": "A small round pale-green cabbage, one cut wedge showing tightly layered cream and green leaves. Not lettuce or bok choy.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_sosu",
+      "subject": "A squat rounded glass bottle of thick dark-brown Japanese savory sauce with a muted gold cap and a simple cream blossom emblem, no lettering. Distinct from the red-capped soy-sauce reference.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_coffee_powder",
+      "subject": "A small open squat brown instant-coffee jar, coarse brown granules visible, a little wooden spoon holding granules beside it. No brewed cup or whole beans.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_koucha_leaf",
+      "subject": "A small cream ceramic tea caddy holding curled dark-brown dried black-tea leaves, with three loose curled leaves beside it. No autumn maple leaf or brewed tea cup.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_matcha_powder",
+      "subject": "A tiny red-and-cream ceramic bowl of fine muted green matcha powder, a short bamboo scoop with a little green powder leaning on its rim. No liquid or whisk.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_milk",
+      "subject": "A short rounded clear glass milk bottle filled with ivory milk, simple cream cap and a tiny cream flower mark. No letters, numbers or branded carton.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_pan_bread",
+      "subject": "Two thick slices of plain white Japanese shokupan bread with rounded square golden crust, one upright and one leaning behind. Untoasted white interior, no butter or fillings.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_butter",
+      "subject": "A simple golden butter block with one small slice cut off, partially wrapped in folded cream paper. No lettering or margarine tub.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_meal_patty",
+      "subject": "A plain unbranded vacuum-sealed transparent food pouch containing ONE fully cooked oval brown hamburger patty and a little brown sauce, simple muted red seal strip. Recognizably prepared patty, not raw steak.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_mash_potato",
+      "subject": "A little cream bowl with a mound of smooth pale mashed potatoes and one small swirl, tiny cream spoon. No whole potato, fries, rice or butter topping.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_frozen_veg",
+      "subject": "A small transparent freezer bag containing green peas, broccoli florets, orange carrot cubes and yellow corn, simple muted blue sealing strip and tiny ice crystals. No letters.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_beef_pouch",
+      "subject": "A sealed stand-up cream-and-rust retort food pouch, a small picture of brown beef stew in a bowl on its front, and one tiny torn opening notch. No writing, branding or raw beef.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_herb",
+      "subject": "ONE short fresh green herb sprig, five simple paired oval leaves and a slim stem. Clean recognizable silhouette, no flower, whole plant or decorative pot.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_bottled_tea",
+      "subject": "A small clear plastic bottle filled with pale green tea, muted green screw cap, plain cream label with a tiny green tea-leaf pictogram only. No letters, branding or milk.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_ice",
+      "subject": "THREE translucent pale-blue chunky ice cubes with soft dark-brown outlines, simple flat cream highlights, isolated small cluster. No glass, water splash or glossy 3D.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_caramel_syrup",
+      "subject": "A small rounded clear syrup bottle containing warm amber caramel with a muted brown pump top, one little amber syrup drop next to it. No text or branding.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_fruit_syrup",
+      "subject": "A small clear rounded bottle of coral-red fruit syrup, muted red cap, tiny strawberry pictogram on a cream label and no lettering. No fresh fruit pile or juice glass.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_soda_water",
+      "subject": "A small clear bottle of nearly colorless pale-blue sparkling water with muted blue cap and three simple bubble circles visible inside. No lettering, fruit or soda can branding.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_fruit_slice",
+      "subject": "ONE thin circular lemon slice, pale yellow segmented flesh and warm golden rind, a small wedge cut into its edge for sitting on a glass rim. No whole fruit or drink.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_stock_powder",
+      "subject": "A small open muted red-and-cream seasoning tin containing pale golden chicken-stock powder, tiny scoop with powder beside it, a simple cream hen silhouette on tin. No letters or cooked soup.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_stock_concentrate",
+      "subject": "A short squat clear jar filled with dark amber concentrated broth, cream screw lid resting beside it, a tiny plain spoon of thick amber paste. No text or cooked soup bowl.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_msg",
+      "subject": "A small clear seasoning shaker with a muted green perforated cap, white seasoning crystals inside and a tiny pinch spilled beside it. Plain label with three small cream dots, NO letters, warning symbols, skulls or glowing chemicals.",
+      "group": "ingredients"
+    },
+    {
+      "id": "ing_oyster_sauce",
+      "subject": "A short rounded dark-brown oyster-sauce bottle with muted green cap, cream label bearing a small oyster-shell pictogram and no lettering. Clearly thick dark sauce, not soy sauce with red cap.",
+      "group": "ingredients"
+    }
+  ]
+}

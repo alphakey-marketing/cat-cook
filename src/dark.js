@@ -2,6 +2,7 @@ import { h, choose, modal, jpLine } from './ui.js';
 import { sfx } from './audio.js';
 import { S, save, srsSeen, srsAnswer } from './save.js';
 import { PLATING, GARNISHES, darkRatings } from './data/dark.js';
+import { art } from './art.js';
 
 export async function dressDarkDish(rec, world) {
   const select = (items, title) => choose(items.map(item => ({ value: item, label: `${item.icon} ${item.label}` })), { title: h('div', { class: 'panel-title' }, title) });
@@ -24,7 +25,7 @@ export function darkReport(rec, taste, styling) {
 export function secretCard(rec, report) {
   return h('div', { class: 'dark-report', 'data-secret': rec.id },
     h('div', { class: 'dark-tag' }, `後廚秘密 ${rec.number} · ${rec.shortcut}`),
-    h('h3', {}, rec.yue),
+    h('div', { class: 'dark-dish-heading' }, art(`dish_${rec.id}`, rec.yue), h('h3', {}, rec.yue)),
     h('div', { class: 'dark-scores' }, ...[['好味', report.taste], ['賣相', report.look], ['宣傳誇張度', report.hype]].map(([name, score]) => h('div', {}, h('b', {}, `${score}`), h('span', {}, name)))),
     h('p', {}, `菜名：${report.pitch === 'grand' ? rec.pitch : rec.yue}`),
     h('p', { class: 'dark-truth' }, `真正做法：${rec.truth}`),

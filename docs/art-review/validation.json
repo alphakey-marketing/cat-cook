@@ -1,6 +1,6 @@
 {
-  "expected": 111,
-  "present": 111,
+  "expected": 157,
+  "present": 157,
   "errors": [],
   "assets": [
     {
@@ -1888,6 +1888,788 @@
         102,
         845,
         922
+      ]
+    },
+    {
+      "file": "dish_edamame.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        130,
+        249,
+        1106,
+        1101
+      ]
+    },
+    {
+      "file": "dish_yakitori.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        76,
+        162,
+        1160,
+        1082
+      ]
+    },
+    {
+      "file": "dish_karaage.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        68,
+        229,
+        1185,
+        1135
+      ]
+    },
+    {
+      "file": "dish_agedashi.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        101,
+        210,
+        1140,
+        1156
+      ]
+    },
+    {
+      "file": "dish_okonomiyaki.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        68,
+        248,
+        1173,
+        1118
+      ]
+    },
+    {
+      "file": "dish_yakisoba.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        76,
+        272,
+        1166,
+        1048
+      ]
+    },
+    {
+      "file": "dish_instant_coffee.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        131,
+        179,
+        1123,
+        1128
+      ]
+    },
+    {
+      "file": "dish_black_tea.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        130,
+        209,
+        1131,
+        1113
+      ]
+    },
+    {
+      "file": "dish_matcha_latte.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        155,
+        189,
+        1119,
+        1124
+      ]
+    },
+    {
+      "file": "dish_pudding.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        92,
+        225,
+        1155,
+        1103
+      ]
+    },
+    {
+      "file": "dish_thick_toast.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        107,
+        171,
+        1143,
+        1108
+      ]
+    },
+    {
+      "file": "dish_pancakes.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        106,
+        214,
+        1143,
+        1095
+      ]
+    },
+    {
+      "file": "dish_dark_ding.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        88,
+        223,
+        1149,
+        1086
+      ]
+    },
+    {
+      "file": "dish_dark_beef.png",
+      "size": [
+        1312,
+        1199
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        171,
+        119,
+        1113,
+        1075
+      ]
+    },
+    {
+      "file": "dish_dark_milk_tea.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        227,
+        106,
+        1033,
+        1157
+      ]
+    },
+    {
+      "file": "dish_dark_coffee.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        191,
+        144,
+        1093,
+        1139
+      ]
+    },
+    {
+      "file": "dish_dark_soda.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        244,
+        84,
+        1020,
+        1173
+      ]
+    },
+    {
+      "file": "dish_dark_soup.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        160,
+        125,
+        1090,
+        1153
+      ]
+    },
+    {
+      "file": "dish_dark_rice.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        104,
+        166,
+        1133,
+        1104
+      ]
+    },
+    {
+      "file": "ing_edamame_raw.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        94,
+        194,
+        1144,
+        1109
+      ]
+    },
+    {
+      "file": "ing_abura.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        280,
+        130,
+        1028,
+        1133
+      ]
+    },
+    {
+      "file": "ing_katakuriko.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        183,
+        161,
+        1075,
+        1149
+      ]
+    },
+    {
+      "file": "ing_komugiko.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        154,
+        167,
+        1101,
+        1129
+      ]
+    },
+    {
+      "file": "ing_kyabetsu.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        118,
+        204,
+        1121,
+        1111
+      ]
+    },
+    {
+      "file": "ing_sosu.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        274,
+        127,
+        970,
+        1133
+      ]
+    },
+    {
+      "file": "ing_coffee_powder.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        205,
+        162,
+        1095,
+        1126
+      ]
+    },
+    {
+      "file": "ing_koucha_leaf.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        117,
+        155,
+        1124,
+        1101
+      ]
+    },
+    {
+      "file": "ing_matcha_powder.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        148,
+        182,
+        1145,
+        1076
+      ]
+    },
+    {
+      "file": "ing_milk.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        316,
+        122,
+        917,
+        1149
+      ]
+    },
+    {
+      "file": "ing_pan_bread.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        130,
+        151,
+        1110,
+        1121
+      ]
+    },
+    {
+      "file": "ing_butter.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        123,
+        211,
+        1132,
+        1083
+      ]
+    },
+    {
+      "file": "ing_meal_patty.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        121,
+        169,
+        1128,
+        1063
+      ]
+    },
+    {
+      "file": "ing_mash_potato.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        174,
+        186,
+        1063,
+        1107
+      ]
+    },
+    {
+      "file": "ing_frozen_veg.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        141,
+        174,
+        1079,
+        1091
+      ]
+    },
+    {
+      "file": "ing_beef_pouch.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        219,
+        145,
+        1024,
+        1122
+      ]
+    },
+    {
+      "file": "ing_herb.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        198,
+        161,
+        1018,
+        1154
+      ]
+    },
+    {
+      "file": "ing_bottled_tea.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        337,
+        121,
+        899,
+        1169
+      ]
+    },
+    {
+      "file": "ing_ice.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        134,
+        179,
+        1120,
+        1113
+      ]
+    },
+    {
+      "file": "ing_caramel_syrup.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        251,
+        129,
+        985,
+        1144
+      ]
+    },
+    {
+      "file": "ing_fruit_syrup.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        278,
+        125,
+        970,
+        1159
+      ]
+    },
+    {
+      "file": "ing_soda_water.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        309,
+        110,
+        929,
+        1158
+      ]
+    },
+    {
+      "file": "ing_fruit_slice.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        167,
+        267,
+        1081,
+        1044
+      ]
+    },
+    {
+      "file": "ing_stock_powder.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        162,
+        123,
+        1090,
+        1155
+      ]
+    },
+    {
+      "file": "ing_stock_concentrate.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        187,
+        133,
+        1151,
+        1152
+      ]
+    },
+    {
+      "file": "ing_msg.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        294,
+        123,
+        998,
+        1157
+      ]
+    },
+    {
+      "file": "ing_oyster_sauce.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        270,
+        109,
+        983,
+        1170
       ]
     }
   ]
