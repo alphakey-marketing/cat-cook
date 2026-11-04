@@ -9,7 +9,15 @@ export function art(id, label = '', cls = '') {
   img.decoding = 'async';
   return img;
 }
-export const vocabArt = (v) => art(`${v.cat}_${v.id}`, v.yue);
+export const vocabArt = (v) => {
+  if (!v.textIcon) return art(`${v.cat}_${v.id}`, v.yue);
+  const icon = document.createElement('span');
+  icon.className = 'food-icon';
+  icon.setAttribute('role', 'img');
+  icon.setAttribute('aria-label', v.yue);
+  icon.textContent = v.emoji;
+  return icon;
+};
 const icons = {
   '🪙':'coin', '🔥':'streak', '📚':'book', '📖':'book', '🛍️':'shop', '⚙️':'settings',
   '🔊':'speaker', '✕':'close', '❤️':'heart', '💖':'heart', '💕':'heart', '🐾':'paw',

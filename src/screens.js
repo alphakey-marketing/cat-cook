@@ -2,6 +2,7 @@ import { art, vocabArt } from './art.js';
 // 各種彈出畫面：食譜卡、圖鑑、商店、設定、收工總結
 import { h, modal, jpLine, applySettings, renderHUD, toast, closeModal } from './ui.js';
 import { RECIPES, COMING_SOON } from './data/recipes.js';
+import { CHAPTERS } from './data/chapters.js';
 import { VOCAB, vocab } from './data/vocab.js';
 import { SHOP } from './data/shop.js';
 import { VOICES } from './data/voices.js';
@@ -66,6 +67,7 @@ export function openBook(tab = 'recipes') {
         const c = h('div', { class: `book-card ${ok ? '' : 'locked'}` },
           h('div', { class: 'big-emo' }, ok ? vocabArt(d) : '🔒'),
           h('div', { class: 'jp-inline', html: ok ? toHTML(d.jp) : '？？？' }),
+          h('div', { class: 'sub' }, CHAPTERS.find(c => c.id === (r.chapter || 'home')).name),
           h('div', { class: 'sub' }, ok ? (S().stars[r.id] ? stars(S().stars[r.id]) : '未煮過') : unlockText(r)));
         if (ok) c.onclick = () => { sfx('tap'); recipeCard(r); };
         grid.append(c);
@@ -187,7 +189,7 @@ export function shiftSummary(stat, { onNext, onRest, onShop, firstShift }) {
     teaser ? h('div', { class: 'teaser' }, h('span', { class: 'big-emo' }, art('ui_lock'), vocabArt(vocab(teaser.dish))), h('div', {}, h('b', { html: toHTML(vocab(teaser.dish).jp) }), h('div', { class: 'sub' }, unlockText(teaser)))) : null,
     h('div', { class: 'sum-btns' },
       onRest ? h('button', { class: `btn primary big ${firstShift ? 'pulse' : ''}`, onclick: () => { closeModal(); onRest(); } }, '🏮 同小黑去日本餐廳食飯') : null,
-      h('button', { class: 'btn big', onclick: () => { closeModal(); onNext(); } }, '🍳 再開一更'),
+      h('button', { class: 'btn big', onclick: () => { closeModal(); onNext(); } }, '🏠 返大堂／揀章節'),
       h('button', { class: 'btn', onclick: () => { closeModal(); onShop(); } }, '🛍️ 商店'),
     ),
   );

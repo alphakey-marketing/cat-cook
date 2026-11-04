@@ -218,10 +218,12 @@ export class World {
     x.fillStyle = '#fff'; x.font = 'bold 30px "Noto Sans JP",sans-serif'; x.textAlign = 'center';
     x.fillText('お品書き', 160, 46);
     x.font = '24px "Noto Sans JP",sans-serif'; x.textAlign = 'left';
-    items.forEach((it, i) => { x.fillStyle = it.locked ? '#889' : '#ffeeaa'; x.fillText((it.locked ? '？？？' : it.name), 30, 90 + i * 36); x.textAlign = 'right'; x.fillText(it.locked ? '' : it.price + '円', 290, 90 + i * 36); x.textAlign = 'left'; });
+    const rowHeight = Math.min(36, 145 / Math.max(1, items.length));
+    x.font = `${items.length > 4 ? 16 : 24}px "Noto Sans JP",sans-serif`;
+    items.forEach((it, i) => { x.fillStyle = it.locked ? '#889' : '#ffeeaa'; x.fillText((it.locked ? '？？？' : it.name), 22, 82 + i * rowHeight, 205); x.textAlign = 'right'; x.fillText(it.locked ? '' : it.price + '円', 298, 82 + i * rowHeight); x.textAlign = 'left'; });
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   }
-  setMenu(items) { this.menuBoard.material.map = this.menuTexture(items); this.menuBoard.material.needsUpdate = true; }
+  setMenu(items) { this.menuBoard.material.map?.dispose(); this.menuBoard.material.map = this.menuTexture(items); this.menuBoard.material.needsUpdate = true; }
 
   // ===== 鏡頭 =====
   setView(name, instant = false) {

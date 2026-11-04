@@ -76,7 +76,7 @@ with sync_playwright() as p:
       for(const id of Object.keys(VOCAB)) holder.append(vocabArt(vocab(id)));
       for(const c of COMING_SOON) holder.append(art(`dish_${c.id}`));
       document.body.append(holder);
-      await Promise.all([...holder.children].map(i=>i.decode()));
+      await Promise.all([...holder.querySelectorAll('img')].map(i=>i.decode()));
       holder.remove();
       testUI.clearBubble();
       if(__world.anchors.length) throw Error('Removed bubble still anchored');

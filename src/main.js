@@ -1,11 +1,13 @@
 import { artURL, vocabArt, decorateArt } from './art.js';
 import './style.css';
 import { World } from './three/world.js';
+import { makeIce } from './three/models.js';
 import { $, h, panel, hidePanel, choose, next, bubble, clearBubble, hint, hideHint, toast, pop, coinFly, renderHUD, showHUD, applySettings, jpLine, fade, wait, shuffle, pick, modal, closeModal } from './ui.js';
 import { unlockAudio, say, sfx, preload, onSfx, setMood } from './audio.js';
 import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './save.js';
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
+import { CHAPTERS, REGULARS } from './data/chapters.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK, RESTAURANT } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
@@ -36,6 +38,7 @@ onSfx((n) => FEEL[n]?.());
 // 場景 → 音樂情緒
 world.onView = (v) => setMood(v === 'cook' ? 'cook' : v.startsWith('rest') ? 'rest' : 'kitchen');
 if (import.meta.env.DEV) window.__world = world; // 測試用
+if (import.meta.env.DEV) window.__game = { hub, serveCustomer, cook, state: S, save, minigames: MINIGAMES };
 
 // ===== 開始畫面 =====
 applySettings();
@@ -136,13 +139,16 @@ async function returning(ci) {
   hub();
 }
 
+function menuRecipes() {
+  return RECIPES.filter(r => (r.chapter || 'home') === S().chapter && isUnlocked(r));
+}
 function special() {
-  const list = RECIPES.filter(isUnlocked);
+  const list = menuRecipes();
   return list[parseInt(hash(today()), 36) % list.length]?.id;
 }
 
 function refreshMenu() {
-  world.setMenu(RECIPES.map((r) => ({ name: VOCAB[r.dish].jp.replace(/\{.*?\}/g, ''), price: r.price, locked: !isUnlocked(r) })));
+  world.setMenu(RECIPES.filter(r => (r.chapter || 'home') === S().chapter).map((r) => ({ name: VOCAB[r.dish].jp.replace(/\{.*?\}/g, ''), price: r.price, locked: !isUnlocked(r) })));
 }
 
 // ===== 大堂（兩更之間）=====
@@ -153,8 +159,15 @@ function hub() {
   const sp = special();
   const spv = sp ? vocab(recipe(sp).dish) : null;
   const canRest = S().shifts >= 1;
+  refreshMenu();
+  const chapter = CHAPTERS.find(c => c.id === S().chapter) || CHAPTERS[0];
   panel(
-    h('div', { class: 'panel-title' }, '今日做咩好？'),
+    h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
+      class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
+      'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
+    }, `${c.icon} ${c.id === 'home' ? '食堂' : c.id === 'izakaya' ? '居酒屋' : '喫茶店'}`))),
+    h('div', { class: 'panel-title' }, chapter.name),
+    h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
     spv ? h('div', { class: 'special' }, '🌟 今日特價：',h('span', { class: 'jp-inline', html: toHTML(spv.jp) }), ' 金幣 x2') : null,
     h('div', { class: 'hub-btns' },
       h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); shift({}); } }, '🏮 開舖'),
@@ -182,11 +195,12 @@ async function shift({ tutorial = false } = {}) {
     // 升級
     if (res.levelUps) {
       const newR = await levelUp();
-      if (newR) forceDish = newR.dish;
+      if (newR && (newR.chapter || 'home') === S().chapter) forceDish = newR.dish;
     }
   }
   $('#shiftinfo').classList.remove('show');
   S().shifts++;
+  S().chapterShifts[S().chapter] = (S().chapterShifts[S().chapter] || 0) + 1;
   save();
   hidePanel();
   clearBubble();
@@ -196,7 +210,7 @@ async function shift({ tutorial = false } = {}) {
   const first = S().shifts === 1;
   await new Promise((res) => shiftSummary(stat, {
     firstShift: first,
-    onNext: () => res(() => shift({})),
+    onNext: () => res(() => hub()),
     onRest: () => res(() => restaurant()),
     onShop: () => res(() => { hub(); openShop(world); }),
   })).then((fn) => fn());
@@ -216,14 +230,14 @@ function pickCustomer(index, tutorial) {
 async function serveCustomer({ index, tutorial, forceDish }) {
   const s = S();
   const lv0 = s.level;
-  const cust = pickCustomer(index, tutorial);
+  const cust = s.chapter === 'cafe' ? CUSTOMERS[index % REGULARS.length] : pickCustomer(index, tutorial);
   const voice = cust.id;
-  const unlocked = RECIPES.filter(isUnlocked);
+  const unlocked = menuRecipes();
   // 揀菜：新解鎖優先，其次 SRS 要溫嘅
   const dishId = forceDish || srsPick(unlocked.map((r) => r.dish));
-  const rec = unlocked.find((r) => r.dish === dishId) || unlocked[0];
+  let rec = unlocked.find((r) => r.dish === dishId) || unlocked[0];
   const withNum = s.level >= 2 && !tutorial && Math.random() < 0.45;
-  const qty = withNum ? 1 + Math.floor(Math.random() * 3) : 1;
+  let qty = withNum ? 1 + Math.floor(Math.random() * 3) : 1;
   const line = withNum
     ? fill(pick(ORDER_NUM_TEMPLATES), { dish: rec.dish, num: NUMS[qty - 1] })
     : fill(pick(ORDER_TEMPLATES), { dish: rec.dish });
@@ -276,6 +290,46 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   srsSeen(rec.dish);
   clearBubble('cust');
 
+  const askChapter = async (jp, yue, options, correct, word, title) => {
+    let first = true;
+    srsSeen(word);
+    for (;;) {
+      bubble(world, 'cust', jp, yue, voice, { hidden: listen });
+      const a = await choose(shuffle(options.map((label, value) => ({ label, value }))), { title: h('div', { class: 'panel-title' }, title) });
+      if (a.value === correct) { srsAnswer(word, first); sfx('good'); clearBubble('cust'); return; }
+      first = false; srsAnswer(word, false); sfx('bad'); hint(yue, 3000);
+    }
+  };
+  if (S().chapter === 'izakaya' && index % 2 === 0) {
+    await askChapter('すみません、もう 一{ひと}つ 追加{ついか}で。', '唔該，再加一份。', ['加一份', '取消訂單', '立即埋單'], 0, 'tsuika', '客人想改張單？');
+    qty++;
+    toast(`加單成功：共 ${qty} 份`);
+  } else if (S().chapter === 'izakaya') {
+    const replacement = unlocked.find(r => r.id !== rec.id);
+    await bubble(world, 'cat', 'すみません、売{う}り切{き}れです。', `${vocab(rec.dish).yue}沽清喇。`, 'cat');
+    clearBubble('cat');
+    const d = vocab(replacement.dish);
+    await askChapter(`${d.jp}を お願{ねが}いします。`, `咁要${d.yue}。`, [d.yue, vocab(rec.dish).yue, '取消所有訂單'], 0, 'urikire', '沽清後，客人改要邊款？');
+    rec = replacement;
+    srsSeen(rec.dish); srsAnswer(rec.dish, true);
+  }
+  let preference = null, servedRegular = null;
+  if (S().chapter === 'cafe' && ['instant_coffee', 'black_tea', 'matcha_latte'].includes(rec.id)) {
+    const regular = REGULARS[index % REGULARS.length];
+    const seen = S().regularVisits[regular.id] || 0;
+    const requests = ['hot', 'iced', 'less_sugar', 'no_sugar'];
+    const options = requests.map(id => vocab(id).yue);
+    await askChapter(regular.jp, regular.yue, options, requests.indexOf(regular.request), regular.request,
+      `${regular.name} · ${seen ? `第 ${seen + 1} 次到訪` : '初次到訪'}：點樣調製？`);
+    preference = regular.request;
+    servedRegular = regular.id;
+    const v = vocab(preference);
+    rec = { ...rec, steps: [...rec.steps, {
+      type: 'pick', need: [preference], decoys: requests.filter(id => id !== preference),
+      jp: `${v.jp}で 仕上{しあ}げて`, yue: `最後調整：${v.yue}`, tip: '記住熟客嘅要求。',
+    }] };
+  }
+
   // 第一次煮呢個菜：睇食譜
   if (!s.cooked[rec.id]) {
     await new Promise((res) => recipeCard(rec, { onStart: res }));
@@ -283,6 +337,8 @@ async function serveCustomer({ index, tutorial, forceDish }) {
 
   // 煮
   const score = await cook(rec);
+  if (preference === 'iced') world.dish?.add(makeIce());
+  if (servedRegular) s.regularVisits[servedRegular] = (s.regularVisits[servedRegular] || 0) + 1;
   const stars = score >= 0.9 ? 3 : score >= 0.65 ? 2 : 1;
   s.stars[rec.id] = Math.max(s.stars[rec.id] || 0, stars);
   s.cooked[rec.id] = (s.cooked[rec.id] || 0) + 1;
@@ -299,6 +355,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   if (listen && tries === 0) coins *= 2;
   const xp = 10 + stars * 5;
   panel(
+    h('div', { class: 'sub' }, `${vocab(rec.dish).yue} × ${qty}${preference ? ` · ${vocab(preference).yue}` : ''}`),
     h('div', { class: 'stars-big' }, ...[1, 2, 3].map((n) => h('span', { class: n <= stars ? 'on' : '' }, '★'))),
     h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`, isSpecial ? h('span', { class: 'tag' }, '特價 x2') : null, listen && tries === 0 ? h('span', { class: 'tag' }, '🎧 x2') : null),
   );

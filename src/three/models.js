@@ -119,6 +119,60 @@ export function makeDish(id) {
     for (let i = 0; i < 10; i++) {
       const ng = cyl(0.01, 0.01, 0.005, 0x7fd04f, 8); ng.position.set(-0.1 + Math.random() * 0.1, 0.158, 0.05 + Math.random() * 0.1); g.add(ng);
     }
+  } else if (['instant_coffee', 'black_tea', 'matcha_latte'].includes(id)) {
+    g.add(plate(0.19));
+    const cup = cyl(0.115, 0.09, 0.2, 0xfff4df); cup.position.y = 0.12; g.add(cup);
+    const drink = cyl(0.106, 0.106, 0.012, id === 'instant_coffee' ? 0x493026 : id === 'black_tea' ? 0xb16d2c : 0x8eac59);
+    drink.position.y = 0.225; g.add(drink);
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.015, 8, 20), mat(0xfff4df));
+    handle.position.set(0.12, 0.12, 0); g.add(handle);
+    if (id === 'matcha_latte') { const foam = cyl(0.06, 0.06, 0.005, 0xfff9df); foam.position.y = 0.235; g.add(foam); }
+  } else if (id === 'edamame') {
+    g.add(plate());
+    for (let i = 0; i < 6; i++) {
+      const pod = sph(0.065, 0x79ad48, 1.7, 0.45, 0.55);
+      pod.position.set((i % 3 - 1) * 0.12, 0.05 + Math.floor(i / 3) * 0.035, (Math.floor(i / 3) - 0.5) * 0.12);
+      pod.rotation.y = i * 0.8; g.add(pod);
+    }
+  } else if (id === 'yakitori') {
+    g.add(plate());
+    for (let i = 0; i < 2; i++) {
+      const skewer = box(0.015, 0.015, 0.42, 0xc6a16c); skewer.position.set(i * 0.17 - 0.08, 0.05, 0); g.add(skewer);
+      for (let j = 0; j < 4; j++) {
+        const piece = box(0.085, 0.06, 0.065, j % 2 ? 0x87a654 : 0xc6823c);
+        piece.position.set(i * 0.17 - 0.08, 0.08, j * 0.08 - 0.08); g.add(piece);
+      }
+    }
+  } else if (id === 'karaage' || id === 'agedashi') {
+    g.add(plate());
+    for (let i = 0; i < 5; i++) {
+      const piece = id === 'karaage' ? sph(0.07, 0xc58a3b, 1, 0.8, 0.9) : box(0.1, 0.08, 0.1, 0xe6c17d);
+      piece.position.set(Math.cos(i * 1.26) * 0.13, 0.07, Math.sin(i * 1.26) * 0.13); g.add(piece);
+      if (id === 'agedashi') { const herb = sph(0.02, 0x6da34a, 1.4, 0.2, 0.5); herb.position.copy(piece.position); herb.position.y += 0.05; g.add(herb); }
+    }
+  } else if (id === 'okonomiyaki' || id === 'pancakes') {
+    g.add(plate());
+    for (let i = 0; i < (id === 'pancakes' ? 3 : 1); i++) {
+      const cake = cyl(0.2, 0.2, 0.045, i % 2 ? 0xe2b86a : 0xc9944c); cake.position.y = 0.045 + i * 0.045; g.add(cake);
+    }
+    if (id === 'pancakes') { const butter = box(0.065, 0.025, 0.065, 0xffdf83); butter.position.y = 0.17; g.add(butter); }
+    else for (let i = 0; i < 4; i++) { const sauce = box(0.31, 0.008, 0.015, 0x643b2c); sauce.position.set(0, 0.075, (i - 1.5) * 0.055); g.add(sauce); }
+  } else if (id === 'thick_toast') {
+    g.add(plate());
+    const crust = box(0.32, 0.09, 0.29, 0x9d6234); crust.position.y = 0.065; g.add(crust);
+    const bread = box(0.28, 0.012, 0.25, 0xecc589); bread.position.y = 0.116; g.add(bread);
+    const butter = box(0.07, 0.022, 0.07, 0xffdf83); butter.position.y = 0.135; g.add(butter);
+  } else if (id === 'pudding') {
+    g.add(plate());
+    const custard = cyl(0.11, 0.16, 0.19, 0xf4d986); custard.position.y = 0.11; g.add(custard);
+    const caramel = cyl(0.112, 0.112, 0.012, 0x9b512f); caramel.position.y = 0.21; g.add(caramel);
+  } else if (id === 'yakisoba') {
+    g.add(plate());
+    for (let i = 0; i < 12; i++) {
+      const noodle = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.009, 6, 16), mat(0xb98545));
+      noodle.rotation.x = Math.PI / 2; noodle.position.set(Math.sin(i * 2) * 0.11, 0.04 + i * 0.004, Math.cos(i * 2) * 0.1); g.add(noodle);
+    }
+    for (let i = 0; i < 5; i++) { const leaf = sph(0.035, 0x96b460, 1.4, 0.2, 1); leaf.position.set(Math.cos(i) * 0.12, 0.1, Math.sin(i) * 0.12); g.add(leaf); }
   } else if (id === 'ocha') {
     const cup = cyl(0.06, 0.05, 0.12, 0x6a8f4e); cup.position.y = 0.06; g.add(cup);
     const tea = new THREE.Mesh(new THREE.CircleGeometry(0.055, 20), mat(0x9bbf4a)); tea.rotation.x = -Math.PI / 2; tea.position.y = 0.11; g.add(tea);
@@ -129,6 +183,15 @@ export function makeDish(id) {
     const foam = sph(0.062, 0xffffff, 1, 0.4, 1); foam.position.y = 0.18; g.add(foam);
     const h = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.012, 6, 12, Math.PI), mat(0xe8f4ff, { transparent: true, opacity: 0.6 }));
     h.rotation.z = -Math.PI / 2; h.position.set(0.06, 0.09, 0); g.add(h);
+  }
+  return g;
+}
+
+export function makeIce() {
+  const g = new THREE.Group();
+  for (let i = 0; i < 3; i++) {
+    const ice = box(0.045, 0.035, 0.045, mat(0xd6f2ff, { transparent: true, opacity: 0.75 }));
+    ice.position.set((i - 1) * 0.045, 0.244, (i % 2) * 0.04 - 0.02); g.add(ice);
   }
   return g;
 }

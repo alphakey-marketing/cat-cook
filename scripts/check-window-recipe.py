@@ -39,7 +39,7 @@ with sync_playwright() as p:
               window.continued=0;
               recipeCard(RECIPES[index], {onStart:()=>window.continued++});
             }""", index)
-            page.wait_for_timeout(60)
+            page.wait_for_function("getComputedStyle(document.querySelector('.card')).transform === 'none'")
             button=page.locator('.card-footer button')
             box=button.bounding_box()
             assert 0 <= box['y'] and box['y']+box['height'] <= height+1, (width,height,index,box)

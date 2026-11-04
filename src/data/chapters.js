@@ -1,0 +1,90 @@
+// Chapter menus share the existing order, cooking and SRS loop.
+export const CHAPTERS = [
+  { id: 'home', name: '小黑食堂', jp: '食堂{しょくどう}', icon: '🏠', intro: '由飯糰開始，練好基本功。' },
+  { id: 'izakaya', name: '居酒屋・夜間營業', jp: '居酒屋{いざかや}', icon: '🏮', intro: '六款新料理，練習加單同沽清應對。' },
+  { id: 'cafe', name: '喫茶店・午後小休', jp: '喫茶店{きっさてん}', icon: '☕', intro: '六款餐飲，記住熟客嘅冷熱同甜度喜好。' },
+];
+
+// [id, Japanese, Cantonese, emoji, model shape, model colour]
+export const NEW_INGREDIENTS = [
+  ['edamame_raw', '枝豆{えだまめ}', '生枝豆', '🫛', 'sphere', 0x79ad48],
+  ['abura', '油{あぶら}', '食用油', '🫗', 'cyl', 0xe6bd54],
+  ['katakuriko', '片栗粉{かたくりこ}', '粟粉／薯仔澱粉', '🥣', 'sphere', 0xfffaf0],
+  ['komugiko', '小麦粉{こむぎこ}', '麵粉', '🥣', 'sphere', 0xeee5d1],
+  ['kyabetsu', 'キャベツ', '椰菜', '🥬', 'sphere', 0x95b969],
+  ['sosu', 'ソース', '日式炒麵／大阪燒醬', '🫙', 'cyl', 0x633323],
+  ['coffee_powder', 'インスタントコーヒー', '即溶咖啡粉', '☕', 'cyl', 0x583727],
+  ['koucha_leaf', '紅茶{こうちゃ}', '紅茶茶葉', '🍂', 'sphere', 0x71402b],
+  ['matcha_powder', '抹茶{まっちゃ}', '抹茶粉', '🍵', 'sphere', 0x72a14b],
+  ['milk', '牛乳{ぎゅうにゅう}', '牛奶', '🥛', 'cyl', 0xfff8e8],
+  ['pan_bread', '食{しょく}パン', '厚切方包', '🍞', 'box', 0xecc38a],
+  ['butter', 'バター', '牛油', '🧈', 'box', 0xf6d779],
+];
+
+const pickStep = (ids) => ({ type: 'pick', need: ids, decoys: ['nori', 'miso'], jp: '材料{ざいりょう}を 選{えら}んで', yue: '揀啱材料', tip: '聽日文，再揀材料。' });
+const action = (type, verb, jp, yue, tip) => ({ type, verb, jp, yue, tip, anim: type === 'timing' ? 'wrap' : 'stir', turns: 2, rounds: 2, zone: type === 'hold' ? [0.45, 0.7] : 0.24 });
+// Each entry owns its real recipe and a short playable cooking sequence.
+export const CHAPTER_RECIPES = [
+  { id: 'edamame', chapter: 'izakaya', jp: '枝豆{えだまめ}', yue: '鹽水枝豆', emoji: '🫛', price: 180, station: 'pot', serves: '2 人', time: '10 分鐘',
+    ingredients: [['edamame_raw', '枝豆 200g'], ['shio', '鹽 1 茶匙'], ['mizu', '水 1 公升']],
+    howto: ['枝豆洗淨，用少少鹽搓一搓。', '水煮滾，落枝豆煮約 4–5 分鐘，至豆仁熟透。', '瀝乾，趁熱拌少少鹽；只食豆仁，豆莢唔食。'],
+    steps: [pickStep(['edamame_raw', 'shio', 'mizu']), action('hold', 'yuderu', '枝豆{えだまめ}を ゆでて', '烚熟枝豆', '長按加熱，綠色位放手。')] },
+  { id: 'yakitori', chapter: 'izakaya', jp: '焼{や}き鳥{とり}', yue: '焼鳥', emoji: '🍢', price: 320, station: 'pan', serves: '4 串', time: '20 分鐘',
+    ingredients: [['toriniku', '雞髀肉 250g'], ['negi', '大蔥 1 條'], ['shoyu', '豉油 1 湯匙'], ['mirin', '味醂 1 湯匙']],
+    howto: ['雞肉切小件，大蔥切段，交替串上竹籤。', '豉油同味醂混合成醬汁。', '用平底鑊煎串燒，不時反面，最後掃醬；雞肉中心須達 75°C 並維持至少 1 分鐘。'],
+    steps: [pickStep(['toriniku', 'negi', 'shoyu']), action('timing', 'noseru', '串{くし}に のせて', '將雞肉同蔥串好', '撳準綠色位。'), action('hold', 'yaku', '鶏肉{とりにく}を 焼{や}いて', '燒熟雞肉', '控制火候，唔好燒焦。')] },
+  { id: 'karaage', chapter: 'izakaya', jp: '唐揚{からあ}げ', yue: '唐揚炸雞', emoji: '🍗', price: 360, station: 'pan', serves: '2 人', time: '25 分鐘',
+    ingredients: [['toriniku', '雞髀肉 250g'], ['shoyu', '豉油 1 湯匙'], ['ninniku', '蒜蓉 1 茶匙'], ['katakuriko', '澱粉 3 湯匙'], ['abura', '炸油 適量']],
+    howto: ['雞肉切件，用豉油同蒜蓉醃 10 分鐘。', '逐件薄薄裹上澱粉。', '以約 170°C 油炸至金黃；雞肉中心須達 75°C 並維持至少 1 分鐘，瀝油上碟。'],
+    steps: [pickStep(['toriniku', 'katakuriko', 'abura']), action('stir', 'mazeru', '衣{ころも}を つけて', '拌上薄薄粉衣', '轉圈拌勻。'), action('hold', 'ageru', '鶏肉{とりにく}を 揚{あ}げて', '炸熟雞肉', '控制油溫。')] },
+  { id: 'agedashi', chapter: 'izakaya', jp: '揚{あ}げ出{だ}し豆腐{どうふ}', yue: '揚出豆腐', emoji: '⬜', price: 280, station: 'pan', serves: '2 人', time: '20 分鐘',
+    ingredients: [['tofu', '硬豆腐 1 盒'], ['katakuriko', '澱粉 2 湯匙'], ['abura', '油 適量'], ['dashi', '高湯 100ml'], ['shoyu', '豉油 1 茶匙'], ['negi', '蔥花 少許']],
+    howto: ['豆腐瀝乾抹乾，切大件，薄薄裹粉。', '熱油中小火煎至各面金黃。', '高湯加豉油煮熱，沿碗邊淋入，再放蔥花。'],
+    steps: [pickStep(['tofu', 'katakuriko', 'dashi']), action('hold', 'ageru', '豆腐{とうふ}を 揚{あ}げて', '煎至金黃', '綠色位放手。'), action('timing', 'noseru', 'ねぎを のせて', '灑上蔥花', '最後先放配料。')] },
+  { id: 'okonomiyaki', chapter: 'izakaya', jp: 'お好{この}み焼{や}き', yue: '大阪燒', emoji: '🥞', price: 380, station: 'pan', serves: '1 塊', time: '20 分鐘',
+    ingredients: [['kyabetsu', '椰菜絲 150g'], ['komugiko', '麵粉 50g'], ['tamago', '雞蛋 1 隻'], ['mizu', '水 50ml'], ['sosu', '大阪燒醬 1 湯匙'], ['abura', '油 1 茶匙']],
+    howto: ['麵粉、蛋同水拌勻，再拌入椰菜絲。', '平底鑊落油，倒入麵糊成厚圓餅，中小火煎約 5 分鐘。', '小心反面，冚蓋再煎至中心熟透，上碟搽醬。'],
+    steps: [pickStep(['kyabetsu', 'komugiko', 'tamago']), action('stir', 'mazeru', '生地{きじ}を 混{ま}ぜて', '拌勻麵糊', '轉圈攪勻。'), action('timing', 'yaku', '裏返{うらがえ}して', '反面煎熟', '撳準時機反面！')] },
+  { id: 'yakisoba', chapter: 'izakaya', jp: '焼{や}きそば', yue: '日式炒麵', emoji: '🍝', price: 340, station: 'pan', serves: '1 人', time: '15 分鐘',
+    ingredients: [['men', '熟炒麵 1 份'], ['kyabetsu', '椰菜絲 100g'], ['tamanegi', '洋蔥 1/4 個'], ['sosu', '炒麵醬 1–2 湯匙'], ['abura', '油 1 茶匙']],
+    howto: ['洋蔥切絲，椰菜切細。', '鑊落油炒軟蔬菜，加熟麵同一湯匙水炒散。', '加醬汁炒勻至熱透。'],
+    steps: [pickStep(['men', 'kyabetsu', 'sosu']), action('stir', 'mazeru', '麺{めん}を 炒{いた}めて', '炒散麵條', '轉圈翻炒。'), action('timing', 'noseru', 'お皿{さら}に のせて', '上碟', '撳準出餐！')] },
+  { id: 'instant_coffee', chapter: 'cafe', jp: 'インスタントコーヒー', yue: '精品即溶咖啡', emoji: '☕', price: 260, station: 'board', serves: '1 杯', time: '3 分鐘',
+    ingredients: [['coffee_powder', '精品即溶咖啡粉 2g'], ['mizu', '熱水 150ml']],
+    howto: ['按咖啡粉包裝建議份量放入杯。', '加入熱水攪溶，按喜好調整濃淡。', '冷飲版先用少量熱水溶粉，再補冷水同冰；加水時計埋融冰份量。'],
+    steps: [pickStep(['coffee_powder', 'mizu']), action('stir', 'tokasu', 'コーヒーを 溶{と}かして', '攪溶咖啡粉', '轉圈攪至均勻。')] },
+  { id: 'black_tea', chapter: 'cafe', jp: '紅茶{こうちゃ}', yue: '紅茶', emoji: '🫖', price: 220, station: 'pot', serves: '1 杯', time: '5 分鐘',
+    ingredients: [['koucha_leaf', '紅茶葉 2g'], ['mizu', '熱水 200ml']],
+    howto: ['暖杯後放入茶葉。', '沖入熱水，按茶葉包裝建議浸泡約 3 分鐘，再隔走茶葉。', '冷飲版放涼再加冰，調整水量避免過淡。'],
+    steps: [pickStep(['koucha_leaf', 'mizu']), action('hold', 'ireru', '紅茶{こうちゃ}を 入{い}れて', '沖泡紅茶', '掌握浸泡時間。')] },
+  { id: 'matcha_latte', chapter: 'cafe', jp: '抹茶{まっちゃ}ラテ', yue: '抹茶拿鐵', emoji: '🍵', price: 320, station: 'board', serves: '1 杯', time: '5 分鐘',
+    ingredients: [['matcha_powder', '抹茶粉 2g'], ['mizu', '熱水 30ml'], ['milk', '牛奶 150ml'], ['satou', '糖 0–1 茶匙，按客人要求']],
+    howto: ['抹茶粉過篩，用熱水攪成冇粉粒嘅茶液。', '按冷熱要求加入暖奶，或凍奶同冰。', '按客人要求加糖，攪勻。'],
+    steps: [pickStep(['matcha_powder', 'milk', 'mizu']), action('stir', 'mazeru', '抹茶{まっちゃ}を 混{ま}ぜて', '攪散抹茶粉', '轉圈攪滑。'), action('timing', 'ireru', '牛乳{ぎゅうにゅう}を 入{い}れて', '倒入牛奶', '慢慢倒奶。')] },
+  { id: 'pudding', chapter: 'cafe', jp: 'プリン', yue: '雞蛋布甸', emoji: '🍮', price: 280, station: 'pot', serves: '2 杯', time: '25 分鐘＋冷藏',
+    ingredients: [['tamago', '雞蛋 1 隻'], ['milk', '牛奶 150ml'], ['satou', '糖 20g']],
+    howto: ['蛋同糖輕輕拌勻，加入微暖牛奶，過篩入耐熱杯。', '用蒸鍋小火蒸約 12–15 分鐘，至中心凝固；蛋液須充分煮熟。', '放涼後冷藏至少 2 小時。'],
+    steps: [pickStep(['tamago', 'milk', 'satou']), action('stir', 'mazeru', '卵液{らんえき}を 混{ま}ぜて', '輕輕攪勻蛋液', '唔好打入太多氣泡。'), action('hold', 'musu', 'プリンを 蒸{む}して', '慢火蒸布甸', '小火先滑！')] },
+  { id: 'thick_toast', chapter: 'cafe', jp: '厚切{あつぎ}りトースト', yue: '牛油厚多士', emoji: '🍞', price: 240, station: 'pan', serves: '1 份', time: '8 分鐘',
+    ingredients: [['pan_bread', '厚切方包 1 片'], ['butter', '牛油 10g']],
+    howto: ['方包表面劃淺格，唔好切穿。', '搽牛油，放多士爐烤至表面金黃；亦可平底鑊小火煎兩面。', '趁熱上碟。'],
+    steps: [pickStep(['pan_bread', 'butter']), action('timing', 'kiru', 'パンに 切{き}り込{こ}みを 入{い}れて', '喺方包劃淺格', '輕力劃，唔好切穿。'), action('hold', 'yaku', 'パンを 焼{や}いて', '烘至金黃', '控制火候。')] },
+  { id: 'pancakes', chapter: 'cafe', jp: 'ホットケーキ', yue: '熱香餅', emoji: '🥞', price: 300, station: 'pan', serves: '2 塊', time: '15 分鐘',
+    ingredients: [['komugiko', '自發粉 100g（此處取代普通麵粉）'], ['tamago', '雞蛋 1 隻'], ['milk', '牛奶 80ml'], ['satou', '糖 15g'], ['butter', '牛油 5g']],
+    howto: ['蛋、奶同糖拌勻，加自發粉輕拌至冇乾粉。', '平底鑊薄搽牛油，小火倒入麵糊。', '表面冒泡、邊緣凝固時反面，再煎至中心熟透。'],
+    steps: [pickStep(['komugiko', 'tamago', 'milk']), action('stir', 'mazeru', '生地{きじ}を 混{ま}ぜて', '輕拌麵糊', '唔好攪過頭。'), action('timing', 'yaku', '裏返{うらがえ}して', '冒泡就反面', '等啱時機！')] },
+].map(r => ({ ...r, dish: r.id, unlock: {}, }));
+
+export const CHAPTER_WORDS = [
+  ['yaku', '焼{や}く', '燒、烘', 'verb'], ['ageru', '揚{あ}げる', '炸', 'verb'],
+  ['ireru', '入{い}れる', '倒入、沖泡', 'verb'], ['musu', '蒸{む}す', '蒸', 'verb'],
+  ['tsuika', '追加{ついか}', '加單', 'phrase'], ['urikire', '売{う}り切{き}れ', '沽清', 'phrase'],
+  ['hot', '温{あたた}かい', '熱飲', 'phrase'], ['iced', '冷{つめ}たい', '凍飲', 'phrase'],
+  ['less_sugar', '甘{あま}さ控{ひか}えめ', '少甜', 'phrase'], ['no_sugar', '砂糖{さとう}なし', '無糖', 'phrase'],
+];
+
+export const REGULARS = [
+  { id: 'reader', name: '讀書常客', request: 'hot', jp: 'いつもの、温{あたた}かいので お願{ねが}いします。', yue: '同平時一樣，要熱嘅。' },
+  { id: 'walker', name: '散步常客', request: 'iced', jp: '冷{つめ}たいので お願{ねが}いします。', yue: '唔該要凍飲。' },
+  { id: 'artist', name: '畫畫常客', request: 'less_sugar', jp: '甘{あま}さ控{ひか}えめで お願{ねが}いします。', yue: '唔該少甜。' },
+];
