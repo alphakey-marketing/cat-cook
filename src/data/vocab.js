@@ -71,8 +71,8 @@ export const VOCAB = {
   iie: { jp: 'いいえ', yue: '唔係／唔使', emoji: '❌', cat: 'phrase' },
 };
 
-for (const [id, jp, yue, emoji, s, c] of [...NEW_INGREDIENTS, ...DARK_INGREDIENTS]) VOCAB[id] = { jp, yue, emoji, cat: 'ing', textIcon: true, m: { s, c, sc: [0.12, 0.1, 0.12] } };
-for (const r of [...CHAPTER_RECIPES, ...DARK_RECIPES]) VOCAB[r.id] = { jp: r.jp, yue: r.yue, emoji: r.emoji, cat: 'dish', textIcon: true };
+for (const [id, jp, yue, emoji, s, c] of [...NEW_INGREDIENTS, ...DARK_INGREDIENTS]) VOCAB[id] = { jp, yue, emoji, cat: 'ing', m: { s, c, sc: [0.12, 0.1, 0.12] } };
+for (const r of [...CHAPTER_RECIPES, ...DARK_RECIPES]) VOCAB[r.id] = { jp: r.jp, yue: r.yue, emoji: r.emoji, cat: 'dish' };
 for (const [id, jp, yue, cat] of [...CHAPTER_WORDS, ...DARK_WORDS]) VOCAB[id] = { jp, yue, cat, emoji: cat === 'verb' ? '🥄' : '💬', textIcon: true };
 
 export function vocab(id) {
