@@ -10,6 +10,8 @@ with sync_playwright() as p:
     page = browser.new_page()
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
+    page.on('response', lambda response: errors.append(f'{response.status} {response.url}')
+            if response.status >= 400 and '/art/' in response.url else None)
     page.goto(url)
     page.wait_for_function('window.__world')
     page.evaluate("""async () => {
