@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>黑貓食堂 · 素材預覽</title>
+<style>
+body{margin:0;padding:32px;background:#fff8ec;color:#2b211b;font:16px/1.5 system-ui,sans-serif}h1{font-size:28px}header{max-width:900px}select{font:inherit;padding:8px;border:1px solid #b59e81;border-radius:8px;background:#fff8ec}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:16px;margin-top:24px}.card{padding:16px;border:1px solid #d3bea0;border-radius:12px;background:#f6e9d2}.stage{display:flex;align-items:center;justify-content:center;gap:12px;min-height:140px;background:repeating-conic-gradient(#fff8ec 0% 25%,#e8dcc9 0% 50%) 50%/16px 16px;border-radius:8px}.large{width:128px;height:128px;object-fit:contain}.small{width:48px;height:48px;object-fit:contain}code{display:block;overflow-wrap:anywhere;margin-top:12px;font-size:12px}p{margin:6px 0}.missing{opacity:.45}body.dark .stage{background:#2b211b}a{color:inherit}
+</style>
+<header><h1>黑貓食堂 · 素材預覽</h1><p>左邊 128px，右邊 48px。棋盤格用嚟檢查透明背景；點檔名可睇原圖。</p><label>分類 <select id="group"><option value="">全部</option></select></label> <label><input id="dark" type="checkbox"> 深色底</label><p id="count"></p></header><main class="grid" id="grid"></main>
+<script type="module">
+const {assets}=await fetch('./manifest.json').then(r=>r.json());
+const group=document.querySelector('#group'),grid=document.querySelector('#grid');
+for(const name of new Set(assets.map(a=>a.group))){const o=document.createElement('option');o.value=o.textContent=name;group.append(o)}
+function render(){grid.replaceChildren();const selected=assets.filter(a=>!group.value||a.group===group.value);document.querySelector('#count').textContent=`${selected.length} 張素材`;for(const a of selected){const card=document.createElement('article');card.className='card';const stage=document.createElement('div');stage.className='stage';for(const size of ['large','small']){const img=document.createElement('img');img.className=size;img.src='./'+a.file;img.alt=a.subject;img.loading='lazy';img.onerror=()=>card.classList.add('missing');stage.append(img)}const link=document.createElement('a');link.href='./'+a.file;const label=document.createElement('code');label.textContent=a.file;link.append(label);card.append(stage,link);grid.append(card)}}
+group.onchange=render;document.querySelector('#dark').onchange=e=>document.body.classList.toggle('dark',e.target.checked);render();
+</script>
+</html>
