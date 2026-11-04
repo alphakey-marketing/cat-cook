@@ -2,7 +2,7 @@ import { artURL } from '../art.js';
 // 3D 世界：廚房 + 餐廳，鏡頭，粒子
 import * as THREE from 'three';
 import { Cat } from './cat.js';
-import { makeBoard, makePot, makePan, makeDish, makeIngredient, makeProp, makeCustomer, makeDeco, circleTexture, mat } from './models.js';
+import { makeBoard, makePot, makePan, makeDish, makeIngredient, makeProp, makeCustomer, makeDeco, makeMicrowave, styleDish, circleTexture, mat } from './models.js';
 
 const REST_X = 40;
 
@@ -141,7 +141,8 @@ export class World {
     const board = makeBoard(); board.position.set(0.05, this.counterY, 0.05); k.add(board);
     const pot = makePot(); pot.position.set(-1.1, this.counterY + 0.05, -0.1); k.add(pot);
     const pan = makePan(); pan.position.set(-1.1, this.counterY + 0.05, -0.1); pan.visible = false; k.add(pan);
-    this.stations = { board, pot, pan };
+    const microwave = makeMicrowave(); microwave.position.set(-1.1, this.counterY + 0.05, -0.1); microwave.visible = false; k.add(microwave);
+    this.stations = { board, pot, pan, microwave };
     this.workItems = new THREE.Group(); k.add(this.workItems);
 
     // 上菜位
@@ -285,8 +286,9 @@ export class World {
 
   // ===== 工作台 =====
   useStation(name) {
-    this.stations.pot.visible = name !== 'pan';
+    this.stations.pot.visible = name !== 'pan' && name !== 'microwave';
     this.stations.pan.visible = name === 'pan';
+    this.stations.microwave.visible = name === 'microwave';
     this.station = name;
   }
   clearWork() { this.workItems.clear(); this.stations.pot.userData.liquid.visible = false; this.stations.pan.userData.liquid.visible = false; this.flame.visible = false; this.steamOn = null; }
@@ -318,6 +320,8 @@ export class World {
     this.workItems.add(p);
   }
   heat(on) { this.flame.visible = on; if (on) this.steamOn = this.stations[this.station === 'pan' ? 'pan' : 'pot']; }
+  microwaveLight(on) { this.stations.microwave.userData.window.material.emissive.setHex(on ? 0x6d4425 : 0x000000); }
+  styleDish(plate, garnish) { styleDish(this.dish, plate, garnish); }
 
   // 成品出現
   showDish(id) {

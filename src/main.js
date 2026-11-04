@@ -8,6 +8,7 @@ import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './s
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
 import { CHAPTERS, REGULARS } from './data/chapters.js';
+import { dressDarkDish, darkReport, revealDarkDish } from './dark.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK, RESTAURANT } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
@@ -165,9 +166,10 @@ function hub() {
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
-    }, `${c.icon} ${c.id === 'home' ? '食堂' : c.id === 'izakaya' ? '居酒屋' : '喫茶店'}`))),
+    }, `${c.icon} ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', dark: '暗黑' }[c.id]}`))),
     h('div', { class: 'panel-title' }, chapter.name),
     h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
+    chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,
     spv ? h('div', { class: 'special' }, '🌟 今日特價：',h('span', { class: 'jp-inline', html: toHTML(spv.jp) }), ' 金幣 x2') : null,
     h('div', { class: 'hub-btns' },
       h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); shift({}); } }, '🏮 開舖'),
@@ -337,6 +339,11 @@ async function serveCustomer({ index, tutorial, forceDish }) {
 
   // 煮
   const score = await cook(rec);
+  let darkResult = null;
+  if (rec.chapter === 'dark') {
+    world.setView('serve');
+    darkResult = darkReport(rec, score, await dressDarkDish(rec, world));
+  }
   if (preference === 'iced') world.dish?.add(makeIce());
   if (servedRegular) s.regularVisits[servedRegular] = (s.regularVisits[servedRegular] || 0) + 1;
   const stars = score >= 0.9 ? 3 : score >= 0.65 ? 2 : 1;
@@ -367,6 +374,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   addXP(xp);
   renderHUD();
   await wait(1600);
+  if (darkResult) { clearBubble(); await revealDarkDish(rec, darkResult); }
   world.removeDish();
 
   // 閒聊（SRS 溫習）
@@ -390,11 +398,11 @@ async function cook(rec) {
   const scores = [];
   for (const step of rec.steps) {
     const sc = await MINIGAMES[step.type](step, world);
-    scores.push(sc);
+    scores.push({ score: sc, weight: step.weight || 1 });
     if (step.verb) { srsSeen(step.verb); srsAnswer(step.verb, sc >= 0.7); }
   }
   hideHint();
-  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const avg = scores.reduce((sum, item) => sum + item.score * item.weight, 0) / scores.reduce((sum, item) => sum + item.weight, 0);
   world.showDish(rec.dish);
   world.catFace('front');
   world.cat.happy();

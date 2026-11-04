@@ -3,6 +3,7 @@
 // step.type: pick 揀材料 / timing 撳準時 / stir 畫圈攪 / mash 狂撳 / hold 長按控火
 
 import { CHAPTER_RECIPES } from './chapters.js';
+import { DARK_RECIPES } from './dark.js';
 export const RECIPES = [
   {
     id: 'onigiri',
@@ -141,7 +142,7 @@ export const RECIPES = [
   },
 ];
 
-RECIPES.push(...CHAPTER_RECIPES);
+RECIPES.push(...CHAPTER_RECIPES, ...DARK_RECIPES);
 
 // 圖鑑用：未做嘅菜（剪影）
 export const COMING_SOON = [

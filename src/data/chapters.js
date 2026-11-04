@@ -3,6 +3,7 @@ export const CHAPTERS = [
   { id: 'home', name: '小黑食堂', jp: '食堂{しょくどう}', icon: '🏠', intro: '由飯糰開始，練好基本功。' },
   { id: 'izakaya', name: '居酒屋・夜間營業', jp: '居酒屋{いざかや}', icon: '🏮', intro: '六款新料理，練習加單同沽清應對。' },
   { id: 'cafe', name: '喫茶店・午後小休', jp: '喫茶店{きっさてん}', icon: '☕', intro: '六款餐飲，記住熟客嘅冷熱同甜度喜好。' },
+  { id: 'dark', name: '暗黑食堂・主廚，叮好喇！', jp: '裏{うら}メニュー', icon: '🌙', intro: '七款捷徑料理，擺盤、改名，再揭開後廚秘密。' },
 ];
 
 // [id, Japanese, Cantonese, emoji, model shape, model colour]

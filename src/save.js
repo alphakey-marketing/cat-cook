@@ -26,6 +26,7 @@ const DEFAULT = {
   chapter: 'home',
   chapterShifts: {},
   regularVisits: {},
+  darkSecrets: {},
   settings: { furigana: true, romaji: true, yue: true, subs: 'show', bgm: true, sfx: true, shake: true },
   jpLevel: null,
   achievements: [],

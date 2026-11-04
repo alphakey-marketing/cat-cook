@@ -68,7 +68,27 @@ function onigiriShape(withNori = true) {
 // 成品菜
 export function makeDish(id) {
   const g = new THREE.Group();
-  if (id === 'onigiri') {
+  if (['dark_milk_tea', 'dark_coffee', 'dark_soda'].includes(id)) {
+    const glass = cyl(0.11, 0.09, 0.3, mat(0xe2f6fa, { transparent: true, opacity: 0.35 })); glass.position.y = 0.17; g.add(glass);
+    const drink = cyl(0.098, 0.083, 0.25, id === 'dark_coffee' ? 0x9e7151 : id === 'dark_soda' ? 0xe9958f : 0xb4c18a); drink.position.y = 0.15; g.add(drink);
+    const ice = makeIce(); ice.position.y = 0.04; g.add(ice);
+    if (id === 'dark_soda') { const fruit = cyl(0.065, 0.065, 0.014, 0xf7da63); fruit.rotation.x = Math.PI / 2; fruit.position.set(0.09, 0.3, 0); g.add(fruit); }
+    if (id === 'dark_coffee') { const milk = cyl(0.096, 0.096, 0.045, 0xe4cfad); milk.position.y = 0.255; g.add(milk); }
+  } else if (id === 'dark_ding') {
+    g.add(plate(0.3));
+    const patty = sph(0.12, 0x875337, 1.1, 0.4, 0.8); patty.position.set(-0.1, 0.07, 0); g.add(patty);
+    const potato = sph(0.09, 0xf0dfa8, 1, 0.8, 1); potato.position.set(0.12, 0.08, 0.08); g.add(potato);
+    for (let i = 0; i < 3; i++) { const veg = sph(0.04, 0x70a54a); veg.position.set(i * 0.06, 0.06, -0.13); g.add(veg); }
+  } else if (id === 'dark_beef' || id === 'dark_soup') {
+    g.add(bowl(0.23, 0.15, id === 'dark_beef' ? 0x845039 : 0xf0e5cf, 0xf6eddf));
+    const soup = cyl(0.205, 0.205, 0.025, id === 'dark_beef' ? 0x824128 : 0xd5b25e); soup.position.y = 0.12; g.add(soup);
+    if (id === 'dark_beef') for (let i = 0; i < 5; i++) { const meat = box(0.065, 0.045, 0.06, 0x915432); meat.position.set(Math.sin(i * 2) * 0.12, 0.15, Math.cos(i * 2) * 0.12); g.add(meat); }
+    const herb = sph(0.04, 0x638e3d, 1.5, 0.2, 0.5); herb.position.set(0, 0.17, 0); g.add(herb);
+  } else if (id === 'dark_rice') {
+    g.add(plate(0.28));
+    const rice = sph(0.21, 0xe2b75e, 1, 0.6, 1); rice.position.y = 0.045; g.add(rice);
+    for (let i = 0; i < 12; i++) { const egg = box(0.035, 0.018, 0.025, i % 3 ? 0xf9d34c : 0x70a54a); egg.position.set(Math.sin(i * 2) * 0.15, 0.13, Math.cos(i * 2) * 0.12); g.add(egg); }
+  } else if (id === 'onigiri') {
     g.add(plate(0.24));
     const o = onigiriShape(); o.position.y = 0.02; g.add(o);
     const o2 = onigiriShape(); o2.position.set(0.1, 0.02, -0.06); o2.rotation.y = 0.5; o2.scale.setScalar(0.85); g.add(o2);
@@ -194,6 +214,26 @@ export function makeIce() {
     ice.position.set((i - 1) * 0.045, 0.244, (i % 2) * 0.04 - 0.02); g.add(ice);
   }
   return g;
+}
+
+export function makeMicrowave() {
+  const g = new THREE.Group();
+  const body = box(0.62, 0.35, 0.4, 0xd5d1cb); body.position.y = 0.175; g.add(body);
+  const window = box(0.42, 0.24, 0.012, mat(0x302c38, { emissive: 0x000000 })); window.position.set(-0.055, 0.18, 0.207); g.add(window);
+  const handle = box(0.025, 0.17, 0.03, 0x77717c); handle.position.set(0.13, 0.18, 0.225); g.add(handle);
+  for (let i = 0; i < 2; i++) { const dial = cyl(0.035, 0.035, 0.025, 0x685b70); dial.rotation.x = Math.PI / 2; dial.position.set(0.235, 0.12 + i * 0.13, 0.22); g.add(dial); }
+  g.userData.window = window;
+  return g;
+}
+
+export function styleDish(dish, plate, garnish) {
+  if (!dish) return;
+  if (plate !== 'plain') {
+    const saucer = cyl(plate === 'grand' ? 0.39 : 0.3, 0.28, 0.02, plate === 'grand' ? 0x34303e : 0xe8e4dc);
+    saucer.position.y = -0.025; dish.add(saucer);
+  }
+  const count = garnish === 'tower' ? 7 : garnish === 'accent' ? 1 : 0;
+  for (let i = 0; i < count; i++) { const leaf = sph(0.04, 0x60963c, 1.5, 0.25, 0.5); leaf.position.set(0.035 * Math.sin(i), 0.32 + i * 0.025, 0); leaf.rotation.y = i; dish.add(leaf); }
 }
 
 // 材料細模型（由 vocab.m 生成）

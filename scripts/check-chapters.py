@@ -16,7 +16,7 @@ with sync_playwright() as p:
       const {RECIPES}=await import('/src/data/recipes.js');
       const {VOCAB}=await import('/src/data/vocab.js');
       const {makeDish}=await import('/src/three/models.js');
-      if(RECIPES.length!==16) throw Error('Expected 4 original and 12 new recipes');
+      if(RECIPES.length!==23) throw Error('Expected 4 original, 12 cafe/izakaya and 7 dark recipes');
       for(const chapter of ['izakaya','cafe']) {
         const recipes=RECIPES.filter(r=>r.chapter===chapter);
         if(recipes.length!==6 || recipes.some(r=>r.id==='onigiri')) throw Error('Bad chapter menu');

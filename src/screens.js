@@ -3,6 +3,8 @@ import { art, vocabArt } from './art.js';
 import { h, modal, jpLine, applySettings, renderHUD, toast, closeModal } from './ui.js';
 import { RECIPES, COMING_SOON } from './data/recipes.js';
 import { CHAPTERS } from './data/chapters.js';
+import { DARK_RECIPES } from './data/dark.js';
+import { secretCard } from './dark.js';
 import { VOCAB, vocab } from './data/vocab.js';
 import { SHOP } from './data/shop.js';
 import { VOICES } from './data/voices.js';
@@ -43,7 +45,7 @@ export function recipeCard(r, { onStart = null } = {}) {
         h('span', { class: 'jp-inline', html: toHTML(v.jp) }),
         h('span', { class: 'amt' }, amt));
     })),
-    h('h3', {}, '做法（真係煮得㗎！）'),
+    h('h3', {}, r.chapter === 'dark' ? '真正捷徑（浮誇菜名唔代表實際工序）' : '做法（真係煮得㗎！）'),
     h('ol', { class: 'howto' }, r.howto.map((t) => h('li', {}, t))),
   );
   const footer = onStart ? h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); m.close(); } }, '🔥 開始煮！') : null;
@@ -55,7 +57,7 @@ export function recipeCard(r, { onStart = null } = {}) {
 export function openBook(tab = 'recipes') {
   const tabs = h('div', { class: 'tabs' });
   const content = h('div', { class: 'tab-content' });
-  const T = { recipes: '🍳 食譜', words: '📝 單詞', stats: '📊 紀錄' };
+  const T = { recipes: '🍳 食譜', words: '📝 單詞', secrets: '🌙 後廚', stats: '📊 紀錄' };
   const show = (t) => {
     tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
     content.innerHTML = '';
@@ -88,6 +90,15 @@ export function openBook(tab = 'recipes') {
           h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'jp-inline', html: toHTML(v.jp) }), h('span', { class: 'yue' }, v.yue), h('span', { class: 'lvl', title: '熟練度' }, lvl)));
       });
       content.append(h('div', { class: 'progress-line' }, `識咗 ${learnedCount()} 個 · 見過 ${seenCount()} 個　（🌱→🌸 越溫越熟）`), list);
+    } else if (t === 'secrets') {
+      const collected = DARK_RECIPES.filter(r => S().darkSecrets[r.id]);
+      content.append(h('p', { class: 'sub' }, `主廚秘密 ${collected.length} / ${DARK_RECIPES.length} · 完成出餐揭曉後收藏`));
+      const shortcuts = [...new Set(collected.map(r => r.shortcut))];
+      content.append(h('div', { class: 'dark-pantry' }, ...DARK_RECIPES.map(r => h('span', { class: shortcuts.includes(r.shortcut) ? 'unlocked' : '' }, shortcuts.includes(r.shortcut) ? r.shortcut : '🔒 未揭曉'))));
+      DARK_RECIPES.forEach(r => {
+        const report = S().darkSecrets[r.id];
+        content.append(report ? secretCard(r, report) : h('div', { class: 'dark-locked' }, `${r.number} · ${r.yue}　🔒`));
+      });
     } else {
       const s = S();
       const rows = [['🔥 連續日數', `${s.streak} 日`], ['📅 玩咗', `${s.daysPlayed} 日`], ['🐾 招呼客人', `${s.served} 位`], ['🏮 去餐廳', `${s.restaurantDone} 次`], ['📝 識咗單詞', `${learnedCount()} 個`], ['💕 小黑好感度', `${s.affection}`]];

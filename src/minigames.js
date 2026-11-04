@@ -259,4 +259,41 @@ export async function hold(step, world) {
   return score;
 }
 
-export const MINIGAMES = { pick, timing, mash, stir, hold };
+// A short game countdown, deliberately separate from real reheating instructions.
+export async function microwave(step, world) {
+  world.useStation('microwave');
+  const display = h('div', { class: 'micro-display', 'aria-live': 'polite' }, '00:03');
+  const start = h('button', { class: 'btn primary big dark-control' }, '放好食物，開始翻熱');
+  panel(header(step), h('div', { class: 'micro-panel' }, h('div', { class: 'micro-window' }, '▤', display), h('div', { class: 'sub' }, step.tip)), start);
+  await new Promise(resolve => start.addEventListener('click', resolve, { once: true }));
+  start.disabled = true;
+  for (let seconds = 3; seconds > 0; seconds--) {
+    display.textContent = `00:0${seconds}`;
+    world.microwaveLight(true);
+    await wait(650);
+  }
+  world.microwaveLight(false);
+  display.textContent = '叮！'; sfx('good');
+  await wait(300);
+  return 1;
+}
+
+export async function season(step) {
+  let level = 0;
+  const meter = h('div', { class: 'season-meter', 'aria-live': 'polite' });
+  const note = h('p', {}, '先試味，再決定要唔要補。');
+  const add = h('button', { class: 'btn dark-control', 'data-season': 'add' }, '加一格調味');
+  const taste = h('button', { class: 'btn dark-control', 'data-season': 'taste' }, '試味');
+  const serve = h('button', { class: 'btn primary big dark-control', 'data-season': 'serve' }, '確認出餐');
+  const draw = () => { meter.textContent = `${'●'.repeat(level)}${'○'.repeat(5 - level)}　${level} / 5`; add.disabled = level >= 5; };
+  draw();
+  add.addEventListener('click', () => { if (level < 5) { level++; draw(); note.textContent = '加咗調味，試一啖先。'; } });
+  taste.addEventListener('click', () => { note.textContent = level === 2 ? '啱啱好，仲食到蛋香同飯香！' : level < 2 ? '味道仲有啲淡。' : '調味過重，蓋過食材味喇。'; sfx('tap'); });
+  panel(header(step), meter, note, h('div', { class: 'dark-actions' }, add, taste), h('div', { class: 'sub' }, step.tip), serve);
+  await new Promise(resolve => serve.addEventListener('click', resolve, { once: true }));
+  const score = Math.max(0.1, 1 - Math.abs(level - 2) * 0.3);
+  sfx(score >= 0.9 ? 'perfect' : 'bad');
+  return score;
+}
+
+export const MINIGAMES = { pick, timing, mash, stir, hold, microwave, season };
