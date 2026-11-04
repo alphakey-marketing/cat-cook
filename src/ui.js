@@ -158,13 +158,14 @@ export function coinFly(n, from = { x: innerWidth / 2, y: innerHeight * 0.4 }) {
 }
 
 // ===== Modal =====
-export function modal(title, body, { onClose = null, wide = false } = {}) {
+export function modal(title, body, { onClose = null, wide = false, footer = null } = {}) {
   const m = $('#modal');
   m.innerHTML = '';
   const close = () => { m.classList.remove('show'); onClose?.(); };
   const card = h('div', { class: `card ${wide ? 'wide' : ''}` },
     h('div', { class: 'card-head' }, h('h2', { html: title }), h('button', { class: 'x', onclick: () => { sfx('tap'); close(); } }, '✕')),
-    h('div', { class: 'card-body' }, body));
+    h('div', { class: 'card-body' }, body),
+    footer ? h('div', { class: 'card-footer' }, footer) : null);
   decorateArt(card);
   m.append(card);
   m.classList.add('show');

@@ -45,8 +45,8 @@ export function recipeCard(r, { onStart = null } = {}) {
     h('h3', {}, '做法（真係煮得㗎！）'),
     h('ol', { class: 'howto' }, r.howto.map((t) => h('li', {}, t))),
   );
-  if (onStart) body.append(h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); m.close(); } }, '🔥 開始煮！'));
-  const m = modal('📖 食譜', body, { onClose: onStart, wide: true });
+  const footer = onStart ? h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); m.close(); } }, '🔥 開始煮！') : null;
+  const m = modal('📖 食譜', body, { onClose: onStart, wide: true, footer });
   return m;
 }
 

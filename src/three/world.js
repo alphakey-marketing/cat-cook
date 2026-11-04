@@ -102,11 +102,12 @@ export class World {
     wainscot.position.set(0, 0.5, -2.17); k.add(wainscot);
     // 窗
     const win = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.0), new THREE.MeshBasicMaterial({ map: this.skyTexture() }));
-    win.position.set(1.4, 2.4, -2.18); k.add(win);
+    // Keep the sky in front of the backing and behind the bars: coplanar faces flicker.
+    win.position.set(1.4, 2.4, -2.14); k.add(win);
     const frame = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 0.04), mat(0x6b4226));
-    frame.position.set(1.4, 2.4, -2.2); k.add(frame);
-    const bar1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.0, 0.06), mat(0x6b4226)); bar1.position.set(1.4, 2.4, -2.16); k.add(bar1);
-    const bar2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.04, 0.06), mat(0x6b4226)); bar2.position.set(1.4, 2.4, -2.16); k.add(bar2);
+    frame.position.set(1.4, 2.4, -2.17); k.add(frame);
+    const bar1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.0, 0.06), mat(0x6b4226)); bar1.position.set(1.4, 2.4, -2.10); k.add(bar1);
+    const bar2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.04, 0.06), mat(0x6b4226)); bar2.position.set(1.4, 2.4, -2.10); k.add(bar2);
     // 餐牌板
     this.menuBoard = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), new THREE.MeshBasicMaterial({ map: this.menuTexture([]) }));
     this.menuBoard.position.set(-1.3, 2.45, -2.17); k.add(this.menuBoard);
