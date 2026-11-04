@@ -23,7 +23,7 @@ const DEFAULT = {
   cooked: {},         // recipeId -> 次數
   srs: {},            // vocabId -> { box, due, seen, right, wrong }
   restaurantDone: 0,
-  settings: { furigana: true, romaji: true, yue: true, subs: 'show', bgm: true, sfx: true },
+  settings: { furigana: true, romaji: true, yue: true, subs: 'show', bgm: true, sfx: true, shake: true },
   jpLevel: null,
   achievements: [],
 };

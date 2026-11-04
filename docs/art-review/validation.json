@@ -1,0 +1,1894 @@
+{
+  "expected": 111,
+  "present": 111,
+  "errors": [],
+  "assets": [
+    {
+      "file": "ing_gohan.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        111,
+        922,
+        913
+      ]
+    },
+    {
+      "file": "ing_shio.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        152,
+        102,
+        872,
+        922
+      ]
+    },
+    {
+      "file": "ing_nori.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        201,
+        922,
+        823
+      ]
+    },
+    {
+      "file": "ing_umeboshi.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        179,
+        922,
+        844
+      ]
+    },
+    {
+      "file": "ing_sake_fish.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        242,
+        922,
+        782
+      ]
+    },
+    {
+      "file": "ing_mizu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        250,
+        102,
+        773,
+        922
+      ]
+    },
+    {
+      "file": "ing_dashi.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        177,
+        922,
+        847
+      ]
+    },
+    {
+      "file": "ing_tofu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        178,
+        922,
+        845
+      ]
+    },
+    {
+      "file": "ing_wakame.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        203,
+        922,
+        820
+      ]
+    },
+    {
+      "file": "ing_negi.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        164,
+        922,
+        860
+      ]
+    },
+    {
+      "file": "ing_miso.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        150,
+        102,
+        874,
+        922
+      ]
+    },
+    {
+      "file": "ing_toriniku.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        198,
+        922,
+        825
+      ]
+    },
+    {
+      "file": "ing_tamago.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        133,
+        922,
+        890
+      ]
+    },
+    {
+      "file": "ing_tamanegi.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        175,
+        102,
+        849,
+        922
+      ]
+    },
+    {
+      "file": "ing_shoyu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        239,
+        102,
+        784,
+        922
+      ]
+    },
+    {
+      "file": "ing_mirin.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        365,
+        102,
+        658,
+        922
+      ]
+    },
+    {
+      "file": "ing_satou.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        167,
+        102,
+        857,
+        922
+      ]
+    },
+    {
+      "file": "ing_men.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        167,
+        922,
+        856
+      ]
+    },
+    {
+      "file": "ing_chashu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        166,
+        922,
+        857
+      ]
+    },
+    {
+      "file": "ing_moyashi.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        163,
+        922,
+        860
+      ]
+    },
+    {
+      "file": "ing_ninniku.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        117,
+        922,
+        906
+      ]
+    },
+    {
+      "file": "ing_sake_drink.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        186,
+        102,
+        838,
+        922
+      ]
+    },
+    {
+      "file": "dish_onigiri.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        134,
+        922,
+        889
+      ]
+    },
+    {
+      "file": "dish_misoshiru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        168,
+        102,
+        856,
+        922
+      ]
+    },
+    {
+      "file": "dish_oyakodon.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        150,
+        102,
+        874,
+        922
+      ]
+    },
+    {
+      "file": "dish_ramen.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        112,
+        922,
+        911
+      ]
+    },
+    {
+      "file": "dish_ocha.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        247,
+        102,
+        776,
+        922
+      ]
+    },
+    {
+      "file": "dish_omizu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        167,
+        102,
+        856,
+        922
+      ]
+    },
+    {
+      "file": "dish_biiru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        158,
+        102,
+        866,
+        922
+      ]
+    },
+    {
+      "file": "dish_tempura.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        123,
+        922,
+        901
+      ]
+    },
+    {
+      "file": "dish_sushi.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        148,
+        922,
+        876
+      ]
+    },
+    {
+      "file": "dish_curry.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        126,
+        922,
+        897
+      ]
+    },
+    {
+      "file": "dish_gyoza.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        185,
+        922,
+        838
+      ]
+    },
+    {
+      "file": "dish_tamagoyaki.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        176,
+        922,
+        847
+      ]
+    },
+    {
+      "file": "verb_kiru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        169,
+        922,
+        855
+      ]
+    },
+    {
+      "file": "verb_mazeru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        164,
+        102,
+        859,
+        922
+      ]
+    },
+    {
+      "file": "verb_niru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        106,
+        102,
+        917,
+        922
+      ]
+    },
+    {
+      "file": "verb_nigiru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        226,
+        922,
+        797
+      ]
+    },
+    {
+      "file": "verb_tokasu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        161,
+        102,
+        862,
+        922
+      ]
+    },
+    {
+      "file": "verb_yuderu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        107,
+        922,
+        916
+      ]
+    },
+    {
+      "file": "verb_noseru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        137,
+        102,
+        887,
+        922
+      ]
+    },
+    {
+      "file": "num_hitotsu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        135,
+        922,
+        889
+      ]
+    },
+    {
+      "file": "num_futatsu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        236,
+        922,
+        788
+      ]
+    },
+    {
+      "file": "num_mittsu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        152,
+        922,
+        871
+      ]
+    },
+    {
+      "file": "num_hitori.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        261,
+        102,
+        763,
+        922
+      ]
+    },
+    {
+      "file": "num_futari.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        131,
+        922,
+        892
+      ]
+    },
+    {
+      "file": "num_sannin.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        191,
+        922,
+        833
+      ]
+    },
+    {
+      "file": "phrase_irasshaimase.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        193,
+        102,
+        831,
+        922
+      ]
+    },
+    {
+      "file": "phrase_arigatou.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        172,
+        102,
+        852,
+        922
+      ]
+    },
+    {
+      "file": "phrase_oishii.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        147,
+        102,
+        876,
+        922
+      ]
+    },
+    {
+      "file": "phrase_itadakimasu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        184,
+        102,
+        840,
+        922
+      ]
+    },
+    {
+      "file": "phrase_gochisousama.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        160,
+        102,
+        863,
+        922
+      ]
+    },
+    {
+      "file": "phrase_kudasai.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        154,
+        102,
+        869,
+        922
+      ]
+    },
+    {
+      "file": "phrase_onegaishimasu.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        178,
+        102,
+        845,
+        922
+      ]
+    },
+    {
+      "file": "phrase_okaikei.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        171,
+        102,
+        852,
+        922
+      ]
+    },
+    {
+      "file": "phrase_sumimasen.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        148,
+        102,
+        876,
+        922
+      ]
+    },
+    {
+      "file": "phrase_atsui.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        146,
+        102,
+        878,
+        922
+      ]
+    },
+    {
+      "file": "phrase_oomori.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        172,
+        102,
+        852,
+        922
+      ]
+    },
+    {
+      "file": "phrase_matta.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        104,
+        102,
+        919,
+        922
+      ]
+    },
+    {
+      "file": "phrase_oishikatta.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        156,
+        102,
+        867,
+        922
+      ]
+    },
+    {
+      "file": "phrase_hai.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        125,
+        102,
+        899,
+        922
+      ]
+    },
+    {
+      "file": "phrase_iie.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        168,
+        102,
+        855,
+        922
+      ]
+    },
+    {
+      "file": "shop_hat_chef.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        165,
+        922,
+        859
+      ]
+    },
+    {
+      "file": "shop_hat_hachimaki.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        175,
+        922,
+        848
+      ]
+    },
+    {
+      "file": "shop_hat_straw.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        211,
+        922,
+        812
+      ]
+    },
+    {
+      "file": "shop_neck_bell.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        121,
+        922,
+        902
+      ]
+    },
+    {
+      "file": "shop_neck_scarf.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        119,
+        102,
+        904,
+        922
+      ]
+    },
+    {
+      "file": "shop_deco_lantern.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        178,
+        102,
+        845,
+        922
+      ]
+    },
+    {
+      "file": "shop_deco_noren.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        281,
+        922,
+        742
+      ]
+    },
+    {
+      "file": "shop_deco_bonsai.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        126,
+        102,
+        897,
+        922
+      ]
+    },
+    {
+      "file": "shop_deco_maneki.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        178,
+        102,
+        845,
+        922
+      ]
+    },
+    {
+      "file": "ui_coin.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        110,
+        922,
+        914
+      ]
+    },
+    {
+      "file": "ui_streak.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        137,
+        102,
+        886,
+        922
+      ]
+    },
+    {
+      "file": "ui_book.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        106,
+        922,
+        918
+      ]
+    },
+    {
+      "file": "ui_shop.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        131,
+        102,
+        892,
+        922
+      ]
+    },
+    {
+      "file": "ui_settings.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        105,
+        102,
+        918,
+        922
+      ]
+    },
+    {
+      "file": "ui_speaker.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        197,
+        922,
+        826
+      ]
+    },
+    {
+      "file": "ui_close.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        109,
+        922,
+        915
+      ]
+    },
+    {
+      "file": "ui_heart.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        166,
+        922,
+        857
+      ]
+    },
+    {
+      "file": "ui_paw.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        162,
+        922,
+        861
+      ]
+    },
+    {
+      "file": "ui_lock.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        164,
+        102,
+        859,
+        922
+      ]
+    },
+    {
+      "file": "ui_star_on.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        124,
+        922,
+        899
+      ]
+    },
+    {
+      "file": "ui_star_off.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        130,
+        922,
+        893
+      ]
+    },
+    {
+      "file": "ui_gift.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        147,
+        922,
+        876
+      ]
+    },
+    {
+      "file": "ui_celebrate.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        144,
+        102,
+        880,
+        922
+      ]
+    },
+    {
+      "file": "ui_unlock.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        150,
+        102,
+        874,
+        922
+      ]
+    },
+    {
+      "file": "ui_listen.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        112,
+        922,
+        911
+      ]
+    },
+    {
+      "file": "ui_serves.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        141,
+        922,
+        882
+      ]
+    },
+    {
+      "file": "ui_timer.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        122,
+        922,
+        902
+      ]
+    },
+    {
+      "file": "ui_target.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        175,
+        102,
+        849,
+        922
+      ]
+    },
+    {
+      "file": "ui_xp.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        124,
+        102,
+        899,
+        922
+      ]
+    },
+    {
+      "file": "ui_rare.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        110,
+        102,
+        913,
+        922
+      ]
+    },
+    {
+      "file": "ui_mic.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        256,
+        102,
+        768,
+        922
+      ]
+    },
+    {
+      "file": "ui_calendar.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        102,
+        922,
+        922
+      ]
+    },
+    {
+      "file": "ui_stats.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        113,
+        102,
+        910,
+        922
+      ]
+    },
+    {
+      "file": "ui_yen.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        185,
+        922,
+        839
+      ]
+    },
+    {
+      "file": "ui_receipt.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        102,
+        922,
+        921
+      ]
+    },
+    {
+      "file": "ui_grow_1.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        128,
+        102,
+        895,
+        922
+      ]
+    },
+    {
+      "file": "ui_grow_2.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        206,
+        102,
+        817,
+        922
+      ]
+    },
+    {
+      "file": "ui_grow_3.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        159,
+        102,
+        864,
+        922
+      ]
+    },
+    {
+      "file": "ui_grow_4.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        140,
+        922,
+        883
+      ]
+    },
+    {
+      "file": "ui_stamp_hanamaru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        106,
+        922,
+        917
+      ]
+    },
+    {
+      "file": "ui_stamp_maru.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        253
+      ],
+      "subject_bounds": [
+        102,
+        111,
+        922,
+        911
+      ]
+    },
+    {
+      "file": "ui_stamp_sankaku.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        127,
+        922,
+        897
+      ]
+    },
+    {
+      "file": "ui_medal.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        245,
+        102,
+        779,
+        922
+      ]
+    },
+    {
+      "file": "ui_trophy.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        254
+      ],
+      "subject_bounds": [
+        102,
+        147,
+        922,
+        877
+      ]
+    },
+    {
+      "file": "ui_crown.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        102,
+        164,
+        922,
+        860
+      ]
+    },
+    {
+      "file": "logo_cat.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        175,
+        102,
+        849,
+        922
+      ]
+    },
+    {
+      "file": "app_icon.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        9,
+        12,
+        1012,
+        1014
+      ]
+    },
+    {
+      "file": "title_bg.png",
+      "size": [
+        1080,
+        1920
+      ],
+      "alpha_range": [
+        255,
+        255
+      ],
+      "subject_bounds": [
+        0,
+        0,
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "ui_open_shop.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        178,
+        102,
+        845,
+        922
+      ]
+    }
+  ]
+}

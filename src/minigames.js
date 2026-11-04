@@ -1,3 +1,4 @@
+import { art, vocabArt } from './art.js';
 // 煮食小遊戲。全部返回 Promise<score 0..1>
 import { h, panel, jpLine, pop, shuffle, wait, hint } from './ui.js';
 import { say, sfx } from './audio.js';
@@ -8,7 +9,7 @@ function header(step) {
   const verb = step.verb ? vocab(step.verb) : null;
   return h('div', { class: 'mg-head' },
     jpLine(step.jp, { yue: step.yue, voice: 'cat' }),
-    verb ? h('div', { class: 'verb-chip' }, '新字 ', h('span', { class: 'jp-inline', html: verb.jp.replace(/([一-鿿]+)\{([^}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>') }), ` = ${verb.yue}`) : null,
+    verb ? h('div', { class: 'verb-chip' }, vocabArt(verb), ' 新字 ', h('span', { class: 'jp-inline', html: verb.jp.replace(/([一-鿿]+)\{([^}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>') }), ` = ${verb.yue}`) : null,
   );
 }
 
@@ -21,7 +22,7 @@ export async function pick(step, world) {
   const cards = {};
   items.forEach((id) => {
     const v = vocab(id);
-    const c = h('button', { class: 'ing' }, h('span', { class: 'emo' }, v.emoji), h('span', { class: 'ing-yue' }, v.yue.replace(/（.*?）/g, '')));
+    const c = h('button', { class: 'ing' }, h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'ing-yue' }, v.yue.replace(/（.*?）/g, '')));
     c.dataset.id = id;
     grid.append(c);
     cards[id] = c;
@@ -122,7 +123,7 @@ export async function timing(step, world) {
 export async function mash(step, world) {
   const need = step.taps || 10, time = step.time || 5;
   let n = 0;
-  const ring = h('div', { class: 'ring' }, h('div', { class: 'ring-in' }, '✊'));
+  const ring = h('div', { class: 'ring' }, h('div', { class: 'ring-in' }, art('verb_nigiru')));
   const timer = h('div', { class: 'mg-timer' }, h('i'));
   panel(header(step), timer, ring);
   say(step.jp, 'cat');

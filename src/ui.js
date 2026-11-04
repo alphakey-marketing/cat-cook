@@ -1,3 +1,4 @@
+import { decorateArt } from './art.js';
 // DOM 介面工具
 import { toHTML, toRomaji } from './jp.js';
 import { say, sfx } from './audio.js';
@@ -14,6 +15,7 @@ export function h(tag, attrs = {}, ...kids) {
     else el.setAttribute(k, v);
   }
   for (const c of kids.flat()) if (c != null) el.append(c.nodeType ? c : document.createTextNode(c));
+  decorateArt(el);
   return el;
 }
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -72,7 +74,7 @@ export function choose(options, { title = null, cols = 1, extra = null } = {}) {
     let done = false; // 揀咗就鎖，唔俾撳多次
     options.forEach((o) => {
       const b = h('div', { class: `choice ${o.cls || ''}`, role: 'button', tabindex: '0' });
-      if (o.el) b.append(o.el); else b.innerHTML = o.label;
+      if (o.el) b.append(o.el); else { b.innerHTML = o.label; decorateArt(b); }
       b.addEventListener('click', () => { if (done) return; done = true; sfx('tap'); res({ value: o.value, button: b, grid }); });
       grid.append(b);
     });
@@ -97,6 +99,7 @@ export function bubble(world, who, jp, yue, voice, { hidden = false, play = true
   const wrap = h('div', { class: 'bubble-anchor', 'data-who': who }, inner);
   $('#bubbles').append(wrap);
   bubbles.add(wrap);
+  wrap._world = world;
   const get = who === 'cat' ? () => world.cat.head : () => world.customer?.userData.head;
   world.anchor(wrap, get, who === 'cat' ? 0.75 : 0.5);
   requestAnimationFrame(() => inner.classList.add('in'));
@@ -107,7 +110,7 @@ export function bubble(world, who, jp, yue, voice, { hidden = false, play = true
   return Promise.resolve();
 }
 export function clearBubble(who) {
-  for (const b of [...bubbles]) if (!who || b.dataset.who === who) { b.remove(); bubbles.delete(b); }
+  for (const b of [...bubbles]) if (!who || b.dataset.who === who) { b._world.unanchor(b); b.remove(); bubbles.delete(b); }
 }
 
 // 小黑廣東話提示（唔讀出聲）
@@ -162,6 +165,7 @@ export function modal(title, body, { onClose = null, wide = false } = {}) {
   const card = h('div', { class: `card ${wide ? 'wide' : ''}` },
     h('div', { class: 'card-head' }, h('h2', { html: title }), h('button', { class: 'x', onclick: () => { sfx('tap'); close(); } }, '✕')),
     h('div', { class: 'card-body' }, body));
+  decorateArt(card);
   m.append(card);
   m.classList.add('show');
   m.onclick = (e) => { if (e.target === m) close(); };
@@ -172,7 +176,7 @@ export function closeModal() { $('#modal').classList.remove('show'); }
 export function fade(fn) {
   const f = $('#fade');
   f.classList.add('on');
-  return wait(400).then(async () => { await fn(); await wait(80); f.classList.remove('on'); await wait(400); });
+  return wait(520).then(async () => { await fn(); await wait(80); f.classList.remove('on'); await wait(520); });
 }
 
 export function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }

@@ -1,0 +1,1008 @@
+{
+  "style": "Use case: stylized-concept. Production PNG game icon for a cozy Japanese cooking game. Exactly 1024x1024 canvas with genuine transparent alpha background. Hand-drawn Japanese picture-book illustration, flat gouache and colored-pencil texture with light paper grain within the object only, soft wobbly dark-brown outline #2b211b about 3-4% object width. One flat base color plus one darker shadow shape and one small cream highlight. Warm muted palette cream #fff8ec, paper #f6e9d2, red #d7263d, gold #f5b82e, green #3fa66b. Chunky rounded slightly squashed cute shapes. Slight three-quarter top view. Single centered isolated subject fills 80% canvas, even padding. Readable at 48px. No text, letters or numbers, no gradient, gloss, glow, 3D, emoji styling, cast/drop shadows, background tiles or circles. Food has no face. ",
+  "character": "Kuro is the SAME round chubby black cat #1c1c24, never pure black, big round gold-yellow eyes, small pink nose, white chef apron, calm kind a bit sleepy, round bean body stubby limbs. For phrases use upper body, optional chef hat. ",
+  "generator": "Built-in image_gen tool",
+  "source": "docs/ART_LIST.md, recovered from origin/claude/pensive-pasteur-0yj0qw",
+  "assets": [
+    {
+      "id": "ing_gohan",
+      "file": "ing_gohan.png",
+      "group": "ingredients",
+      "subject": "A small red-brown rice bowl piled with fluffy white rice, a few visible grains.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_shio",
+      "file": "ing_shio.png",
+      "group": "ingredients",
+      "subject": "Small round ceramic salt pot with a tiny wooden spoon and a little mound of white salt.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_nori",
+      "file": "ing_nori.png",
+      "group": "ingredients",
+      "subject": "One dark-green rectangular nori sheet, slightly curled corner, subtle texture.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_umeboshi",
+      "file": "ing_umeboshi.png",
+      "group": "ingredients",
+      "subject": "One wrinkly red-pink umeboshi pickled plum, small shiso leaf underneath.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_sake_fish",
+      "file": "ing_sake_fish.png",
+      "group": "ingredients",
+      "subject": "A thick salmon fillet, orange with pale fat stripes, small strip of silver skin.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_mizu",
+      "file": "ing_mizu.png",
+      "group": "ingredients",
+      "subject": "A clear glass of water with a small water drop above it, light blue tint.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_dashi",
+      "file": "ing_dashi.png",
+      "group": "ingredients",
+      "subject": "A piece of kombu kelp and a small pile of bonito flakes next to a little bowl of golden broth.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_tofu",
+      "file": "ing_tofu.png",
+      "group": "ingredients",
+      "subject": "One soft white tofu block on a small leaf or plate, gentle edges.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_wakame",
+      "file": "ing_wakame.png",
+      "group": "ingredients",
+      "subject": "A small tangle of dark-green wakame seaweed. Use flat cream highlights rather than glossy shading.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_negi",
+      "file": "ing_negi.png",
+      "group": "ingredients",
+      "subject": "Two long green onion stalks, white bottoms and green tops, a few sliced rings in front.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_miso",
+      "file": "ing_miso.png",
+      "group": "ingredients",
+      "subject": "Small wooden tub of light brown miso paste with a wooden spoon scoop.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_toriniku",
+      "file": "ing_toriniku.png",
+      "group": "ingredients",
+      "subject": "A raw chicken thigh piece, pale pink with skin, not a cartoon drumstick.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_tamago",
+      "file": "ing_tamago.png",
+      "group": "ingredients",
+      "subject": "One brown-cream egg and one cracked egg showing its golden yolk.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_tamanegi",
+      "file": "ing_tamanegi.png",
+      "group": "ingredients",
+      "subject": "One round yellow-brown onion with dry papery skin and small root tuft.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_shoyu",
+      "file": "ing_shoyu.png",
+      "group": "ingredients",
+      "subject": "Classic Japanese soy sauce dispenser bottle with red cap, dark sauce inside.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_mirin",
+      "file": "ing_mirin.png",
+      "group": "ingredients",
+      "subject": "Tall slim bottle with pale golden liquid and plain label, no text.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_satou",
+      "file": "ing_satou.png",
+      "group": "ingredients",
+      "subject": "Small jar of white sugar cubes with a few cubes beside it.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_men",
+      "file": "ing_men.png",
+      "group": "ingredients",
+      "subject": "A curled bundle of fresh wavy ramen noodles, pale yellow.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_chashu",
+      "file": "ing_chashu.png",
+      "group": "ingredients",
+      "subject": "Two round slices of rolled chashu pork, swirl visible, browned edge.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_moyashi",
+      "file": "ing_moyashi.png",
+      "group": "ingredients",
+      "subject": "A small bunch of white bean sprouts with yellow tips.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_ninniku",
+      "file": "ing_ninniku.png",
+      "group": "ingredients",
+      "subject": "One garlic bulb plus one peeled clove.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ing_sake_drink",
+      "file": "ing_sake_drink.png",
+      "group": "ingredients",
+      "subject": "Small white ceramic tokkuri sake bottle with a tiny ochoko cup.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_onigiri",
+      "file": "dish_onigiri.png",
+      "group": "dishes",
+      "subject": "Triangle white rice ball with a dark-green nori band at the bottom, on a small bamboo leaf.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_misoshiru",
+      "file": "dish_misoshiru.png",
+      "group": "dishes",
+      "subject": "Red-black lacquer bowl of miso soup with tofu cubes, wakame and green onion, light steam.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_oyakodon",
+      "file": "dish_oyakodon.png",
+      "group": "dishes",
+      "subject": "Donburi bowl with chicken and soft runny egg over rice, green onion on top, steam.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_ramen",
+      "file": "dish_ramen.png",
+      "group": "dishes",
+      "subject": "Ramen bowl with chashu, half soft-boiled egg, nori, green onion, chopsticks resting on top.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_ocha",
+      "file": "dish_ocha.png",
+      "group": "dishes",
+      "subject": "Japanese teacup yunomi with green tea and a little steam.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_omizu",
+      "file": "dish_omizu.png",
+      "group": "dishes",
+      "subject": "Glass of ice water with exactly two ice cubes.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_biiru",
+      "file": "dish_biiru.png",
+      "group": "dishes",
+      "subject": "Beer mug with foam.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_tempura",
+      "file": "dish_tempura.png",
+      "group": "dishes",
+      "subject": "Shrimp tempura, in full warm color.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_sushi",
+      "file": "dish_sushi.png",
+      "group": "dishes",
+      "subject": "A pair of nigiri sushi, in full color.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_curry",
+      "file": "dish_curry.png",
+      "group": "dishes",
+      "subject": "Japanese curry rice, in full color.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_gyoza",
+      "file": "dish_gyoza.png",
+      "group": "dishes",
+      "subject": "Pan-fried gyoza, in full color.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "dish_tamagoyaki",
+      "file": "dish_tamagoyaki.png",
+      "group": "dishes",
+      "subject": "Rolled Japanese omelette slices, in full color.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "verb_kiru",
+      "file": "verb_kiru.png",
+      "group": "verbs",
+      "subject": "Kitchen knife over a wooden board, with a little motion line. Use a black cat paw if a hand is needed.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "verb_mazeru",
+      "file": "verb_mazeru.png",
+      "group": "verbs",
+      "subject": "Wooden spoon stirring in a bowl, curved swirl motion line. Use a black cat paw if a hand is needed.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "verb_niru",
+      "file": "verb_niru.png",
+      "group": "verbs",
+      "subject": "Small pot with lid slightly lifted, gentle bubbles and steam.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "verb_nigiru",
+      "file": "verb_nigiru.png",
+      "group": "verbs",
+      "subject": "Two black cat paws shaping a triangle rice ball.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "verb_tokasu",
+      "file": "verb_tokasu.png",
+      "group": "verbs",
+      "subject": "Ladle with miso melting into soup, small swirl.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "verb_yuderu",
+      "file": "verb_yuderu.png",
+      "group": "verbs",
+      "subject": "Big pot with rolling boil, noodles in strainer basket.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "verb_noseru",
+      "file": "verb_noseru.png",
+      "group": "verbs",
+      "subject": "Chopsticks placing a slice of chashu onto a bowl, small downward arrow showing motion. Use a black cat paw if a hand is needed.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "num_hitotsu",
+      "file": "num_hitotsu.png",
+      "group": "numbers",
+      "subject": "Exactly ONE onigiri rice ball.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "num_futatsu",
+      "file": "num_futatsu.png",
+      "group": "numbers",
+      "subject": "Exactly TWO onigiri rice balls side by side.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "num_mittsu",
+      "file": "num_mittsu.png",
+      "group": "numbers",
+      "subject": "Exactly THREE onigiri rice balls in a little pyramid.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "num_hitori",
+      "file": "num_hitori.png",
+      "group": "numbers",
+      "subject": "Exactly ONE small cute animal customer, a bunny standing.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "num_futari",
+      "file": "num_futari.png",
+      "group": "numbers",
+      "subject": "Exactly TWO small cute animal customers standing, a bunny and a bear.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "num_sannin",
+      "file": "num_sannin.png",
+      "group": "numbers",
+      "subject": "Exactly THREE small cute animal customers standing, a bunny and a bear and a fox.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_irasshaimase",
+      "file": "phrase_irasshaimase.png",
+      "group": "phrases",
+      "subject": "Kuro bowing politely with a big welcoming smile.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_arigatou",
+      "file": "phrase_arigatou.png",
+      "group": "phrases",
+      "subject": "Kuro making a small bow, eyes closed happily.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_oishii",
+      "file": "phrase_oishii.png",
+      "group": "phrases",
+      "subject": "Kuro holding chopsticks, cheeks puffed, small sparkles.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_itadakimasu",
+      "file": "phrase_itadakimasu.png",
+      "group": "phrases",
+      "subject": "Kuro with paws pressed together in front of a bowl.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_gochisousama",
+      "file": "phrase_gochisousama.png",
+      "group": "phrases",
+      "subject": "Kuro with paws together, empty bowl, satisfied smile.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_kudasai",
+      "file": "phrase_kudasai.png",
+      "group": "phrases",
+      "subject": "Kuro pointing a paw at a menu, no letters or numbers on menu.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_onegaishimasu",
+      "file": "phrase_onegaishimasu.png",
+      "group": "phrases",
+      "subject": "Kuro making a deep bow, paws together.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_okaikei",
+      "file": "phrase_okaikei.png",
+      "group": "phrases",
+      "subject": "Kuro holding a small paper receipt, only abstract strokes, no text or numbers.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_sumimasen",
+      "file": "phrase_sumimasen.png",
+      "group": "phrases",
+      "subject": "Kuro raising one paw to call a waiter.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_atsui",
+      "file": "phrase_atsui.png",
+      "group": "phrases",
+      "subject": "Kuro with tongue out, fanning mouth, steam from bowl.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_oomori",
+      "file": "phrase_oomori.png",
+      "group": "phrases",
+      "subject": "Kuro looking up at a huge overflowing bowl of rice.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_matta",
+      "file": "phrase_matta.png",
+      "group": "phrases",
+      "subject": "Kuro waving goodbye at a small shop door with noren curtain, no text.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_oishikatta",
+      "file": "phrase_oishikatta.png",
+      "group": "phrases",
+      "subject": "Kuro patting full round tummy, blissful.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_hai",
+      "file": "phrase_hai.png",
+      "group": "phrases",
+      "subject": "Kuro holding up a sign with a red circle symbol, the circle symbol is allowed but no text.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "phrase_iie",
+      "file": "phrase_iie.png",
+      "group": "phrases",
+      "subject": "Kuro shaking head, paws crossed in an X.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_hat_chef",
+      "file": "shop_hat_chef.png",
+      "group": "shop",
+      "subject": "Puffy white chef hat, item on its own, not worn.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_hat_hachimaki",
+      "file": "shop_hat_hachimaki.png",
+      "group": "shop",
+      "subject": "Twisted white headband with a small red circle, knot at back, item on its own, not worn.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_hat_straw",
+      "file": "shop_hat_straw.png",
+      "group": "shop",
+      "subject": "Straw hat with a red ribbon, item on its own, not worn.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_neck_bell",
+      "file": "shop_neck_bell.png",
+      "group": "shop",
+      "subject": "Gold round cat bell on a red cord, item on its own, not worn.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_neck_scarf",
+      "file": "shop_neck_scarf.png",
+      "group": "shop",
+      "subject": "Small knotted scarf, red with a simple Japanese seigaiha wave pattern, item on its own, not worn.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_deco_lantern",
+      "file": "shop_deco_lantern.png",
+      "group": "shop",
+      "subject": "Red paper chochin lantern, warm flat-color illuminated appearance without glow or gradients, no text, item on its own.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_deco_noren",
+      "file": "shop_deco_noren.png",
+      "group": "shop",
+      "subject": "Indigo noren curtain with exactly three panels and a simple white cat-paw mark, no text, item on its own.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_deco_bonsai",
+      "file": "shop_deco_bonsai.png",
+      "group": "shop",
+      "subject": "Small pine bonsai in a shallow brown pot, item on its own.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "shop_deco_maneki",
+      "file": "shop_deco_maneki.png",
+      "group": "shop",
+      "subject": "White maneki-neko with a raised paw, red collar, gold bell, no lettering.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_coin",
+      "file": "ui_coin.png",
+      "group": "ui",
+      "subject": "Gold coin with a small cat-paw stamp in the middle.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_streak",
+      "file": "ui_streak.png",
+      "group": "ui",
+      "subject": "Small warm flame, orange and red.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_book",
+      "file": "ui_book.png",
+      "group": "ui",
+      "subject": "Closed recipe book, red cover, ribbon bookmark, no text.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_shop",
+      "file": "ui_shop.png",
+      "group": "ui",
+      "subject": "Small paper shopping bag with cat-ear handles.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_settings",
+      "file": "ui_settings.png",
+      "group": "ui",
+      "subject": "Simple cat-paw-shaped gear.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_speaker",
+      "file": "ui_speaker.png",
+      "group": "ui",
+      "subject": "Small speaker with sound waves.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_close",
+      "file": "ui_close.png",
+      "group": "ui",
+      "subject": "Hand-drawn dark-brown brush X mark.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_heart",
+      "file": "ui_heart.png",
+      "group": "ui",
+      "subject": "Chubby pink heart.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_paw",
+      "file": "ui_paw.png",
+      "group": "ui",
+      "subject": "Black cat paw print.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_lock",
+      "file": "ui_lock.png",
+      "group": "ui",
+      "subject": "Small closed padlock.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_star_on",
+      "file": "ui_star_on.png",
+      "group": "ui",
+      "subject": "Simple gold star with five points.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_star_off",
+      "file": "ui_star_off.png",
+      "group": "ui",
+      "subject": "Same simple five-point star as an empty dark-brown outline with transparent interior.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_gift",
+      "file": "ui_gift.png",
+      "group": "ui",
+      "subject": "Gift box wrapped in Japanese furoshiki cloth.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_celebrate",
+      "file": "ui_celebrate.png",
+      "group": "ui",
+      "subject": "Party popper with a few chunky confetti shapes.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_unlock",
+      "file": "ui_unlock.png",
+      "group": "ui",
+      "subject": "Open padlock with small sparkles.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_listen",
+      "file": "ui_listen.png",
+      "group": "ui",
+      "subject": "Headphones with cat ears.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_serves",
+      "file": "ui_serves.png",
+      "group": "ui",
+      "subject": "Plate with chopsticks.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_timer",
+      "file": "ui_timer.png",
+      "group": "ui",
+      "subject": "Small kitchen timer with simple dial ticks but no numbers or lettering.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_target",
+      "file": "ui_target.png",
+      "group": "ui",
+      "subject": "Paw-print target.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_xp",
+      "file": "ui_xp.png",
+      "group": "ui",
+      "subject": "Small sparkle cluster.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_rare",
+      "file": "ui_rare.png",
+      "group": "ui",
+      "subject": "One big gold sparkle.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_mic",
+      "file": "ui_mic.png",
+      "group": "ui",
+      "subject": "Vintage microphone.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_calendar",
+      "file": "ui_calendar.png",
+      "group": "ui",
+      "subject": "Tear-off calendar page with blank squares, no text or numbers.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_stats",
+      "file": "ui_stats.png",
+      "group": "ui",
+      "subject": "Little notebook with a simple bar chart, no letters or numbers.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_yen",
+      "file": "ui_yen.png",
+      "group": "ui",
+      "subject": "Folded yen banknote, no text, no numbers.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_receipt",
+      "file": "ui_receipt.png",
+      "group": "ui",
+      "subject": "Small paper receipt with abstract short strokes only, no letters or numbers.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_grow_1",
+      "file": "ui_grow_1.png",
+      "group": "ui",
+      "subject": "One tiny seed sprout.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_grow_2",
+      "file": "ui_grow_2.png",
+      "group": "ui",
+      "subject": "One small plant with leaves.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_grow_3",
+      "file": "ui_grow_3.png",
+      "group": "ui",
+      "subject": "One young tree.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_grow_4",
+      "file": "ui_grow_4.png",
+      "group": "ui",
+      "subject": "Cherry blossom branch in bloom.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_stamp_hanamaru",
+      "file": "ui_stamp_hanamaru.png",
+      "group": "ui",
+      "subject": "Red ink Japanese hanko stamp: flower circle perfect symbol, no letters.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_stamp_maru",
+      "file": "ui_stamp_maru.png",
+      "group": "ui",
+      "subject": "Red ink Japanese hanko stamp: simple red circle good symbol, no letters.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_stamp_sankaku",
+      "file": "ui_stamp_sankaku.png",
+      "group": "ui",
+      "subject": "Red ink Japanese hanko stamp: simple red triangle OK symbol, no letters.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_medal",
+      "file": "ui_medal.png",
+      "group": "ui",
+      "subject": "A gold medal on a short red ribbon, no text.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_trophy",
+      "file": "ui_trophy.png",
+      "group": "ui",
+      "subject": "Small gold trophy, no text.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "ui_crown",
+      "file": "ui_crown.png",
+      "group": "ui",
+      "subject": "Small gold crown, no text.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "logo_cat",
+      "file": "logo_cat.png",
+      "group": "branding",
+      "subject": "Kuro full body, sitting, white chef hat and white apron, sleepy happy face, holding a wooden ladle.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true
+    },
+    {
+      "id": "app_icon",
+      "file": "app_icon.png",
+      "group": "branding",
+      "subject": "Kuro face with white chef hat on a cream #fff8ec rounded tile, thick hand-drawn outline. Home-screen icon and favicon. Background tile is explicitly allowed.",
+      "width": 1024,
+      "height": 1024,
+      "transparent": false
+    },
+    {
+      "id": "title_bg",
+      "file": "title_bg.png",
+      "group": "branding",
+      "subject": "Warm wooden Japanese diner counter at night, noren curtain and red lantern, softly blurred, dark brown #2a1d14 tones so white text remains readable. Portrait 1080x1920. Full environment background, no lettering, no people, no text.",
+      "width": 1080,
+      "height": 1920,
+      "transparent": false
+    },
+    {
+      "id": "ui_open_shop",
+      "file": "ui_open_shop.png",
+      "group": "ui",
+      "subject": "Reuse shop_deco_lantern.png",
+      "width": 1024,
+      "height": 1024,
+      "transparent": true,
+      "reuses": "shop_deco_lantern"
+    }
+  ]
+}

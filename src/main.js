@@ -1,7 +1,8 @@
+import { artURL, vocabArt, decorateArt } from './art.js';
 import './style.css';
 import { World } from './three/world.js';
 import { $, h, panel, hidePanel, choose, next, bubble, clearBubble, hint, hideHint, toast, pop, coinFly, renderHUD, showHUD, applySettings, jpLine, fade, wait, shuffle, pick, modal, closeModal } from './ui.js';
-import { unlockAudio, say, sfx, preload } from './audio.js';
+import { unlockAudio, say, sfx, preload, onSfx, setMood } from './audio.js';
 import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './save.js';
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
@@ -12,8 +13,28 @@ import { fill, NUMS } from './lines.js';
 import { isUnlocked, recipeCard, openBook, openShop, openSettings, shiftSummary, apply } from './screens.js';
 import { hash, toHTML } from './jp.js';
 
+decorateArt(document.body);
+$('#start').style.setProperty('--title-bg', `url("${artURL('title_bg')}")`);
 const world = new World($('#c'));
 let busy = false;
+world.shakeOn = S().settings.shake !== false;
+
+// 手感：音效同時觸發鏡頭微震 / 擠壓拉伸 / 畫面閃光
+const FEEL = {
+  chop: () => { world.shake(0.18); world.cat.squash(-0.08); },
+  press: () => world.shake(0.15),
+  bad: () => { world.shake(0.4); world.cat.squash(-0.12); },
+  good: () => world.cat.squash(0.08),
+  perfect: () => { world.shake(0.25); world.cat.squash(0.14); },
+  level: () => { world.shake(0.55); world.cat.squash(0.2); },
+  rare: () => world.shake(0.3),
+  door: () => world.shake(0.12),
+  purr: () => world.cat.squash(-0.1),
+  coin: () => {},
+};
+onSfx((n) => FEEL[n]?.());
+// 場景 → 音樂情緒
+world.onView = (v) => setMood(v === 'cook' ? 'cook' : v.startsWith('rest') ? 'rest' : 'kitchen');
 if (import.meta.env.DEV) window.__world = world; // 測試用
 
 // ===== 開始畫面 =====
@@ -35,7 +56,7 @@ $('#start').addEventListener('click', async () => {
 
 $('#btn-book').onclick = () => { sfx('tap'); openBook(); };
 $('#btn-shop').onclick = () => { sfx('tap'); if (busy) return toast('做緊嘢，收工先買啦！'); openShop(world); };
-$('#btn-set').onclick = () => { sfx('tap'); openSettings(); };
+$('#btn-set').onclick = () => { sfx('tap'); openSettings(world); };
 
 // 掃小黑
 let petsToday = 0;
@@ -228,12 +249,12 @@ async function serveCustomer({ index, tutorial, forceDish }) {
     bubble(world, 'cust', line.jp, line.yue, voice, { hidden: listen });
     const opts = shuffle(unlocked).map((r) => {
       const v = vocab(r.dish);
-      return { value: r.dish, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, v.emoji), h('span', { class: 'jp-inline', html: toHTML(v.jp) })) };
+      return { value: r.dish, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'jp-inline', html: toHTML(v.jp) })) };
     });
     const pickDish = await choose(opts, { title: h('div', { class: 'panel-title' }, '🐾 客人要咩？'), cols: Math.min(opts.length, 2) });
     let pickQty = 1;
     if (pickDish.value === rec.dish && withNum) {
-      const qo = await choose(NUMS.map((id, i) => ({ value: i + 1, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, vocab(id).emoji), h('span', { class: 'jp-inline', html: toHTML(vocab(id).jp) })) })), { title: h('div', { class: 'panel-title' }, '要幾多個？'), cols: 3 });
+      const qo = await choose(NUMS.map((id, i) => ({ value: i + 1, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, vocabArt(vocab(id))), h('span', { class: 'jp-inline', html: toHTML(vocab(id).jp) })) })), { title: h('div', { class: 'panel-title' }, '要幾多個？'), cols: 3 });
       pickQty = qo.value;
     }
     if (pickDish.value === rec.dish && pickQty === qty) {
@@ -377,7 +398,7 @@ async function announceRecipe(r) {
   const v = vocab(r.dish);
   sfx('rare');
   bubble(world, 'cat', CAT.newRecipe.jp, CAT.newRecipe.yue, 'cat');
-  await next('好嘢！', h('div', { class: 'unlock' }, h('div', { class: 'big-emo spin' }, v.emoji), h('div', { class: 'panel-title' }, '🔓 新食譜解鎖！'), jpLine(v.jp, { yue: v.yue, voice: 'word', size: 'big', autoplay: true })));
+  await next('好嘢！', h('div', { class: 'unlock' }, h('div', { class: 'big-emo spin' }, vocabArt(v)), h('div', { class: 'panel-title' }, '🔓 新食譜解鎖！'), jpLine(v.jp, { yue: v.yue, voice: 'word', size: 'big', autoplay: true })));
   clearBubble('cat');
 }
 
@@ -403,7 +424,7 @@ async function restaurant() {
   let right = 0, qs = 0;
 
   await fade(() => { world.catTo('rest'); world.setView('rest', true); });
-  const task = h('div', { class: 'task' }, `🎯 任務：你哋 ${ppl.n} 個人，每人想食 ${vocab(food).emoji}${vocab(food).yue.replace(/（.*?）/g, '')}，飲 ${vocab(drink).emoji}${vocab(drink).yue.replace(/（.*?）/g, '')}`);
+  const task = h('div', { class: 'task' }, `🎯 任務：你哋 ${ppl.n} 個人，每人想食 ${vocab(food).yue.replace(/（.*?）/g, '')}，飲 ${vocab(drink).yue.replace(/（.*?）/g, '')}`);
   $('#taskbar').innerHTML = ''; $('#taskbar').append(task); $('#taskbar').classList.add('show');
   hint('今次你做客人！小黑做店員 🐈‍⬛', 3000);
 

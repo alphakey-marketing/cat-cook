@@ -1,3 +1,4 @@
+import { art, vocabArt } from './art.js';
 // 各種彈出畫面：食譜卡、圖鑑、商店、設定、收工總結
 import { h, modal, jpLine, applySettings, renderHUD, toast, closeModal } from './ui.js';
 import { RECIPES, COMING_SOON } from './data/recipes.js';
@@ -30,14 +31,14 @@ const stars = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
 export function recipeCard(r, { onStart = null } = {}) {
   const d = vocab(r.dish);
   const body = h('div', { class: 'recipe' },
-    h('div', { class: 'recipe-hero' }, h('div', { class: 'big-emo' }, d.emoji), jpLine(d.jp, { yue: d.yue, voice: 'word', size: 'big', autoplay: true })),
+    h('div', { class: 'recipe-hero' }, h('div', { class: 'big-emo' }, vocabArt(d)), jpLine(d.jp, { yue: d.yue, voice: 'word', size: 'big', autoplay: true })),
     h('div', { class: 'recipe-meta' }, `🍽️ ${r.serves}　⏱️ ${r.time}　${S().stars[r.id] ? stars(S().stars[r.id]) : ''}`),
     h('h3', {}, '材料'),
     h('ul', { class: 'ing-list' }, r.ingredients.map(([id, amt]) => {
       const v = vocab(id);
       return h('li', {},
         h('button', { class: 'mini-spk', onclick: () => say(v.jp, 'word') }, '🔊'),
-        h('span', { class: 'emo' }, v.emoji),
+        h('span', { class: 'emo' }, vocabArt(v)),
         h('span', { class: 'jp-inline', html: toHTML(v.jp) }),
         h('span', { class: 'amt' }, amt));
     })),
@@ -63,13 +64,13 @@ export function openBook(tab = 'recipes') {
         const d = vocab(r.dish);
         const ok = isUnlocked(r);
         const c = h('div', { class: `book-card ${ok ? '' : 'locked'}` },
-          h('div', { class: 'big-emo' }, ok ? d.emoji : '🔒'),
+          h('div', { class: 'big-emo' }, ok ? vocabArt(d) : '🔒'),
           h('div', { class: 'jp-inline', html: ok ? toHTML(d.jp) : '？？？' }),
           h('div', { class: 'sub' }, ok ? (S().stars[r.id] ? stars(S().stars[r.id]) : '未煮過') : unlockText(r)));
         if (ok) c.onclick = () => { sfx('tap'); recipeCard(r); };
         grid.append(c);
       });
-      COMING_SOON.forEach((c) => grid.append(h('div', { class: 'book-card locked soon' }, h('div', { class: 'big-emo sil' }, c.emoji), h('div', { class: 'jp-inline', html: toHTML(c.jp) }), h('div', { class: 'sub' }, '即將推出'))));
+      COMING_SOON.forEach((c) => grid.append(h('div', { class: 'book-card locked soon' }, h('div', { class: 'big-emo sil' }, art(`dish_${c.id}`, c.yue)), h('div', { class: 'jp-inline', html: toHTML(c.jp) }), h('div', { class: 'sub' }, '即將推出'))));
       const total = RECIPES.length + COMING_SOON.length;
       const have = RECIPES.filter(isUnlocked).length;
       content.append(h('div', { class: 'progress-line' }, `收集 ${have} / ${total}`, h('div', { class: 'bar' }, h('i', { style: `width:${(have / total) * 100}%` }))), grid);
@@ -82,7 +83,7 @@ export function openBook(tab = 'recipes') {
         const v = vocab(id), r = S().srs[id];
         const lvl = ['🌱', '🌱', '🌿', '🌿', '🌳', '🌸'][r.box];
         list.append(h('div', { class: 'word-row', onclick: () => say(v.jp, 'word') },
-          h('span', { class: 'emo' }, v.emoji), h('span', { class: 'jp-inline', html: toHTML(v.jp) }), h('span', { class: 'yue' }, v.yue), h('span', { class: 'lvl', title: '熟練度' }, lvl)));
+          h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'jp-inline', html: toHTML(v.jp) }), h('span', { class: 'yue' }, v.yue), h('span', { class: 'lvl', title: '熟練度' }, lvl)));
       });
       content.append(h('div', { class: 'progress-line' }, `識咗 ${learnedCount()} 個 · 見過 ${seenCount()} 個　（🌱→🌸 越溫越熟）`), list);
     } else {
@@ -102,7 +103,7 @@ export function openShop(world) {
   const head = h('div', { class: 'shop-coins' });
   const draw = () => {
     const s = S();
-    head.innerHTML = `🪙 <b>${s.coins}</b>`;
+    head.replaceChildren(art('ui_coin'), h('b', {}, s.coins));
     grid.innerHTML = '';
     SHOP.forEach((it) => {
       const owned = s.owned.includes(it.id) || s.deco.includes(it.id);
@@ -116,7 +117,7 @@ export function openShop(world) {
           if (it.slot === 'deco') s.deco.push(it.id); else { s.owned.push(it.id); s.wear[it.slot] = it.id; }
           save(); apply(world); renderHUD(); draw();
           say(it.jp, 'word');
-          toast(`買咗 ${it.emoji} ${it.yue}！`);
+          toast(`買咗 ${it.yue}！`);
         };
       } else if (it.slot === 'deco') {
         btn = h('button', { class: 'btn ghost' }, '✔ 已擺');
@@ -125,7 +126,7 @@ export function openShop(world) {
         btn.onclick = () => { sfx('tap'); s.wear[it.slot] = worn ? (it.slot === 'hat' ? null : null) : it.id; save(); apply(world); draw(); world.cat.happy(); };
       }
       grid.append(h('div', { class: `shop-item ${worn ? 'worn' : ''}` },
-        h('div', { class: 'big-emo' }, it.emoji),
+        h('div', { class: 'big-emo' }, art(`shop_${it.id}`, it.yue)),
         h('div', { class: 'jp-inline', html: toHTML(it.jp), onclick: () => say(it.jp, 'word') }),
         h('div', { class: 'sub' }, it.yue),
         btn));
@@ -142,12 +143,12 @@ export function apply(world) {
 }
 
 // ===== 設定 =====
-export function openSettings() {
+export function openSettings(world) {
   const s = S().settings;
   const row = (label, key, desc) => {
     const inp = h('input', { type: 'checkbox' });
     inp.checked = !!s[key];
-    inp.onchange = () => { s[key] = inp.checked; save(); applySettings(); if (key === 'bgm') setBGM(inp.checked); sfx('tap'); };
+    inp.onchange = () => { s[key] = inp.checked; save(); applySettings(); if (key === 'bgm') setBGM(inp.checked); if (key === 'shake') world.shakeOn = inp.checked; sfx('tap'); };
     return h('label', { class: 'set-row' }, h('div', {}, h('b', {}, label), h('div', { class: 'sub' }, desc)), inp);
   };
   const subs = h('input', { type: 'checkbox' });
@@ -161,6 +162,7 @@ export function openSettings() {
     h('label', { class: 'set-row' }, h('div', {}, h('b', {}, '🎧 聽力挑戰'), h('div', { class: 'sub' }, '客人落單嘅字幕要撳先見，答啱有雙倍貼士')), subs),
     row('背景音樂', 'bgm', ''),
     row('音效', 'sfx', ''),
+    row('畫面震動', 'shake', '切菜、答錯、升級時鏡頭輕震'),
     h('p', { class: 'credits' }, `🎙️ 語音：${credits}`),
     h('button', { class: 'btn danger', onclick: () => { if (confirm('真係要清除全部進度？')) { reset(); location.reload(); } } }, '清除進度'),
   );
@@ -182,7 +184,7 @@ export function shiftSummary(stat, { onNext, onRest, onShop, firstShift }) {
       h('div', {}, h('b', {}, `${learnedCount()}`), h('span', {}, '📝 識咗字')),
     ),
     h('div', { class: 'streak-row' }, ...Array.from({ length: 7 }, (_, i) => h('div', { class: `sd ${i < Math.min(s.streak, 7) ? 'on' : ''}` }, i < Math.min(s.streak, 7) ? '🔥' : i + 1)), h('div', { class: 'sub' }, `連續 ${s.streak} 日！聽日返嚟，禮物會再大啲`)),
-    teaser ? h('div', { class: 'teaser' }, h('span', { class: 'big-emo' }, '🔒' + vocab(teaser.dish).emoji), h('div', {}, h('b', { html: toHTML(vocab(teaser.dish).jp) }), h('div', { class: 'sub' }, unlockText(teaser)))) : null,
+    teaser ? h('div', { class: 'teaser' }, h('span', { class: 'big-emo' }, art('ui_lock'), vocabArt(vocab(teaser.dish))), h('div', {}, h('b', { html: toHTML(vocab(teaser.dish).jp) }), h('div', { class: 'sub' }, unlockText(teaser)))) : null,
     h('div', { class: 'sum-btns' },
       onRest ? h('button', { class: `btn primary big ${firstShift ? 'pulse' : ''}`, onclick: () => { closeModal(); onRest(); } }, '🏮 同小黑去日本餐廳食飯') : null,
       h('button', { class: 'btn big', onclick: () => { closeModal(); onNext(); } }, '🍳 再開一更'),
