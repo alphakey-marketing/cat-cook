@@ -27,6 +27,7 @@ CUSTOMERS.forEach((c) => add(c.jp, 'word'));
 COMING_SOON.forEach((c) => add(c.jp, 'word'));
 // 小黑
 Object.values(CAT).forEach((l) => add(l.jp, 'cat'));
+add('おかえりにゃ！', 'cat');
 RECIPES.forEach((r) => r.steps.forEach((s) => add(s.jp, 'cat')));
 // 客人：lv0 又冇 hi 旗標 → 六把聲線；其餘只用 HI_VOICES（慳音檔）
 const dishes = RECIPES.filter((r) => r.chapter !== 'dark').map((r) => r.dish); // 暗黑菜用專屬落單句
