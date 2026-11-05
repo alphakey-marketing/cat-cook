@@ -397,11 +397,17 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   await wait(500);
   const react = pickByLevel(stars === 3 ? REACT.great : stars === 2 ? REACT.ok : REACT.meh);
   world.customerJump();
-  bubble(world, 'cust', react.jp, react.yue, lineVoice(cust.id, react));
+  // 客人食後反應：要等講完先走下一步，唔好畀後面句子 cut 咗
+  // 最多等 6 秒，防音檔 hang 住
+  const reactDone = Promise.race([
+    bubble(world, 'cust', react.jp, react.yue, lineVoice(cust.id, react), { hidden: listen }),
+    wait(6000),
+  ]);
   const isSpecial = special() === rec.id;
   let darkMult = 1;
   if (darkResult) {
-    await wait(900);
+    await reactDone;
+    await wait(400);
     clearBubble('cust');
     darkMult = await darkInterrogation(cust, rec, darkResult, listen);
   }
@@ -420,7 +426,8 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   s.served++;
   addXP(xp);
   renderHUD();
-  await wait(1600);
+  // 結算畫面至少 1.6 秒，而且反應句一定講完（再留 400ms 畀人睇字幕）
+  await Promise.all([wait(1600), reactDone.then(() => wait(400))]);
   if (darkResult) { clearBubble(); await revealDarkDish(rec, darkResult); }
   world.removeDish();
 
