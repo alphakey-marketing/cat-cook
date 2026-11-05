@@ -1,5 +1,6 @@
 // Shared art URLs work at the GitHub Pages project path too.
-export const artURL = (id) => new URL(`${import.meta.env.BASE_URL}art/game/${id}.webp`, document.baseURI).href;
+const clearIcons = new Set(['ui_lock', 'ui_unlock', 'ui_settings', 'ui_coin', 'ui_timer', 'ui_serves']);
+export const artURL = (id) => new URL(`${import.meta.env.BASE_URL}art/game/${id}.${clearIcons.has(id) ? 'svg' : 'webp'}`, document.baseURI).href;
 export function art(id, label = '', cls = '') {
   const img = document.createElement('img');
   img.src = artURL(id);

@@ -11,6 +11,7 @@ import { VOICES } from './data/voices.js';
 import { S, save, reset, learnedCount, seenCount, msToMidnight } from './save.js';
 import { say, sfx, setBGM } from './audio.js';
 import { toHTML } from './jp.js';
+import { LEVELS, jpLevel, SMALLTALK_LIST, DETAILS, REACT } from './data/phrases.js';
 
 export function isUnlocked(r) {
   const s = S();
@@ -35,12 +36,12 @@ export function recipeCard(r, { onStart = null } = {}) {
   const d = vocab(r.dish);
   const body = h('div', { class: 'recipe' },
     h('div', { class: 'recipe-hero' }, h('div', { class: 'big-emo' }, vocabArt(d)), jpLine(d.jp, { yue: d.yue, voice: 'word', size: 'big', autoplay: true })),
-    h('div', { class: 'recipe-meta' }, `🍽️ ${r.serves}　⏱️ ${r.time}　${S().stars[r.id] ? stars(S().stars[r.id]) : ''}`),
+    h('div', { class: 'recipe-meta' }, `🍽️ ${r.serves}　⏱️ 現實烹調：${r.time}　${S().stars[r.id] ? stars(S().stars[r.id]) : ''}`),
     h('h3', {}, '材料'),
     h('ul', { class: 'ing-list' }, r.ingredients.map(([id, amt]) => {
       const v = vocab(id);
       return h('li', {},
-        h('button', { class: 'mini-spk', onclick: () => say(v.jp, 'word') }, '🔊'),
+        h('button', { class: 'mini-spk', 'aria-label': `再聽：${v.yue}`, onclick: () => say(v.jp, 'word') }, '🔊'),
         h('span', { class: 'emo' }, vocabArt(v)),
         h('span', { class: 'jp-inline', html: toHTML(v.jp) }),
         h('span', { class: 'amt' }, amt));
@@ -48,6 +49,12 @@ export function recipeCard(r, { onStart = null } = {}) {
     h('h3', {}, r.chapter === 'dark' ? '真正捷徑（浮誇菜名唔代表實際工序）' : '做法（真係煮得㗎！）'),
     h('ol', { class: 'howto' }, r.howto.map((t) => h('li', {}, t))),
   );
+  if (onStart) {
+    const [hero, ...realRecipe] = [...body.children];
+    const labels = { pick: '聽日文揀材料', mash: '連撳搓飯糰', timing: '指針入綠色區時撳掣', stir: '手指畫圈攪拌', hold: '長按加熱，綠色區放手', microwave: '撳掣翻熱', cover: '見到「？」即刻撳掣', season: '先試味再調味', request: '聽客人要求，揀實際做法' };
+    const details = h('details', { class: 'real-recipe' }, h('summary', {}, '📖 睇真實食譜、份量同烹調時間'), ...realRecipe);
+    body.replaceChildren(hero, h('h3', {}, '今次遊戲步驟'), h('ol', { class: 'howto game-steps' }, r.steps.map(step => h('li', {}, labels[step.type]))), details);
+  }
   const footer = onStart ? h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); m.close(); } }, '🔥 開始煮！') : null;
   const m = modal('📖 食譜', body, { onClose: onStart, wide: true, footer });
   return m;
@@ -57,7 +64,7 @@ export function recipeCard(r, { onStart = null } = {}) {
 export function openBook(tab = 'recipes') {
   const tabs = h('div', { class: 'tabs' });
   const content = h('div', { class: 'tab-content' });
-  const T = { recipes: '🍳 食譜', words: '📝 單詞', secrets: '🌙 後廚', stats: '📊 紀錄' };
+  const T = { recipes: '🍳 食譜', words: '📝 單詞', phrases: '💬 句子', secrets: '🌙 後廚', stats: '📊 紀錄' };
   const show = (t) => {
     tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
     content.innerHTML = '';
@@ -90,6 +97,27 @@ export function openBook(tab = 'recipes') {
           h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'jp-inline', html: toHTML(v.jp) }), h('span', { class: 'yue' }, v.yue), h('span', { class: 'lvl', title: '熟練度' }, lvl)));
       });
       content.append(h('div', { class: 'progress-line' }, `識咗 ${learnedCount()} 個 · 見過 ${seenCount()} 個　（🌱→🌸 越溫越熟）`), list);
+    } else if (t === 'phrases') {
+      // 閒聊／再見／落單細節：見過先顯示，按等級分組，點一下聽
+      const L = jpLevel();
+      const all = [...SMALLTALK_LIST, ...DETAILS, ...REACT.bye];
+      const seen = all.filter((x) => S().srs[x.key]);
+      const total = all.filter((x) => (x.lv ?? 0) <= L).length;
+      content.append(h('div', { class: 'progress-line' }, `見過 ${seen.length} 句 · 你而家嘅程度可以遇到 ${total} 句　（🌱→🌸 越溫越熟）`));
+      if (!seen.length) content.append(h('p', { class: 'muted' }, '未有句子，開店同客人傾偈先啦！'));
+      for (const lv of [0, 1, 2]) {
+        const rows = seen.filter((x) => (x.lv ?? 0) === lv).sort((a, b) => S().srs[b.key].box - S().srs[a.key].box);
+        if (!rows.length) continue;
+        content.append(h('div', { class: 'sub' }, `${LEVELS[lv].icon} ${LEVELS[lv].name}`));
+        const list = h('div', { class: 'word-list' });
+        rows.forEach((x) => {
+          const r = S().srs[x.key];
+          const m = ['🌱', '🌱', '🌿', '🌿', '🌳', '🌸'][r.box];
+          list.append(h('div', { class: 'word-row', onclick: () => say(x.jp, 'usagi') },
+            h('span', { class: 'jp-inline', html: toHTML(x.jp) }), h('span', { class: 'yue' }, x.yue), h('span', { class: 'lvl', title: '熟練度' }, m)));
+        });
+        content.append(list);
+      }
     } else if (t === 'secrets') {
       const collected = DARK_RECIPES.filter(r => S().darkSecrets[r.id]);
       content.append(h('p', { class: 'sub' }, `主廚秘密 ${collected.length} / ${DARK_RECIPES.length} · 完成出餐揭曉後收藏`));
@@ -167,11 +195,22 @@ export function openSettings(world) {
   const subs = h('input', { type: 'checkbox' });
   subs.checked = s.subs === 'tap';
   subs.onchange = () => { s.subs = subs.checked ? 'tap' : 'show'; save(); sfx('tap'); };
+  // 日文程度：之後隨時改，唔會郁字幕設定
+  const lvBox = h('div', { class: 'lv-pick' });
+  const drawLvBox = () => {
+    lvBox.replaceChildren(...LEVELS.map((l) => h('button', {
+      class: `btn ${jpLevel() === l.id ? 'primary' : ''}`,
+      onclick: () => { S().jpLevel = l.id; save(); sfx('tap'); drawLvBox(); },
+    }, `${l.icon} ${l.name}`, h('small', {}, l.desc))));
+  };
+  drawLvBox();
   const credits = Object.values(VOICES).map((v) => `VOICEVOX:${v.name}`).filter((v, i, a) => a.indexOf(v) === i).join('、');
   const body = h('div', { class: 'settings' },
+    h('div', { class: 'set-row lv-row' }, h('div', {}, h('b', {}, '📚 日文程度'), h('div', { class: 'sub' }, '決定客人同餐廳對白嘅難度；轉咗之後新句即刻生效')), lvBox),
     row('振假名 ふりがな', 'furigana', '漢字上面顯示讀音'),
     row('羅馬字 Romaji', 'romaji', '例：onigiri'),
     row('廣東話翻譯', 'yue', '每句下面顯示意思'),
+    row('加大文字', 'largeText', '放大對白、翻譯同操作說明'),
     h('label', { class: 'set-row' }, h('div', {}, h('b', {}, '🎧 聽力挑戰'), h('div', { class: 'sub' }, '客人落單嘅字幕要撳先見，答啱有雙倍貼士')), subs),
     row('背景音樂', 'bgm', ''),
     row('音效', 'sfx', ''),
@@ -185,10 +224,13 @@ export function openSettings(world) {
 // ===== 收工總結 =====
 export function shiftSummary(stat, { onNext, onRest, onShop, firstShift }) {
   const s = S();
+  let selected = false;
+  const finish = fn => { selected = true; closeModal(); fn(); };
   const locked = RECIPES.filter((r) => !isUnlocked(r));
   const teaser = locked[0];
   const body = h('div', { class: 'summary' },
     h('div', { class: 'sum-big' }, '🎉'),
+    firstShift ? h('div', { class: 'panel-title' }, '第一道菜完成！想繼續開舖，定去餐廳試吓？') : null,
     jpLine('お疲{つか}れ様{さま}でした！', { yue: '辛苦晒！（收工講）', voice: 'cat' }),
     h('div', { class: 'sum-grid' },
       h('div', {}, h('b', {}, stat.served), h('span', {}, '位客人')),
@@ -199,11 +241,11 @@ export function shiftSummary(stat, { onNext, onRest, onShop, firstShift }) {
     h('div', { class: 'streak-row' }, ...Array.from({ length: 7 }, (_, i) => h('div', { class: `sd ${i < Math.min(s.streak, 7) ? 'on' : ''}` }, i < Math.min(s.streak, 7) ? '🔥' : i + 1)), h('div', { class: 'sub' }, `連續 ${s.streak} 日！聽日返嚟，禮物會再大啲`)),
     teaser ? h('div', { class: 'teaser' }, h('span', { class: 'big-emo' }, art('ui_lock'), vocabArt(vocab(teaser.dish))), h('div', {}, h('b', { html: toHTML(vocab(teaser.dish).jp) }), h('div', { class: 'sub' }, unlockText(teaser)))) : null,
     h('div', { class: 'sum-btns' },
-      onRest ? h('button', { class: `btn primary big ${firstShift ? 'pulse' : ''}`, onclick: () => { closeModal(); onRest(); } }, '🏮 同小黑去日本餐廳食飯') : null,
-      h('button', { class: 'btn big', onclick: () => { closeModal(); onNext(); } }, '🏠 返大堂／揀章節'),
-      h('button', { class: 'btn', onclick: () => { closeModal(); onShop(); } }, '🛍️ 商店'),
+      h('button', { class: 'btn primary big', onclick: () => finish(onNext) }, firstShift ? '🏮 繼續開舖／返大堂' : '🏠 返大堂／揀章節'),
+      onRest ? h('button', { class: 'btn big', onclick: () => finish(onRest) }, '🏮 同小黑去日本餐廳食飯') : null,
+      h('button', { class: 'btn', onclick: () => finish(onShop) }, '🛍️ 商店'),
     ),
   );
-  modal('收工！', body);
+  modal('收工！', body, { onClose: () => { if (!selected) onNext(); } });
   say('お疲{つか}れ様{さま}でした！', 'cat');
 }

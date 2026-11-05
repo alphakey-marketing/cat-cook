@@ -5,7 +5,9 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK, RESTAURANT } from '../src/data/dialogue.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
+import { REGULARS } from '../src/data/chapters.js';
+import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY } from '../src/data/dark.js';
 import { SHOP, CUSTOMERS } from '../src/data/shop.js';
 import { VOICES, CUSTOMER_VOICES } from '../src/data/voices.js';
 import { audioKey, toSpeech, toReading, kataToHira } from '../src/jp.js';
@@ -26,22 +28,35 @@ COMING_SOON.forEach((c) => add(c.jp, 'word'));
 // 小黑
 Object.values(CAT).forEach((l) => add(l.jp, 'cat'));
 RECIPES.forEach((r) => r.steps.forEach((s) => add(s.jp, 'cat')));
-// 客人
-const dishes = RECIPES.map((r) => r.dish);
-for (const cv of CUSTOMER_VOICES) {
-  for (const d of dishes) {
-    ORDER_TEMPLATES.forEach((t) => add(fill(t, { dish: d }).jp, cv));
-    ORDER_NUM_TEMPLATES.forEach((t) => NUMS.forEach((n) => add(fill(t, { dish: d, num: n }).jp, cv)));
-  }
-  Object.values(REACT).flat().forEach((l) => add(l.jp, cv));
-  Object.values(SMALLTALK).forEach((l) => add(l.jp, cv));
+// 客人：lv0 又冇 hi 旗標 → 六把聲線；其餘只用 HI_VOICES（慳音檔）
+const dishes = RECIPES.filter((r) => r.chapter !== 'dark').map((r) => r.dish); // 暗黑菜用專屬落單句
+const custAdd = (l, jp = l.jp) => ((l.lv ?? 0) > 0 || l.hi ? HI_VOICES : CUSTOMER_VOICES).forEach((cv) => add(jp, cv));
+const tplAdd = (t, vars) => custAdd(t, fill(t, vars).jp);
+for (const d of dishes) {
+  ORDER_TEMPLATES.forEach((t) => tplAdd(t, { dish: d }));
+  ORDER_NUM_TEMPLATES.forEach((t) => NUMS.forEach((n) => tplAdd(t, { dish: d, num: n })));
+  REPLACE.forEach((t) => tplAdd(t, { dish: d }));
+  SOLDOUT.forEach((t) => add(fill(t, { dish: d }).jp, 'cat'));
 }
+Object.values(REACT).flat().forEach((l) => custAdd(l));
+SMALLTALK_LIST.forEach((l) => custAdd(l));
+DETAILS.forEach((l) => custAdd(l));
+TSUIKA.forEach((l) => custAdd(l));
+// 喫茶店熟客（固定 customer 聲線）
+REGULARS.forEach((r) => CUSTOMERS.slice(0, REGULARS.length).forEach((c) => add(r.jp, c.id)));
+// 熟客最後一步指示、暗黑食堂
+Object.values(FINISH_STEPS).forEach((jp) => add(jp, 'cat'));
+add('中身{なかみ}は？', 'word');
+// 暗黑食堂：浮誇菜單名落單、追問、回應
+DARK_RECIPES.forEach((r) => DARK_ORDER_TEMPLATES.forEach((t) => custAdd(t, t.jp.replace('{dish}', r.jp))));
+Object.values(DARK_CUST).flat().forEach((l) => custAdd(l));
+Object.values(DARK_REPLY).forEach((l) => add(l.jp, 'cat'));
 // 餐廳
 const R = RESTAURANT;
-Object.entries(R.staff).forEach(([k, l]) => { if (k !== 'pay') add(l.jp, 'cat'); });
+Object.entries(R.staff).forEach(([k, l]) => { if (k !== 'pay' && k !== 'pay2') add(l.jp, 'cat'); });
 const totals = new Set();
 for (const f of R.foods) for (const d of R.drinks) for (const p of R.people) totals.add((R.prices[f] + R.prices[d]) * p.n);
-totals.forEach((t) => add(fill(R.staff.pay, { price: t }).jp, 'cat'));
+totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill(R.staff.pay2, { price: t }).jp, 'cat'); });
 R.people.forEach((p) => add(p.jp, 'word'));
 for (const n of NUMS) {
   R.foods.forEach((f) => add(fill(R.you.order, { food: f, num: n }).jp, 'word'));
@@ -49,8 +64,22 @@ for (const n of NUMS) {
 }
 Object.entries(R.you).forEach(([k, l]) => { if (k !== 'order' && k !== 'drink') add(l.jp, 'word'); });
 add(R.name.jp, 'cat');
+// 餐廳額外環節：店員 cat、你講嘅 word
+const rl = allRestaurantLines();
+rl.staff.forEach((jp) => add(jp, 'cat'));
+rl.you.forEach((jp) => add(jp, 'word'));
 
 console.log(`共 ${jobs.size} 句`);
+if (process.env.DRY) {
+  // 只數缺幾多，唔生成
+  const miss = [...jobs].filter(([k]) => !fs.existsSync(path.join(OUT, k + '.mp3')));
+  console.log(`缺 ${miss.length} 個；例：`);
+  const by = {};
+  miss.forEach(([, j]) => { by[j.voice] = (by[j.voice] || 0) + 1; });
+  console.log(by);
+  miss.slice(0, 400).forEach(([, j]) => console.log(`${j.voice}	${j.jp}`));
+  process.exit(0);
+}
 
 function norm(s) {
   return kataToHira(s).replace(/[、。？！?!\s'_/]/g, '').replace(/ー/g, '');

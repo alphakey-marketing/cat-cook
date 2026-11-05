@@ -75,13 +75,13 @@ with sync_playwright() as p:
         }""", {'chapter':chapter,'index':index,'dish':dish})
         for _ in range(240):
             if page.evaluate('!!window.result'): break
-            title=page.locator('#panel .panel-title').first
-            text=title.text_content() if title.count() else ''
+            text=page.locator('#panel').evaluate("el=>el.querySelector('.panel-title')?.textContent || ''")
             choices=page.locator('#panel .choice')
             if choices.count():
                 target=None
                 if '客人要' in text:
-                    target=page.locator('#panel .choice').filter(has=page.locator(f'[aria-label="' + ('鹽水枝豆' if dish=='edamame' else '精品即溶咖啡' if dish=='instant_coffee' else '抹茶拿鐵') + '"]')).first
+                    wanted=page.evaluate("async id=>(await import('/src/data/vocab.js')).vocab(id).yue",dish)
+                    target=choices.filter(has=page.locator(f'[aria-label="{wanted}"], img[alt="{wanted}"]')).first
                 elif '幾多' in text:
                     # Match the numeral shown in the customer's Japanese subtitle.
                     bubble=page.locator('.bubble.cust .jp-text').inner_text()
@@ -92,7 +92,9 @@ with sync_playwright() as p:
                 elif '調製' in text:
                     target=choices.filter(has_text=['熱飲','凍飲','少甜'][index%3])
                 else: target=choices.first
-                if target is not None and target.count(): target.evaluate('(el)=>el.click()')
+                if target is not None and target.count():
+                    try: target.evaluate('(el)=>el.click()',timeout=1000)
+                    except Exception: pass  # A resolved choice can replace the panel between calls.
             # Level-up and recipe announcements can also need a continuation button.
             if page.locator('#panel .unlock').count():
                 page.locator('#panel button').last.click(force=True)

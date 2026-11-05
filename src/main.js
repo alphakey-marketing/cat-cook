@@ -2,14 +2,16 @@ import { art, artURL, vocabArt, decorateArt } from './art.js';
 import './style.css';
 import { World } from './three/world.js';
 import { makeIce } from './three/models.js';
-import { $, h, panel, hidePanel, choose, next, bubble, clearBubble, hint, hideHint, toast, pop, coinFly, renderHUD, showHUD, applySettings, jpLine, fade, wait, shuffle, pick, modal, closeModal } from './ui.js';
+import { $, h, panel, hidePanel, choose, next, bubble, clearBubble, hint, hideHint, toast, pop, coinFly, renderHUD, showHUD, applySettings, jpLine, fade, wait, shuffle, pick, modal, closeModal, mission } from './ui.js';
 import { unlockAudio, say, sfx, preload, onSfx, setMood } from './audio.js';
 import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './save.js';
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
 import { CHAPTERS, REGULARS } from './data/chapters.js';
-import { dressDarkDish, darkReport, revealDarkDish } from './dark.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK, RESTAURANT } from './data/dialogue.js';
+import { dressDarkDish, darkReport, revealDarkDish, bluffChance } from './dark.js';
+import { DARK_ORDER_TEMPLATES, DARK_REPLY, DARK_CUST, HYPE } from './data/dark.js';
+import { DARK, resetDark } from './darkstate.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS, SMALLTALK_LIST } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
 import { fill, NUMS } from './lines.js';
@@ -39,7 +41,7 @@ onSfx((n) => FEEL[n]?.());
 // 場景 → 音樂情緒
 world.onView = (v) => setMood(v === 'cook' ? 'cook' : v.startsWith('rest') ? 'rest' : 'kitchen');
 if (import.meta.env.DEV) window.__world = world; // 測試用
-if (import.meta.env.DEV) window.__game = { hub, serveCustomer, cook, state: S, save, minigames: MINIGAMES };
+if (import.meta.env.DEV) window.__game = { hub, serveCustomer, cook, restaurant, state: S, save, minigames: MINIGAMES };
 
 // ===== 開始畫面 =====
 applySettings();
@@ -137,6 +139,12 @@ async function returning(ci) {
     renderHUD();
   }
   for (const r of newlyUnlocked) await announceRecipe(r);
+  // 舊存檔未揀過程度：補問一次（唔改字幕設定）
+  if (s.jpLevel == null) {
+    const lv = await choose(LEVELS.map((l) => ({ label: `<b>${l.icon} ${l.name}</b><small>${l.desc}</small>`, value: l.id })),
+      { title: h('div', { class: 'panel-title' }, '新增咗分級對白！揀你嘅日文程度（之後可喺 ⚙️ 改）') });
+    s.jpLevel = lv.value; save();
+  }
   hub();
 }
 
@@ -152,9 +160,21 @@ function refreshMenu() {
   world.setMenu(RECIPES.filter(r => (r.chapter || 'home') === S().chapter).map((r) => ({ name: VOCAB[r.dish].jp.replace(/\{.*?\}/g, ''), price: r.price, locked: !isUnlocked(r) })));
 }
 
+// 答啱率高：問玩家想唔想升一級
+function levelNudgeCard() {
+  const n = levelNudge();
+  if (!n) return null;
+  const to = LEVELS[n.to];
+  return h('div', { class: 'special lv-nudge' },
+    `${LEVELS[n.from].icon} 呢級答啱率 ${n.rate}%（${n.total} 題）！想試吓 ${to.icon} ${to.name} 嗎？`,
+    h('button', { class: 'btn primary', onclick: () => { S().jpLevel = n.to; save(); sfx('level'); toast(`轉咗做 ${to.name}`); hub(); } }, '升一級'),
+    h('button', { class: 'btn', onclick: () => { S().lvNudgeDismissed = n.from; save(); hub(); } }, '遲啲先'));
+}
+
 // ===== 大堂（兩更之間）=====
 function hub() {
   busy = false;
+  clearBubble();
   world.setView('kitchen');
   world.catFace('front');
   const sp = special();
@@ -162,7 +182,12 @@ function hub() {
   const canRest = S().shifts >= 1;
   refreshMenu();
   const chapter = CHAPTERS.find(c => c.id === S().chapter) || CHAPTERS[0];
-  panel(
+  const actions = h('div', { class: 'hub-btns' },
+    h('button', { class: 'btn primary big', 'data-action': 'open-shift', onclick: () => { sfx('tap'); shift({}); } }, '🏮 開舖'),
+    h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🍱 去日本餐廳' : '🔒 日本餐廳'),
+    h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
+    h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店'));
+  panel(h('div', { class: 'hub-info' },
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
@@ -171,19 +196,15 @@ function hub() {
     h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
     chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,
     spv ? h('div', { class: 'special' }, '🌟 今日特價：',h('span', { class: 'jp-inline', html: toHTML(spv.jp) }), ' 金幣 x2') : null,
-    h('div', { class: 'hub-btns' },
-      h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); shift({}); } }, '🏮 開舖'),
-      h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(); else toast('做完第一更先解鎖！'); } }, canRest ? '🍱 去日本餐廳' : '🔒 日本餐廳'),
-      h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
-      h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店'),
-    ),
-  );
+    levelNudgeCard(),
+  ), actions).classList.add('hub-panel');
 }
 
 // ===== 一更（幾位客人）=====
 async function shift({ tutorial = false } = {}) {
   busy = true;
-  const n = tutorial ? 4 : 5;
+  resetUsed();
+  const n = tutorial ? 1 : 5;
   const stat = { served: 0, coins: 0, perfect: 0 };
   let forceDish = null;
   for (let i = 0; i < n; i++) {
@@ -233,16 +254,21 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   const s = S();
   const lv0 = s.level;
   const cust = s.chapter === 'cafe' ? CUSTOMERS[index % REGULARS.length] : pickCustomer(index, tutorial);
-  const voice = cust.id;
   const unlocked = menuRecipes();
   // 揀菜：新解鎖優先，其次 SRS 要溫嘅
   const dishId = forceDish || srsPick(unlocked.map((r) => r.dish));
   let rec = unlocked.find((r) => r.dish === dishId) || unlocked[0];
-  const withNum = s.level >= 2 && !tutorial && Math.random() < 0.45;
+  const withNum = s.level >= 2 && !tutorial && rec.chapter !== 'dark' && Math.random() < 0.45;
   let qty = withNum ? 1 + Math.floor(Math.random() * 3) : 1;
-  const line = withNum
-    ? fill(pick(ORDER_NUM_TEMPLATES), { dish: rec.dish, num: NUMS[qty - 1] })
-    : fill(pick(ORDER_TEMPLATES), { dish: rec.dish });
+  // 按日文程度抽句；高級句用共用聲線（慳音檔）
+  const isDark = rec.chapter === 'dark';
+  if (isDark) qty = 1;
+  const tpl = pickByLevel(isDark ? DARK_ORDER_TEMPLATES : withNum ? ORDER_NUM_TEMPLATES : ORDER_TEMPLATES);
+  // 暗黑食堂：客人照浮誇菜單名落單（自然日文）
+  const line = isDark
+    ? { jp: tpl.jp.replace('{dish}', rec.jp), yue: tpl.yue.replace('{dishYue}', rec.yue) }
+    : fill(tpl, withNum ? { dish: rec.dish, num: NUMS[qty - 1] } : { dish: rec.dish });
+  const voice = lineVoice(cust.id, tpl);
   preload(line.jp, voice);
 
   // 入門
@@ -282,8 +308,8 @@ async function serveCustomer({ index, tutorial, forceDish }) {
       tries++;
       sfx('bad');
       world.cat.play('sad', 0.6);
-      const wr = pick(REACT.wrong);
-      await bubble(world, 'cust', wr.jp, wr.yue, voice);
+      const wr = pickByLevel(REACT.wrong);
+      await bubble(world, 'cust', wr.jp, wr.yue, lineVoice(cust.id, wr));
       hint(`佢講：「${line.yue}」— 再聽一次！`, 3500);
       srsAnswer(rec.dish, false);
       await wait(600);
@@ -292,26 +318,45 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   srsSeen(rec.dish);
   clearBubble('cust');
 
-  const askChapter = async (jp, yue, options, correct, word, title) => {
+  const askChapter = async (jp, yue, options, correct, word, title, vo = voice) => {
     let first = true;
     srsSeen(word);
     for (;;) {
-      bubble(world, 'cust', jp, yue, voice, { hidden: listen });
+      bubble(world, 'cust', jp, yue, vo, { hidden: listen });
       const a = await choose(shuffle(options.map((label, value) => ({ label, value }))), { title: h('div', { class: 'panel-title' }, title) });
       if (a.value === correct) { srsAnswer(word, first); sfx('good'); clearBubble('cust'); return; }
       first = false; srsAnswer(word, false); sfx('bad'); hint(yue, 3000);
     }
   };
+  // 落單細節：食堂章節，Lv1/2 約 30% 客人補一句（大盛り／走蔥…）
+  if (S().chapter === 'home' && !tutorial && jpLevel() > 0 && Math.random() < 0.3) {
+    const pd = pickDetail(rec.dish);
+    if (pd) {
+      const dv = lineVoice(cust.id, pd.d);
+      srsSeen(pd.d.key);
+      let first = true;
+      for (;;) {
+        bubble(world, 'cust', pd.d.jp, pd.d.yue, dv, { hidden: listen });
+        const a = await choose(shuffle([pd.d.label, ...pd.wrongs].map((label, value) => ({ label, value: value === 0 ? 0 : -1 }))), { title: h('div', { class: 'panel-title' }, '客人再補一句？') });
+        if (a.value === 0) { srsAnswer(pd.d.key, first); trackLv(pd.d.lv, first); sfx('good'); clearBubble('cust'); break; }
+        first = false; srsAnswer(pd.d.key, false); sfx('bad'); hint(pd.d.yue, 3000);
+      }
+    }
+  }
   if (S().chapter === 'izakaya' && index % 2 === 0) {
-    await askChapter('すみません、もう 一{ひと}つ 追加{ついか}で。', '唔該，再加一份。', ['加一份', '取消訂單', '立即埋單'], 0, 'tsuika', '客人想改張單？');
+    const ts = pickByLevel(TSUIKA);
+    await askChapter(ts.jp, ts.yue, ['加一份', '取消訂單', '立即埋單'], 0, 'tsuika', '客人想改張單？', lineVoice(cust.id, ts));
     qty++;
     toast(`加單成功：共 ${qty} 份`);
   } else if (S().chapter === 'izakaya') {
     const replacement = unlocked.find(r => r.id !== rec.id);
-    await bubble(world, 'cat', 'すみません、売{う}り切{き}れです。', `${vocab(rec.dish).yue}沽清喇。`, 'cat');
+    const so = fill(pickByLevel(SOLDOUT), { dish: rec.dish });
+    await bubble(world, 'cat', so.jp, so.yue, 'cat');
     clearBubble('cat');
     const d = vocab(replacement.dish);
-    await askChapter(`${d.jp}を お願{ねが}いします。`, `咁要${d.yue}。`, [d.yue, vocab(rec.dish).yue, '取消所有訂單'], 0, 'urikire', '沽清後，客人改要邊款？');
+    const rp = pickByLevel(REPLACE);
+    const rl = fill(rp, { dish: replacement.dish });
+    await askChapter(rl.jp, rl.yue, [d.yue, vocab(rec.dish).yue, '取消所有訂單'], 0, 'urikire', '沽清後，客人改要邊款？', lineVoice(cust.id, rp));
     rec = replacement;
     srsSeen(rec.dish); srsAnswer(rec.dish, true);
   }
@@ -319,16 +364,11 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   if (S().chapter === 'cafe' && ['instant_coffee', 'black_tea', 'matcha_latte'].includes(rec.id)) {
     const regular = REGULARS[index % REGULARS.length];
     const seen = S().regularVisits[regular.id] || 0;
-    const requests = ['hot', 'iced', 'less_sugar', 'no_sugar'];
-    const options = requests.map(id => vocab(id).yue);
-    await askChapter(regular.jp, regular.yue, options, requests.indexOf(regular.request), regular.request,
-      `${regular.name} · ${seen ? `第 ${seen + 1} 次到訪` : '初次到訪'}：點樣調製？`);
     preference = regular.request;
     servedRegular = regular.id;
-    const v = vocab(preference);
     rec = { ...rec, steps: [...rec.steps, {
-      type: 'pick', need: [preference], decoys: requests.filter(id => id !== preference),
-      jp: `${v.jp}で 仕上{しあ}げて`, yue: `最後調整：${v.yue}`, tip: '記住熟客嘅要求。',
+      type: 'request', request: preference, jp: regular.jp, yue: regular.yue, voice: cust.id,
+      title: `${regular.name} · ${seen ? `第 ${seen + 1} 次到訪` : '初次到訪'}：點樣調製？`,
     }] };
   }
 
@@ -338,6 +378,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   }
 
   // 煮
+  if (rec.chapter === 'dark') resetDark();
   const score = await cook(rec);
   let darkResult = null;
   if (rec.chapter === 'dark') {
@@ -354,17 +395,23 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   world.setView('serve');
   world.slideDishToCustomer();
   await wait(500);
-  const react = pick(stars === 3 ? REACT.great : REACT.ok);
+  const react = pickByLevel(stars === 3 ? REACT.great : stars === 2 ? REACT.ok : REACT.meh);
   world.customerJump();
-  bubble(world, 'cust', react.jp, react.yue, voice);
+  bubble(world, 'cust', react.jp, react.yue, lineVoice(cust.id, react));
   const isSpecial = special() === rec.id;
-  let coins = Math.round(rec.price * qty * (0.6 + 0.4 * score) * cust.tip * (isSpecial ? 2 : 1) / 10);
+  let darkMult = 1;
+  if (darkResult) {
+    await wait(900);
+    clearBubble('cust');
+    darkMult = await darkInterrogation(cust, rec, darkResult, listen);
+  }
+  let coins = Math.round(rec.price * qty * (0.6 + 0.4 * score) * cust.tip * (isSpecial ? 2 : 1) * darkMult / 10);
   if (listen && tries === 0) coins *= 2;
   const xp = 10 + stars * 5;
   panel(
     h('div', { class: 'sub' }, `${vocab(rec.dish).yue} × ${qty}${preference ? ` · ${vocab(preference).yue}` : ''}`),
     h('div', { class: 'stars-big' }, ...[1, 2, 3].map((n) => h('span', { class: n <= stars ? 'on' : '' }, '★'))),
-    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`, isSpecial ? h('span', { class: 'tag' }, '特價 x2') : null, listen && tries === 0 ? h('span', { class: 'tag' }, '🎧 x2') : null),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`, isSpecial ? h('span', { class: 'tag' }, '特價 x2') : null, darkResult && darkMult !== 1 ? h('span', { class: 'tag' }, darkMult ? `浮誇 x${darkMult}` : '被揭穿') : null, listen && tries === 0 ? h('span', { class: 'tag' }, '🎧 x2') : null),
   );
   [1, 2, 3].forEach((n) => n <= stars && setTimeout(() => sfx('good'), n * 180));
   world.coinsFromCustomer();
@@ -379,11 +426,12 @@ async function serveCustomer({ index, tutorial, forceDish }) {
 
   // 閒聊（SRS 溫習）
   let extra = 0;
-  if (!(tutorial && index === 0)) extra = await smalltalk(cust, voice);
+  if (!(tutorial && index === 0)) extra = await smalltalk(cust);
 
   // 走
-  const bye = pick(REACT.bye);
-  await bubble(world, 'cust', bye.jp, bye.yue, voice);
+  const bye = pickByLevel(REACT.bye);
+  if (!(tutorial && index === 0) && bye.key && Math.random() < 1 / 3) await byeQuiz(cust, bye);
+  else await bubble(world, 'cust', bye.jp, bye.yue, lineVoice(cust.id, bye));
   clearBubble('cust');
   world.customerOut();
   milestones();
@@ -413,18 +461,16 @@ async function cook(rec) {
   return avg;
 }
 
-async function smalltalk(cust, voice) {
-  const keys = Object.keys(SMALLTALK);
-  const k = srsPick(keys);
-  const st = SMALLTALK[k];
-  const v = vocab(st.key);
+async function smalltalk(cust) {
+  const { st, wrongs } = pickSmalltalk(S().chapter, srsPick);
+  const voice = lineVoice(cust.id, st);
   srsSeen(st.key);
   const listen = S().settings.subs === 'tap';
   bubble(world, 'cust', st.jp, '', voice, { hidden: listen });
-  const wrongs = shuffle(keys.filter((x) => x !== k)).slice(0, 2).map((x) => SMALLTALK[x].yue);
-  const opts = shuffle([{ value: true, label: st.yue }, ...wrongs.map((w) => ({ value: false, label: w }))]);
+  const opts = shuffle([{ value: true, label: st.yue }, ...wrongs.map((w) => ({ value: false, label: w.yue }))]);
   const ans = await choose(opts, { title: h('div', { class: 'panel-title' }, '💬 客人講咩？（答啱有貼士）') });
   srsAnswer(st.key, ans.value);
+  trackLv(st.lv, ans.value);
   let coins = 0;
   if (ans.value) {
     sfx('perfect');
@@ -439,11 +485,64 @@ async function smalltalk(cust, voice) {
     sfx('bad');
     ans.button.classList.add('wrong');
     [...ans.grid.children].forEach((b, i) => { if (opts[i].value) b.classList.add('right'); });
-    hint(`「${v.jp.replace(/\{.*?\}/g, '')}」= ${v.yue}。之後會再考你！`, 3500);
+    hint(`「${st.jp.replace(/\{.*?\}/g, '')}」= ${st.yue}。之後會再考你！`, 3500);
   }
   await wait(1300);
   clearBubble('cust');
   return coins;
+}
+
+// 暗黑食堂：客人追問（只喺你吹噓過先會問），返回收入倍數
+async function darkInterrogation(cust, rec, report, listen) {
+  const tier = report.pitch;
+  const H = HYPE[tier];
+  if (Math.random() >= H.ask) { report.outcome = 'none'; return H.mult; }
+  const L = jpLevel();
+  const pool = SMALLTALK_LIST.filter((x) => x.ch === 'dark' && x.lv <= L);
+  const key = srsPick(pool.map((x) => x.key));
+  const st = pool.find((x) => x.key === key) || pool[0];
+  const wrongs = shuffle(pool.filter((x) => x.key !== st.key && x.yue !== st.yue)).slice(0, 2);
+  const voice = lineVoice(cust.id, st);
+  srsSeen(st.key);
+  bubble(world, 'cust', st.jp, '', voice, { hidden: listen });
+  const ans = await choose(shuffle([{ value: true, label: st.yue }, ...wrongs.map((w) => ({ value: false, label: w.yue }))]),
+    { title: h('div', { class: 'panel-title' }, '🤨 客人追問緊咩？（聽明先知點答）') });
+  srsAnswer(st.key, ans.value);
+  trackLv(st.lv, ans.value);
+  clearBubble('cust');
+  if (!ans.value) hint(`佢問：「${st.yue}」`, 2500);
+  const reply = (await choose([
+    { value: 'honest', el: h('div', {}, '老實交代', h('small', {}, DARK_REPLY.honest.yue)) },
+    { value: 'bluff', el: h('div', {}, '硬撐到底', h('small', {}, DARK_REPLY.bluff.yue)) },
+    { value: 'deflect', el: h('div', {}, '轉移話題', h('small', {}, DARK_REPLY.deflect.yue)) },
+  ], { title: h('div', { class: 'panel-title' }, '你點答？') })).value;
+  const mine = DARK_REPLY[reply];
+  srsSeen('nakami');
+  await bubble(world, 'cat', mine.jp, mine.yue, 'cat');
+  clearBubble('cat');
+  const lv = Math.min(L, 2);
+  const say_ = (list) => { const l = list[lv] || list[0]; return bubble(world, 'cust', l.jp, l.yue, lineVoice(cust.id, l)); };
+  let mult, outcome;
+  if (reply === 'honest') { mult = 1; outcome = 'honest'; await say_(DARK_CUST.forgive); S().coins += 0; sfx('good'); }
+  else if (Math.random() < bluffChance(tier, DARK.suspicion, reply)) { mult = H.mult; outcome = 'believe'; await say_(DARK_CUST.believe); sfx('perfect'); }
+  else { mult = 0; outcome = 'expose'; await say_(DARK_CUST.expose); sfx('bad'); world.shake(0.4); }
+  report.outcome = outcome;
+  clearBubble('cust');
+  return mult;
+}
+
+// 再見小測：客人講再見，揀意思（約 1/3 機會）
+async function byeQuiz(cust, bye) {
+  const wrongs = shuffle(REACT.bye.filter((x) => x.key !== bye.key && x.yue !== bye.yue && (x.lv ?? 0) <= jpLevel())).slice(0, 2);
+  srsSeen(bye.key);
+  const opts = shuffle([{ value: true, label: bye.yue }, ...wrongs.map((w) => ({ value: false, label: w.yue }))]);
+  bubble(world, 'cust', bye.jp, '', lineVoice(cust.id, bye), { hidden: S().settings.subs === 'tap' });
+  const ans = await choose(opts, { title: h('div', { class: 'panel-title' }, '👋 客人走之前講咩？') });
+  srsAnswer(bye.key, ans.value);
+  trackLv(bye.lv ?? 0, ans.value);
+  if (ans.value) { sfx('perfect'); pop('+5 🪙', 'good'); S().coins += 5; renderHUD(); }
+  else { sfx('bad'); hint(`「${bye.jp.replace(/\{.*?\}/g, '')}」= ${bye.yue}`, 3000); }
+  await wait(900);
 }
 
 async function levelUp() {
@@ -478,6 +577,7 @@ function milestones() {
 // ===== 日本餐廳（你做客人）=====
 async function restaurant() {
   busy = true;
+  resetUsed();
   hidePanel();
   clearBubble();
   const R = RESTAURANT;
@@ -487,10 +587,13 @@ async function restaurant() {
   const num = NUMS[ppl.n - 1];
   const total = (R.prices[food] + R.prices[drink]) * ppl.n;
   let right = 0, qs = 0;
+  // 額外對答環節：程度越高越多（1/2/3 個）
+  const ctx = { ppl, food, drink, num, f: {} };
+  const beats = drawBeats(ctx, BEAT_COUNT[jpLevel()]);
 
   await fade(() => { world.catTo('rest'); world.setView('rest', true); });
-  const task = h('div', { class: 'task' }, `🎯 任務：你哋 ${ppl.n} 個人，每人想食 ${vocab(food).yue.replace(/（.*?）/g, '')}，飲 ${vocab(drink).yue.replace(/（.*?）/g, '')}`);
-  $('#taskbar').innerHTML = ''; $('#taskbar').append(task); $('#taskbar').classList.add('show');
+  const taskDetails = `你哋 ${ppl.n} 個人，每人想食 ${vocab(food).yue.replace(/（.*?）/g, '')}，飲 ${vocab(drink).yue.replace(/（.*?）/g, '')}${beats.map((b) => b.task(ctx)).filter(Boolean).map((t) => `；${t}`).join('')}`;
+  mission(`${ppl.n} 位 · ${vocab(food).yue.replace(/（.*?）/g, '')} · ${vocab(drink).yue.replace(/（.*?）/g, '')}`, taskDetails);
   hint('今次你做客人！小黑做店員 🐈‍⬛', 3000);
 
   // 一條問題：店員講 staffLine，你喺 options 揀
@@ -507,7 +610,7 @@ async function restaurant() {
         a.button.classList.add('right');
         if (first) right++;
         await say(options[correctIdx].jp, 'word');
-        return;
+        return first;
       }
       sfx('bad');
       a.button.classList.add('wrong');
@@ -517,15 +620,31 @@ async function restaurant() {
     }
   };
 
+  // 跑某個階段嘅額外環節
+  const runBeats = async (phase) => {
+    for (const b of beats.filter((x) => x.phase === phase)) {
+      const reminder = b.task(ctx);
+      if (reminder) hint(`📋 ${reminder}`, 5000);
+      const r = b.build(ctx);
+      const ok = await ask(r.staff || { jp: null, yue: r.prompt }, r.options, 0, r.title);
+      trackLv(b.lv, ok);
+      if (r.reply) await bubble(world, 'cat', r.reply.jp, r.reply.yue, 'cat');
+    }
+  };
+
   const ppOpts = R.people.map((p) => ({ jp: p.jp, yue: p.yue }));
   await ask(R.staff.welcome, ppOpts, R.people.indexOf(ppl), '👥 你哋幾多位？');
   srsAnswer(ppl.key, true);
+  await runBeats('enter');
   await bubble(world, 'cat', R.staff.seat.jp, R.staff.seat.yue, 'cat');
+  await runBeats('seat');
+  await runBeats('preorder');
 
   const otherFood = pick(R.foods.filter((f) => f !== food));
   const otherNum = pick(NUMS.filter((x) => x !== num));
   const fo = [fill(R.you.order, { food, num }), fill(R.you.order, { food: otherFood, num }), fill(R.you.order, { food, num: otherNum })];
   await ask(R.staff.order, fo, 0, '🍽️ 點餐（記住人數！）');
+  await runBeats('order');
 
   const otherDrink = pick(R.drinks.filter((d) => d !== drink));
   const dr = [fill(R.you.drink, { drink, num }), fill(R.you.drink, { drink: otherDrink, num }), fill(R.you.drink, { drink, num: otherNum })];
@@ -533,10 +652,12 @@ async function restaurant() {
 
   await ask(R.staff.confirm, [R.you.yes, R.you.wrongPay, R.you.wrongGreet], 0, '✅ 就咁多？');
   await bubble(world, 'cat', R.staff.wait.jp, R.staff.wait.yue, 'cat');
+  await runBeats('wait');
   clearBubble();
   hidePanel();
   await fade(() => { world.setView('restTable', true); world.restServe([food, drink], ppl.n); });
   await bubble(world, 'cat', R.staff.serve.jp, R.staff.serve.yue, 'cat');
+  await runBeats('mid');
   await ask({ jp: null, yue: '（食之前講咩？）' }, [R.you.itadakimasu, R.you.wrongEat, R.you.gochisou], 0, '🙏 開動之前講咩？');
   srsAnswer('itadakimasu', true);
   hidePanel();
@@ -546,11 +667,13 @@ async function restaurant() {
   await fade(() => { world.restClear(); world.setView('rest', true); });
   await ask({ jp: null, yue: '（食完講咩？）' }, [R.you.gochisou, R.you.itadakimasu, R.you.wrongGreet], 0, '😊 食完講咩？');
   srsAnswer('gochisousama', true);
+  await runBeats('after');
   await ask({ jp: null, yue: '（想埋單）' }, [R.you.kaikei, R.you.wrongPay, R.you.no], 0, '🧾 叫埋單');
   srsAnswer('okaikei', true);
+  await runBeats('pay');
 
-  // 聽價錢
-  const payLine = fill(R.staff.pay, { price: total });
+  // 聽價錢（初學以上有時會講「税込み」）
+  const payLine = fill(jpLevel() > 0 && Math.random() < 0.5 ? R.staff.pay2 : R.staff.pay, { price: total });
   await bubble(world, 'cat', payLine.jp, '（聽吓幾錢？）', 'cat', { hidden: true });
   qs++;
   const fakes = shuffle([total + 100, Math.max(100, total - 50), total + 500, total * 2].filter((x) => x !== total)).slice(0, 2);
@@ -561,6 +684,7 @@ async function restaurant() {
     sfx('bad'); a.button.classList.add('wrong'); firstP = false; say(payLine.jp, 'cat');
     await wait(700);
   }
+  await runBeats('receipt');
   await bubble(world, 'cat', R.staff.bye.jp, R.staff.bye.yue, 'cat');
 
   // 結果

@@ -1,4 +1,5 @@
 import { artURL } from '../art.js';
+import { isPaused } from '../gameplay.js';
 // 3D 世界：廚房 + 餐廳，鏡頭，粒子
 import * as THREE from 'three';
 import { Cat } from './cat.js';
@@ -516,7 +517,8 @@ export class World {
   unanchor(el) { this.anchors = this.anchors.filter((a) => a.el !== el); }
 
   frame() {
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const delta = this.clock.getDelta();
+    const dt = isPaused() ? 0 : Math.min(delta, 0.05);
     // 鏡頭
     const k = 1 - Math.pow(0.02, dt);
     this.camPos.lerp(this.camTargetPos, k);
@@ -580,12 +582,17 @@ export class World {
       const bubble = a.el.firstElementChild;
       const margin = 12;
       const hud = document.querySelector('#hud.show');
-      const top = hud ? hud.getBoundingClientRect().bottom + 12 : margin;
+      const taskbar = document.querySelector('#taskbar.show');
+      const top = Math.max(hud?.getBoundingClientRect().bottom || 0, taskbar?.getBoundingClientRect().bottom || 0, margin) + 12;
       const panel = document.querySelector('#panel.show');
-      const bottom = panel ? panel.getBoundingClientRect().top - 12 : innerHeight - margin;
+      const panelRect = panel?.getBoundingClientRect();
+      const sidePanel = innerWidth > innerHeight && innerHeight <= 500 && panelRect && !panel.classList.contains('hub-panel');
+      const right = sidePanel ? panelRect.left - margin : innerWidth;
+      const bottom = panelRect && !sidePanel ? panelRect.top - 12 : innerHeight - margin;
+      bubble.style.maxWidth = `${Math.min(360, right - margin * 2)}px`;
       bubble.style.maxHeight = `${Math.max(44, bottom - top)}px`;
       const width = bubble.offsetWidth, height = bubble.offsetHeight;
-      const x = Math.max(width / 2 + margin, Math.min(innerWidth - width / 2 - margin, s.x));
+      const x = Math.max(width / 2 + margin, Math.min(right - width / 2 - margin, s.x));
       const y = Math.max(top + height, Math.min(bottom, s.y));
       bubble.style.setProperty('--tail-x', `${Math.max(16, Math.min(width - 16, s.x - x + width / 2))}px`);
       a.el.style.opacity = s.behind ? 0 : 1;

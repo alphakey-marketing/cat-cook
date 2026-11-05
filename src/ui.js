@@ -3,6 +3,8 @@ import { decorateArt } from './art.js';
 import { toHTML, toRomaji } from './jp.js';
 import { say, sfx } from './audio.js';
 import { S, xpForLevel } from './save.js';
+import { pause, wait } from './gameplay.js';
+export { wait } from './gameplay.js';
 
 export const $ = (s, r = document) => r.querySelector(s);
 export function h(tag, attrs = {}, ...kids) {
@@ -18,7 +20,6 @@ export function h(tag, attrs = {}, ...kids) {
   decorateArt(el);
   return el;
 }
-export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // 套用設定（振假名 / 羅馬字 / 廣東話）
 export function applySettings() {
@@ -26,6 +27,7 @@ export function applySettings() {
   document.body.classList.toggle('no-furi', !st.furigana);
   document.body.classList.toggle('no-roma', !st.romaji);
   document.body.classList.toggle('no-yue', !st.yue);
+  document.body.classList.toggle('large-text', !!st.largeText);
 }
 
 // 一句日文：振假名 + 羅馬字 + 廣東話 + 🔊
@@ -61,7 +63,9 @@ export function showHUD(on) { $('#hud').classList.toggle('show', on); }
 export function panel(...kids) {
   const p = $('#panel');
   p.innerHTML = '';
-  p.append(...kids);
+  p.classList.remove('hub-panel');
+  p.scrollTop = 0;
+  p.append(...kids.flat().filter((k) => k != null && k !== false));
   p.classList.add('show');
   return p;
 }
@@ -73,7 +77,7 @@ export function choose(options, { title = null, cols = 1, extra = null } = {}) {
     const grid = h('div', { class: `choices cols${cols}` });
     let done = false; // 揀咗就鎖，唔俾撳多次
     options.forEach((o) => {
-      const b = h('div', { class: `choice ${o.cls || ''}`, role: 'button', tabindex: '0' });
+      const b = h('button', { class: `choice ${o.cls || ''}`, type: 'button' });
       if (o.el) b.append(o.el); else { b.innerHTML = o.label; decorateArt(b); }
       b.addEventListener('click', () => { if (done) return; done = true; sfx('tap'); res({ value: o.value, button: b, grid }); });
       grid.append(b);
@@ -105,7 +109,7 @@ export function bubble(world, who, jp, yue, voice, { hidden = false, play = true
   requestAnimationFrame(() => inner.classList.add('in'));
   if (play) {
     if (who === 'cat') world.cat.setMode('talk');
-    return say(jp, voice).then(() => { if (who === 'cat' && world.cat.mode === 'talk') world.cat.setMode('idle'); });
+    return say(jp, voice).then(async () => { await wait(); if (who === 'cat' && world.cat.mode === 'talk') world.cat.setMode('idle'); });
   }
   return Promise.resolve();
 }
@@ -160,10 +164,13 @@ export function coinFly(n, from = { x: innerWidth / 2, y: innerHeight * 0.4 }) {
 // ===== Modal =====
 export function modal(title, body, { onClose = null, wide = false, footer = null } = {}) {
   const m = $('#modal');
+  pause('modal', true);
   m.innerHTML = '';
-  const close = () => { m.classList.remove('show'); onClose?.(); };
+  let closed = false;
+  const close = () => { if (closed) return; closed = true; m.classList.remove('show'); pause('modal', false); onClose?.(); };
+  m._close = close;
   const card = h('div', { class: `card ${wide ? 'wide' : ''}` },
-    h('div', { class: 'card-head' }, h('h2', { html: title }), h('button', { class: 'x', onclick: () => { sfx('tap'); close(); } }, '✕')),
+    h('div', { class: 'card-head' }, h('h2', { html: title }), h('button', { class: 'x', 'aria-label': '關閉', onclick: () => { sfx('tap'); close(); } }, '✕')),
     h('div', { class: 'card-body' }, body),
     footer ? h('div', { class: 'card-footer' }, footer) : null);
   decorateArt(card);
@@ -172,7 +179,14 @@ export function modal(title, body, { onClose = null, wide = false, footer = null
   m.onclick = (e) => { if (e.target === m) close(); };
   return { close, card };
 }
-export function closeModal() { $('#modal').classList.remove('show'); }
+export function closeModal() { $('#modal')._close?.(); }
+
+// A short, tappable brief leaves room for dialogue; full details stay available.
+export function mission(summary, details) {
+  const bar = $('#taskbar');
+  bar.replaceChildren(h('button', { class: 'mission-btn', onclick: () => modal('📋 今次任務', h('p', { class: 'mission-details' }, details)) }, `📋 ${summary} · 詳情`));
+  bar.classList.add('show');
+}
 
 export function fade(fn) {
   const f = $('#fade');

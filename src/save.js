@@ -29,6 +29,8 @@ const DEFAULT = {
   darkSecrets: {},
   settings: { furigana: true, romaji: true, yue: true, subs: 'show', bgm: true, sfx: true, shake: true },
   jpLevel: null,
+  lvStats: {},            // 每級答題 {right,total}，俾升級提示用
+  lvNudgeDismissed: -1,   // 已經拒絕過升到邊級
   achievements: [],
 };
 
