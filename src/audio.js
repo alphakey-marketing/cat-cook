@@ -120,6 +120,7 @@ export function sfx(name) {
     case 'level': [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0.3, { type: 'triangle', vol: 0.22, at: i * 0.09 })); break;
     case 'meow': tone(700, 0.35, { type: 'sawtooth', vol: 0.06, slide: 1.4 }); tone(980, 0.3, { type: 'sine', vol: 0.1, at: 0.15, slide: 0.6 }); break;
     case 'purr': for (let i = 0; i < 10; i++) noise(0.05, { vol: 0.25, freq: 120, q: 2, at: i * 0.07, type: 'lowpass' }); break;
+    case 'ding': tone(2093, 0.9, { type: 'sine', vol: 0.22 }); tone(2637, 0.7, { type: 'sine', vol: 0.12, at: 0.02 }); break;
     case 'door': tone(1568, 0.5, { vol: 0.12 }); tone(1975, 0.6, { vol: 0.1, at: 0.15 }); break;
     case 'rare': [1047, 1319, 1568, 2093, 1568, 2093].forEach((f, i) => tone(f, 0.25, { type: 'triangle', vol: 0.2, at: i * 0.07 })); break;
   }

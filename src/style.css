@@ -436,3 +436,30 @@ button { min-height: 44px; }
   #panel.hub-panel.show, .large-text #panel.hub-panel.show { transform: translateX(-50%); }
   .card { max-height: calc(100dvh - 12px); }
 }
+
+/* ===== 暗黑食堂：HUD／紅綠燈／擺盤 ===== */
+#darkbar { position: fixed; top: calc(84px + var(--safe-t)); left: 50%; transform: translateX(-50%); z-index: 19; display: none; gap: 10px; background: #2a1d2e; color: #fff; padding: 5px 12px; border-radius: 99px; font-size: 13px; font-weight: 700; pointer-events: none; white-space: nowrap; }
+#darkbar.show { display: flex; }
+#darkbar[data-sus="4"] .db-sus, #darkbar[data-sus="5"] .db-sus { color: #ff7a6b; animation: susPulse .8s infinite alternate; }
+@keyframes susPulse { to { opacity: .5; } }
+@media (max-width: 720px) { #darkbar { top: calc(100px + var(--safe-t)); font-size: 12px; gap: 8px; } }
+
+.sneak-cust { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: #eef7ee; border: 2px solid #9bd39b; margin: 8px 0; transition: background .2s, border-color .2s; }
+.sneak-cust[data-phase="tell"] { background: #fff6dc; border-color: #f2c14e; }
+.sneak-cust[data-phase="look"] { background: #ffe1dc; border-color: #e5534b; }
+.sneak-face { font-size: 38px; line-height: 1; min-width: 44px; text-align: center; }
+.sneak-talk { flex: 1; min-width: 0; }
+.sneak-state { font-weight: 700; font-size: 14px; }
+.sneak-line { min-height: 28px; }
+.sneak-label { font-size: 12px; opacity: .7; margin-top: 4px; }
+.mg-timer.prog i { background: #4caf50; }
+.sneak-btn { width: 100%; margin-top: 10px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.sneak-btn.on { background: #e5534b; border-color: #b8322b; }
+
+.seg { display: flex; gap: 6px; margin: 4px 0 8px; }
+.seg-btn { flex: 1; padding: 8px 4px; font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.seg-btn small { font-size: 11px; opacity: .75; }
+.seg-btn.on { outline: 3px solid var(--ink); background: #fff3d6; }
+.dark-goals p { margin: 6px 0; font-weight: 700; }
+.dark-stars { margin: 10px 0; text-align: center; }
+.dark-stars .goal { font-size: 14px; margin: 3px 0; }

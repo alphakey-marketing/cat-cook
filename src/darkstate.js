@@ -1,3 +1,5 @@
-// 暗黑食堂單碟狀態：客人懷疑度，每碟開始前 reset
-export const DARK = { suspicion: 0 };
-export const resetDark = () => { DARK.suspicion = 0; };
+// 暗黑食堂成更狀態：懷疑度、黑錢彩池、combo；開更 reset
+export const SUS_MAX = 5;
+export const DARK = { suspicion: 0, pot: 0, combo: 1, persona: null, exposes: 0, raid: null, earned: 0, active: false };
+export const resetDark = () => Object.assign(DARK, { suspicion: 0, pot: 0, combo: 1, persona: null, exposes: 0, raid: null, earned: 0, active: true });
+export const addSus = (n) => { DARK.suspicion = Math.max(0, Math.min(SUS_MAX, DARK.suspicion + n)); };

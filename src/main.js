@@ -8,10 +8,10 @@ import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './s
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
 import { CHAPTERS, REGULARS } from './data/chapters.js';
-import { dressDarkDish, darkReport, revealDarkDish, bluffChance } from './dark.js';
-import { DARK_ORDER_TEMPLATES, DARK_REPLY, DARK_CUST, HYPE } from './data/dark.js';
+import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, plateEffect, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
+import { DARK_ORDER_TEMPLATES } from './data/dark.js';
 import { DARK, resetDark } from './darkstate.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS, SMALLTALK_LIST } from './data/dialogue.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
 import { fill, NUMS } from './lines.js';
@@ -41,7 +41,7 @@ onSfx((n) => FEEL[n]?.());
 // 場景 → 音樂情緒
 world.onView = (v) => setMood(v === 'cook' ? 'cook' : v.startsWith('rest') ? 'rest' : 'kitchen');
 if (import.meta.env.DEV) window.__world = world; // 測試用
-if (import.meta.env.DEV) window.__game = { hub, serveCustomer, cook, restaurant, state: S, save, minigames: MINIGAMES };
+if (import.meta.env.DEV) window.__game = { hub, shift, serveCustomer, cook, restaurant, state: S, save, minigames: MINIGAMES };
 
 // ===== 開始畫面 =====
 applySettings();
@@ -207,6 +207,9 @@ async function shift({ tutorial = false } = {}) {
   const n = tutorial ? 1 : 5;
   const stat = { served: 0, coins: 0, perfect: 0 };
   let forceDish = null;
+  // 暗黑食堂：成更懷疑度／彩池
+  const dark = S().chapter === 'dark' && !tutorial;
+  if (dark) { resetDark(); await darkShiftIntro(); }
   for (let i = 0; i < n; i++) {
     $('#shiftinfo').textContent = `客人 ${i + 1} / ${n}`;
     $('#shiftinfo').classList.add('show');
@@ -215,6 +218,11 @@ async function shift({ tutorial = false } = {}) {
     stat.served++;
     stat.coins += res.coins;
     if (res.stars === 3) stat.perfect++;
+    if (dark) {
+      stat.coins += await raid(world, S().settings.subs === 'tap');
+      if (i < n - 1) stat.coins += await bankOrGamble();
+      hidePanel();
+    }
     // 升級
     if (res.levelUps) {
       const newR = await levelUp();
@@ -222,6 +230,7 @@ async function shift({ tutorial = false } = {}) {
     }
   }
   $('#shiftinfo').classList.remove('show');
+  if (dark) { stat.coins += bankAtEnd(); stat.dark = darkStars(stat); hideDarkbar(); }
   S().shifts++;
   S().chapterShifts[S().chapter] = (S().chapterShifts[S().chapter] || 0) + 1;
   save();
@@ -258,11 +267,12 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   // 揀菜：新解鎖優先，其次 SRS 要溫嘅
   const dishId = forceDish || srsPick(unlocked.map((r) => r.dish));
   let rec = unlocked.find((r) => r.dish === dishId) || unlocked[0];
+  if (import.meta.env.DEV) window.__order = rec.dish; // 測試用
   const withNum = s.level >= 2 && !tutorial && rec.chapter !== 'dark' && Math.random() < 0.45;
   let qty = withNum ? 1 + Math.floor(Math.random() * 3) : 1;
   // 按日文程度抽句；高級句用共用聲線（慳音檔）
   const isDark = rec.chapter === 'dark';
-  if (isDark) qty = 1;
+  if (isDark) { qty = 1; DARK.persona = pickPersona(); DARK.custId = cust.id; }
   const tpl = pickByLevel(isDark ? DARK_ORDER_TEMPLATES : withNum ? ORDER_NUM_TEMPLATES : ORDER_TEMPLATES);
   // 暗黑食堂：客人照浮誇菜單名落單（自然日文）
   const line = isDark
@@ -281,6 +291,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   sfx('door');
   await world.customerIn(cust);
   if (cust.rare) { sfx('rare'); toast(`✨ 稀有客人：${cust.yue}！ 貼士 x${cust.tip}`, 2600, 'rare'); }
+  if (isDark) { introPersona(DARK.persona); renderDarkbar(); }
   world.cat.play('wave', 0.8);
   await bubble(world, 'cat', CAT.irasshai.jp, CAT.irasshai.yue, 'cat');
   clearBubble('cat');
@@ -381,7 +392,6 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   }
 
   // 煮
-  if (rec.chapter === 'dark') resetDark();
   const score = await cook(rec);
   let darkResult = null;
   if (rec.chapter === 'dark') {
@@ -409,20 +419,25 @@ async function serveCustomer({ index, tutorial, forceDish }) {
     reactLoaded.then(() => wait(6000), () => wait(6000)),
   ]);
   const isSpecial = special() === rec.id;
-  let darkMult = 1;
+  let lookMult = 1;
   if (darkResult) {
+    lookMult = plateEffect(darkResult);
     await reactDone;
     await wait(400);
     clearBubble('cust');
-    darkMult = await darkInterrogation(cust, rec, darkResult, listen);
+    await interrogate(world, cust, darkResult, listen);
   }
-  let coins = Math.round(rec.price * qty * (0.6 + 0.4 * score) * cust.tip * (isSpecial ? 2 : 1) * darkMult / 10);
+  // 暗黑：客類型畀錢倍數 × 擺盤 × 店評（⭐3 ≈ x1.04）
+  const darkPay = darkResult ? DARK.persona.pay * lookMult * (0.8 + (s.darkRating ?? 3) * 0.08) : 1;
+  let coins = Math.round(rec.price * qty * (0.6 + 0.4 * score) * cust.tip * (isSpecial ? 2 : 1) * darkPay / 10);
   if (listen && tries === 0) coins *= 2;
+  if (darkResult) coins = settleDark(darkResult, coins);
+  const darkTag = darkResult ? { none: `💰 +${darkResult.bonus} 入彩池`, believe: `💰 +${darkResult.bonus} 入彩池`, honest: '老實 x0.8', expose: '被揭穿', plain: '如實介紹' }[darkResult.outcome] : null;
   const xp = 10 + stars * 5;
   panel(
     h('div', { class: 'sub' }, `${vocab(rec.dish).yue} × ${qty}${preference ? ` · ${vocab(preference).yue}` : ''}`),
     h('div', { class: 'stars-big' }, ...[1, 2, 3].map((n) => h('span', { class: n <= stars ? 'on' : '' }, '★'))),
-    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`, isSpecial ? h('span', { class: 'tag' }, '特價 x2') : null, darkResult && darkMult !== 1 ? h('span', { class: 'tag' }, darkMult ? `浮誇 x${darkMult}` : '被揭穿') : null, listen && tries === 0 ? h('span', { class: 'tag' }, '🎧 x2') : null),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`, isSpecial ? h('span', { class: 'tag' }, '特價 x2') : null, darkTag ? h('span', { class: 'tag' }, darkTag) : null, listen && tries === 0 ? h('span', { class: 'tag' }, '🎧 x2') : null),
   );
   [1, 2, 3].forEach((n) => n <= stars && setTimeout(() => sfx('good'), n * 180));
   world.coinsFromCustomer();
@@ -437,12 +452,14 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   world.removeDish();
 
   // 閒聊（SRS 溫習）
+  // 暗黑食堂唔考閒聊同再見（節奏留畀紅綠燈同追問）
+  const quiz = !(tutorial && index === 0) && !isDark;
   let extra = 0;
-  if (!(tutorial && index === 0)) extra = await smalltalk(cust);
+  if (quiz) extra = await smalltalk(cust);
 
   // 走
   const bye = pickByLevel(REACT.bye);
-  if (!(tutorial && index === 0) && bye.key && Math.random() < 1 / 3) await byeQuiz(cust, bye);
+  if (quiz && bye.key && Math.random() < 1 / 3) await byeQuiz(cust, bye);
   else await bubble(world, 'cust', bye.jp, bye.yue, lineVoice(cust.id, bye));
   clearBubble('cust');
   world.customerOut();
@@ -502,45 +519,6 @@ async function smalltalk(cust) {
   await wait(1300);
   clearBubble('cust');
   return coins;
-}
-
-// 暗黑食堂：客人追問（只喺你吹噓過先會問），返回收入倍數
-async function darkInterrogation(cust, rec, report, listen) {
-  const tier = report.pitch;
-  const H = HYPE[tier];
-  if (Math.random() >= H.ask) { report.outcome = 'none'; return H.mult; }
-  const L = jpLevel();
-  const pool = SMALLTALK_LIST.filter((x) => x.ch === 'dark' && x.lv <= L);
-  const key = srsPick(pool.map((x) => x.key));
-  const st = pool.find((x) => x.key === key) || pool[0];
-  const wrongs = shuffle(pool.filter((x) => x.key !== st.key && x.yue !== st.yue)).slice(0, 2);
-  const voice = lineVoice(cust.id, st);
-  srsSeen(st.key);
-  bubble(world, 'cust', st.jp, '', voice, { hidden: listen });
-  const ans = await choose(shuffle([{ value: true, label: st.yue }, ...wrongs.map((w) => ({ value: false, label: w.yue }))]),
-    { title: h('div', { class: 'panel-title' }, '🤨 客人追問緊咩？（聽明先知點答）') });
-  srsAnswer(st.key, ans.value);
-  trackLv(st.lv, ans.value);
-  clearBubble('cust');
-  if (!ans.value) hint(`佢問：「${st.yue}」`, 2500);
-  const reply = (await choose([
-    { value: 'honest', el: h('div', {}, '老實交代', h('small', {}, DARK_REPLY.honest.yue)) },
-    { value: 'bluff', el: h('div', {}, '硬撐到底', h('small', {}, DARK_REPLY.bluff.yue)) },
-    { value: 'deflect', el: h('div', {}, '轉移話題', h('small', {}, DARK_REPLY.deflect.yue)) },
-  ], { title: h('div', { class: 'panel-title' }, '你點答？') })).value;
-  const mine = DARK_REPLY[reply];
-  srsSeen('nakami');
-  await bubble(world, 'cat', mine.jp, mine.yue, 'cat');
-  clearBubble('cat');
-  const lv = Math.min(L, 2);
-  const say_ = (list) => { const l = list[lv] || list[0]; return bubble(world, 'cust', l.jp, l.yue, lineVoice(cust.id, l)); };
-  let mult, outcome;
-  if (reply === 'honest') { mult = 1; outcome = 'honest'; await say_(DARK_CUST.forgive); S().coins += 0; sfx('good'); }
-  else if (Math.random() < bluffChance(tier, DARK.suspicion, reply)) { mult = H.mult; outcome = 'believe'; await say_(DARK_CUST.believe); sfx('perfect'); }
-  else { mult = 0; outcome = 'expose'; await say_(DARK_CUST.expose); sfx('bad'); world.shake(0.4); }
-  report.outcome = outcome;
-  clearBubble('cust');
-  return mult;
 }
 
 // 再見小測：客人講再見，揀意思（約 1/3 機會）

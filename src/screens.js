@@ -17,10 +17,12 @@ export function isUnlocked(r) {
   const s = S();
   if (r.unlock.level) return s.level >= r.unlock.level;
   if (r.unlock.day) return s.daysPlayed >= r.unlock.day;
+  if (r.unlock.darkShift) return (s.chapterShifts.dark || 0) >= r.unlock.darkShift;
   return true;
 }
 export function unlockText(r) {
   if (r.unlock.level) return `Lv.${r.unlock.level} 解鎖`;
+  if (r.unlock.darkShift) return `暗黑食堂完成 ${r.unlock.darkShift} 更解鎖`;
   if (r.unlock.day) {
     const ms = msToMidnight();
     const hh = Math.floor(ms / 3600000), mm = Math.floor((ms % 3600000) / 60000);
@@ -238,6 +240,10 @@ export function shiftSummary(stat, { onNext, onRest, onShop, firstShift }) {
       h('div', {}, h('b', {}, stat.perfect), h('span', {}, '⭐ 三星')),
       h('div', {}, h('b', {}, `${learnedCount()}`), h('span', {}, '📝 識咗字')),
     ),
+    stat.dark ? h('div', { class: 'dark-stars', 'data-stars': stat.dark.stars },
+      h('div', { class: 'stars-big' }, ...[1, 2, 3].map((n) => h('span', { class: n <= stat.dark.stars ? 'on' : '' }, '★'))),
+      ...stat.dark.res.map((r) => h('div', { class: `goal ${r.ok ? 'ok' : ''}` }, `${r.ok ? '✅' : '❌'} ${r.label}`)),
+      h('div', { class: 'sub' }, `店舖評分 ⭐ ${(s.darkRating ?? 3).toFixed(2)}`)) : null,
     h('div', { class: 'streak-row' }, ...Array.from({ length: 7 }, (_, i) => h('div', { class: `sd ${i < Math.min(s.streak, 7) ? 'on' : ''}` }, i < Math.min(s.streak, 7) ? '🔥' : i + 1)), h('div', { class: 'sub' }, `連續 ${s.streak} 日！聽日返嚟，禮物會再大啲`)),
     teaser ? h('div', { class: 'teaser' }, h('span', { class: 'big-emo' }, art('ui_lock'), vocabArt(vocab(teaser.dish))), h('div', {}, h('b', { html: toHTML(vocab(teaser.dish).jp) }), h('div', { class: 'sub' }, unlockText(teaser)))) : null,
     h('div', { class: 'sum-btns' },

@@ -1,13 +1,15 @@
 import { art, vocabArt } from './art.js';
 // 煮食小遊戲。全部返回 Promise<score 0..1>
-import { h, panel, jpLine, pop, shuffle, wait, hint, next } from './ui.js';
+import { h, panel, jpLine, pop, shuffle, pick as pickOne, wait, hint, next } from './ui.js';
 import { gameNow, isPaused, playActivity } from './gameplay.js';
-import { say, sfx } from './audio.js';
+import { say, sfx, preload } from './audio.js';
 import { vocab } from './data/vocab.js';
 import { S, srsAnswer, srsSeen } from './save.js';
 import { toHTML } from './jp.js';
-import { DARK } from './darkstate.js';
-import { jpLevel } from './data/phrases.js';
+import { DARK, addSus } from './darkstate.js';
+import { TELLS, PERSONAS } from './data/dark.js';
+import { renderDarkbar } from './dark.js';
+import { jpLevel, hiVoice } from './data/phrases.js';
 
 function header(step, instruction = '') {
   const verb = step.verb ? vocab(step.verb) : null;
@@ -276,47 +278,110 @@ export async function hold(step, world) {
   return score;
 }
 
-// A short game countdown, deliberately separate from real reheating instructions.
-export async function microwave(step, world) {
-  world.useStation('microwave');
-  const display = h('div', { class: 'micro-display', 'aria-live': 'polite' }, '00:03');
-  const start = h('button', { class: 'btn primary big dark-control' }, '放好食物，開始翻熱');
-  panel(header(step), h('div', { class: 'micro-panel' }, h('div', { class: 'micro-window' }, '▤', display), h('div', { class: 'sub' }, step.tip)), start);
-  await new Promise(resolve => start.addEventListener('click', resolve, { once: true }));
-  start.disabled = true;
-  for (let seconds = 3; seconds > 0; seconds--) {
-    display.textContent = `00:0${seconds}`;
-    world.microwaveLight(true);
-    await wait(650);
-  }
-  world.microwaveLight(false);
-  display.textContent = '叮！'; sfx('good');
-  await wait(300);
-  return 1;
-}
+// ---------- 後廚紅綠燈（暗黑食堂）----------
+// 按住 = 做見唔得光嘅嘢。客人間中講嘢：同朋友傾偈 = 冇事；
+// 講嘢衝住你嚟 = 預兆，過一陣就轉頭望。望緊嗰陣仲按住 = 捉到（懷疑度 +1）。
+// 零基礎有 ❓ 視覺提示；初學提示遲啲先出；N3 淨係靠聽。
+export async function sneak(step, world) {
+  const L = jpLevel();
+  const P = DARK.persona || PERSONAS.tourist;
+  const work = step.work || 2.6;               // 要按住幾多秒先做完
+  const limit = step.limit || 11;              // 時限（秒）
+  const tellMs = [1500, 1200, 1000][L] * P.tell;
+  const lookMs = 1300 * P.look;
+  const voice = hiVoice(DARK.custId || 'usagi');
+  const pool = (k) => TELLS[k].filter((x) => x.lv <= L);
+  [...pool('safe'), ...pool('turn')].forEach((x) => preload(x.jp, voice));
+  if (step.station) world.useStation(step.station);
 
-// 遮掩：客人偷望三次，喺佢望過嚟嗰下撳掣；級數越高，窗口越短
-export async function cover(step) {
-  const win = [1100, 850, 650][jpLevel()] || 1100;
-  const eye = h('div', { class: 'cover-eye' }, '😺');
-  const note = h('p', {}, '客人偷望前會出現「？」，即刻撳掣！');
-  const btn = h('button', { class: 'btn primary big dark-control', 'data-cover': 'btn' }, step.btn);
-  let alert = false, hit = false;
-  btn.addEventListener('click', () => { if (alert && !hit) { hit = true; sfx('good'); } else sfx('tap'); });
-  panel(header(step), eye, note, btn);
-  let ok = 0;
-  for (let i = 0; i < 3; i++) {
-    await wait(700 + Math.random() * 900);
-    alert = true; hit = false;
-    eye.textContent = '😳❓';
-    await wait(win);
-    alert = false;
-    if (hit) { ok++; note.textContent = step.ok; }
-    else { DARK.suspicion++; eye.textContent = '🤨'; note.textContent = step.bad; sfx('bad'); }
-    await wait(600);
-    eye.textContent = '😺';
-  }
-  return ok === 3 ? 1 : ok === 2 ? 0.8 : ok === 1 ? 0.6 : 0.4;
+  const face = h('div', { class: 'sneak-face' }, '🗣️');
+  const status = h('div', { class: 'sneak-state' }, `${P.icon} ${P.name}同朋友傾緊偈`);
+  const line = h('div', { class: 'sneak-line' });
+  const cust = h('div', { class: 'sneak-cust', 'data-phase': 'idle' }, face, h('div', { class: 'sneak-talk' }, status, line));
+  const prog = h('div', { class: 'mg-timer prog' }, h('i'));
+  const timer = h('div', { class: 'mg-timer' }, h('i'));
+  const btn = h('button', { class: 'btn primary big holdbtn sneak-btn', 'data-sneak': 'hold' }, step.btn);
+  const help = L === 0 ? '按住做嘢。客人講嘢後見到 ❓ 就即刻放手！第一下按先開始計時。'
+    : '按住做嘢。聽客人講咩：同朋友傾偈照做；講嘢衝住你嚟就即刻放手！';
+  panel(header(step, help), cust,
+    h('div', { class: 'sneak-label' }, '進度'), prog, h('div', { class: 'sneak-label' }, '時間'), timer, btn);
+  say(step.jp, 'cat');
+
+  let holding = false, locked = false, started = false, finished = false;
+  let progress = 0, caught = 0, phase = 'away', t0 = 0, last = 0, nextLine = 0, turnAt = 0, lookUntil = 0, dingAt = 0, caughtThis = false;
+  const setPhase = (p) => { phase = p; cust.dataset.phase = p; };
+  const release = () => { holding = false; btn.classList.remove('on'); btn.textContent = step.btn; world.cat.setMode('idle'); if (step.ding) world.microwaveLight(false); };
+  const onPause = () => release();
+  document.addEventListener('gamepause', onPause);
+
+  const score = await new Promise((resolve) => {
+    let raf;
+    const finish = (sc) => { if (finished) return; finished = true; cancelAnimationFrame(raf); release(); resolve(sc); };
+    const getCaught = (why) => {
+      caught++; caughtThis = true; locked = holding; release();
+      addSus(1); renderDarkbar();
+      sfx('bad'); world.shake(0.4);
+      face.textContent = '🤨'; status.textContent = why;
+    };
+    const speak = (now) => {
+      const turn = Math.random() < P.turn;
+      const l = pickOne(pool(turn ? 'turn' : 'safe'));
+      line.replaceChildren(jpLine(l.jp, { yue: L === 0 ? l.yue : '', voice }));
+      say(l.jp, voice);
+      if (turn) { setPhase('tell'); turnAt = now + tellMs; if (L === 0) face.textContent = '❓'; }
+      else { face.textContent = '🗣️'; status.textContent = `${P.icon} 同朋友傾緊偈`; nextLine = now + (1200 + Math.random() * 1200) * P.gap; }
+    };
+    const loop = () => {
+      const now = gameNow();
+      const dt = (now - last) / 1000; last = now;
+      if (phase === 'away' && now >= nextLine && !dingAt) speak(now);
+      else if (phase === 'tell') {
+        if (L === 1 && now >= turnAt - 350) face.textContent = '❓';
+        if (now >= turnAt) { setPhase('look'); lookUntil = now + lookMs; caughtThis = false; face.textContent = '👀'; status.textContent = '客人望緊廚房！'; }
+      } else if (phase === 'look') {
+        if (holding && !caughtThis) getCaught(step.caught);
+        if (now >= lookUntil) {
+          setPhase('away'); face.textContent = '🗣️'; status.textContent = `${P.icon} 轉返去傾偈`; line.replaceChildren();
+          nextLine = now + (900 + Math.random() * 900) * P.gap;
+        }
+      }
+      if (holding && !dingAt) {
+        progress = Math.min(1, progress + dt / work);
+        if (progress >= 1) {
+          if (step.ding) { dingAt = now + 450; release(); btn.disabled = true; btn.textContent = '⏳ 就嚟「叮」…'; }
+          else return finish(caught ? 0.9 : 1);
+        }
+      }
+      if (dingAt && now >= dingAt) {
+        sfx('ding');
+        if (phase === 'look') getCaught('「チン♪」——客人聽到晒！');
+        return finish(caught ? 0.9 : 1);
+      }
+      const el = (now - t0) / 1000;
+      prog.firstChild.style.width = progress * 100 + '%';
+      timer.firstChild.style.width = Math.max(0, 1 - el / limit) * 100 + '%';
+      cust.dataset.progress = progress.toFixed(2);
+      if (el >= limit) return finish(Math.max(0.3, progress * 0.8));
+      raf = requestAnimationFrame(loop);
+    };
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); try { btn.setPointerCapture(e.pointerId); } catch {}
+      if (finished || isPaused() || locked || dingAt) return;
+      if (!started) { started = true; t0 = last = gameNow(); nextLine = t0 + 900 + Math.random() * 600; raf = requestAnimationFrame(loop); }
+      holding = true; btn.classList.add('on'); btn.textContent = `${step.btn.replace('按住：', '')}…`;
+      world.cat.setMode('stir'); if (step.ding) world.microwaveLight(true);
+      if (phase === 'look' && !caughtThis) getCaught(step.caught);
+    });
+    const up = () => { locked = false; if (holding) { release(); btn.textContent = `${step.hide}（放手中）`; } };
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointercancel', up);
+  });
+  document.removeEventListener('gamepause', onPause);
+  if (finished && score >= 1) { pop('冇俾人發現！', 'perfect'); sfx('perfect'); }
+  else if (score >= 0.9) { pop('做完…但俾人望到', 'good'); }
+  else { pop('做唔切！', 'miss'); sfx('bad'); hint(`被捉 ${caught} 次；時間唔夠，味道會差啲`, 3000); }
+  await wait(500);
+  return score;
 }
 
 export async function season(step) {
@@ -368,4 +433,4 @@ export async function request(step) {
   }
 }
 
-export const MINIGAMES = Object.fromEntries(Object.entries({ pick, timing, mash, stir, hold, microwave, season, cover, request }).map(([key, fn]) => [key, (...args) => playActivity(fn, ...args)]));
+export const MINIGAMES = Object.fromEntries(Object.entries({ pick, timing, mash, stir, hold, sneak, season, request }).map(([key, fn]) => [key, (...args) => playActivity(fn, ...args)]));

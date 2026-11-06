@@ -27,6 +27,8 @@ const DEFAULT = {
   chapterShifts: {},
   regularVisits: {},
   darkSecrets: {},
+  darkRating: 3,
+  darkBest: 0,
   settings: { furigana: true, romaji: true, yue: true, subs: 'show', bgm: true, sfx: true, shake: true },
   jpLevel: null,
   lvStats: {},            // 每級答題 {right,total}，俾升級提示用
