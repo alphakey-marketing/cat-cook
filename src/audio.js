@@ -38,7 +38,8 @@ async function loadBuf(key) {
   return p;
 }
 
-export function preload(jp, voice) { if (ctx) loadBuf(audioKey(jp, voice)); }
+// 預載音檔；返回 Promise（載完 resolve，冇 ctx 就即刻 resolve）
+export function preload(jp, voice) { return ctx ? loadBuf(audioKey(jp, voice)) : Promise.resolve(null); }
 
 // 講一句日文。返回 Promise（講完 resolve）
 export async function say(jp, voice = 'word', rate = 1) {

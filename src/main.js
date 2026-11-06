@@ -270,6 +270,9 @@ async function serveCustomer({ index, tutorial, forceDish }) {
     : fill(tpl, withNum ? { dish: rec.dish, num: NUMS[qty - 1] } : { dish: rec.dish });
   const voice = lineVoice(cust.id, tpl);
   preload(line.jp, voice);
+  // 食後反應句預先揀好兼預載：手機網慢都唔使上菜先下載
+  const reacts = { 3: pickByLevel(REACT.great), 2: pickByLevel(REACT.ok), 1: pickByLevel(REACT.meh) };
+  for (const r of Object.values(reacts)) preload(r.jp, lineVoice(cust.id, r));
 
   // 入門
   hidePanel();
@@ -395,13 +398,15 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   world.setView('serve');
   world.slideDishToCustomer();
   await wait(500);
-  const react = pickByLevel(stars === 3 ? REACT.great : stars === 2 ? REACT.ok : REACT.meh);
+  const react = reacts[stars];
+  const reactVoice = lineVoice(cust.id, react);
   world.customerJump();
   // 客人食後反應：要等講完先走下一步，唔好畀後面句子 cut 咗
-  // 最多等 6 秒，防音檔 hang 住
+  // 6 秒上限喺音檔載完先開始計（下載時間唔計），防音檔 hang 住
+  const reactLoaded = preload(react.jp, reactVoice);
   const reactDone = Promise.race([
-    bubble(world, 'cust', react.jp, react.yue, lineVoice(cust.id, react), { hidden: listen }),
-    wait(6000),
+    bubble(world, 'cust', react.jp, react.yue, reactVoice, { hidden: listen }),
+    reactLoaded.then(() => wait(6000), () => wait(6000)),
   ]);
   const isSpecial = special() === rec.id;
   let darkMult = 1;
