@@ -416,7 +416,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   // 6 秒上限喺音檔載完先開始計（下載時間唔計），防音檔 hang 住
   const reactLoaded = preload(react.jp, reactVoice);
   const reactDone = Promise.race([
-    bubble(world, 'cust', react.jp, react.yue, reactVoice, { hidden: listen }),
+    bubble(world, 'cust', react.jp, react.yue, reactVoice), // 反應唔考，唔遮字幕
     reactLoaded.then(() => wait(6000), () => wait(6000)),
   ]);
   const isSpecial = special() === rec.id;

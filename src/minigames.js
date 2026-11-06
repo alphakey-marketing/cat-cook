@@ -322,7 +322,7 @@ export async function sneak(step, world) {
   const prog = h('div', { class: 'mg-timer prog' }, h('i'));
   const timer = h('div', { class: 'mg-timer' }, h('i'));
   const bars = h('div', { class: 'sneak-bars' }, h('span', { title: '進度' }, '🍳'), prog, h('span', { title: '時間' }, '⏱️'), timer);
-  const btn = h('button', { class: 'btn primary big holdbtn sneak-btn', 'data-sneak': 'hold' }, step.btn);
+  const btn = h('button', { class: 'btn primary big holdbtn sneak-btn', 'data-sneak': 'hold', 'data-state': 'ready' }, step.btn);
   const help = L === 0 ? '🟢 按住做嘢 → 🟡 客人講嘢衝你：放手 → 🟢 佢轉返去：再按住'
     : L === 1 ? '傾偈就按住；聽到講嘢衝你就放手，佢轉返去再按'
     : '靠耳仔：傾偈就按住；講嘢衝你就放手';
@@ -334,25 +334,29 @@ export async function sneak(step, world) {
   const setPhase = (p) => { phase = p; cust.dataset.phase = p; };
   // cue 決定個框顏色同狀態字（Lv2 預兆唔變色，淨係靠聽）
   const cue = (c, txt, fc) => { cust.dataset.cue = c; if (txt) status.textContent = txt; if (fc) face.textContent = fc; };
-  const idleText = () => (phase === 'look' ? '🙈 唔好掂！' : phase === 'tell' && cust.dataset.cue === 'tell' ? '✋ 放手！' : step.btn);
-  const release = () => { holding = false; btn.classList.remove('on'); btn.textContent = idleText(); world.cat.setMode('idle'); if (step.ding) world.microwaveLight(false); };
+  // 個掣狀態：ready 紅 / hold 綠 / stop 灰 / tell 黃 / look 深紅
+  const show = (st, txt) => { btn.dataset.state = st; btn.textContent = txt; };
+  const idleShow = () => (phase === 'look' ? show('look', '🙈 唔好掂！')
+    : phase === 'tell' && cust.dataset.cue === 'tell' ? show('tell', '✋ 放手！')
+    : started ? show('stop', '⏸ 停咗｜再按住繼續') : show('ready', step.btn));
+  const release = () => { holding = false; btn.classList.remove('on'); bars.classList.remove('on'); idleShow(); world.cat.setMode('idle'); if (step.ding) world.microwaveLight(false); };
   const onPause = () => release();
   document.addEventListener('gamepause', onPause);
 
   const score = await new Promise((resolve) => {
     let raf;
-    const finish = (sc) => { if (finished) return; finished = true; cancelAnimationFrame(raf); release(); resolve(sc); };
+    const finish = (sc) => { if (finished) return; finished = true; cancelAnimationFrame(raf); release(); show(sc >= 0.9 ? 'hold' : 'stop', sc >= 0.9 ? '✅ 完成！' : '⌛ 時間到'); resolve(sc); };
     const getCaught = (why) => {
       caught++; caughtThis = true; locked = holding; release();
       addSus(1); renderDarkbar();
       sfx('bad'); world.shake(0.4);
       pop('👀 被發現！懷疑度 +1', 'miss');
       cue('caught', `🔴 ${why}｜被發現！放手，等佢轉返去再按`, '🤨');
-      btn.textContent = '🙈 唔好掂！';
+      show('look', '🙈 唔好掂！');
     };
     const showTell = () => {
       cue('tell', '🟡 客人講嘢衝住你！即刻放手！', '❓');
-      if (!holding) btn.textContent = '✋ 放手！';
+      if (!holding) show('tell', '✋ 放手！');
     };
     const speak = (now, turn) => {
       const l = pickOne(pool(turn ? 'turn' : 'safe'));
@@ -379,7 +383,7 @@ export async function sneak(step, world) {
         if (now >= turnAt) {
           setPhase('look'); lookAt = now; lookUntil = now + lookMs; caughtThis = false;
           cue('look', '🔴 客人望緊廚房！唔好掂！', '👀');
-          if (!holding) btn.textContent = '🙈 唔好掂！';
+          if (!holding) show('look', '🙈 唔好掂！');
         }
       } else if (phase === 'look') {
         if (holding && !caughtThis && now >= lookAt + GRACE) getCaught(step.caught);
@@ -387,7 +391,7 @@ export async function sneak(step, world) {
           setPhase('away'); line.replaceChildren();
           if (!caughtThis) { pop('😌 冇被發現！', 'good'); sfx('good'); }
           cue('safe', `🟢 ${caughtThis ? '佢' : '冇發現！佢'}轉返去傾偈 → 再按住`, '🗣️');
-          if (!holding) btn.textContent = step.btn;
+          if (!holding) show('ready', step.btn);
           nextLine = now + (900 + Math.random() * 900) * P.gap;
         }
       }
@@ -395,7 +399,7 @@ export async function sneak(step, world) {
         // 預兆未出晒 / 客人未轉返去，唔俾做完
         progress = Math.min(tellIdx < marks.length || phase !== 'away' ? 0.97 : 1, progress + dt / work);
         if (progress >= 1) {
-          if (step.ding) { dingAt = now + 450; release(); btn.disabled = true; btn.textContent = '⏳ 就嚟「叮」…'; }
+          if (step.ding) { dingAt = now + 450; release(); btn.disabled = true; show('stop', '⏳ 就嚟「叮」…'); }
           else return finish(caught ? 0.9 : 1);
         }
       }
@@ -415,7 +419,7 @@ export async function sneak(step, world) {
       e.preventDefault(); try { btn.setPointerCapture(e.pointerId); } catch {}
       if (finished || isPaused() || locked || dingAt) return;
       if (!started) { started = true; t0 = last = gameNow(); nextLine = t0 + 900 + Math.random() * 600; raf = requestAnimationFrame(loop); }
-      holding = true; btn.classList.add('on'); btn.textContent = `${step.btn.replace('按住：', '')}…`;
+      holding = true; btn.classList.add('on'); bars.classList.add('on'); show('hold', `🍳 ${step.btn.replace(/^\S*\s*按住：/, '')}…`);
       world.cat.setMode('stir'); if (step.ding) world.microwaveLight(true);
       if (phase === 'look' && !caughtThis) getCaught(step.caught);
     });
@@ -423,8 +427,7 @@ export async function sneak(step, world) {
       locked = false;
       if (!holding) return;
       release();
-      if (phase === 'tell') { cue(L < 2 ? 'tell' : 'hid', `🫣 ${step.hide}…收埋咗，等佢望完`); btn.textContent = '🫣 收埋咗'; }
-      else if (phase === 'away') btn.textContent = step.btn;
+      if (phase === 'tell') { cue(L < 2 ? 'tell' : 'hid', `🫣 ${step.hide}…收埋咗，等佢望完`); show('tell', '🫣 收埋咗'); }
     };
     btn.addEventListener('pointerup', up);
     btn.addEventListener('pointercancel', up);
