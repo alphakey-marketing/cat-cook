@@ -31,6 +31,24 @@ export function unlockText(r) {
   return '';
 }
 
+// 單詞進度：總數只計已解鎖食譜用到嘅字 + 基本字（數字／常用句），未解鎖章節唔計
+export function wordProgress() {
+  const pool = new Set();
+  for (const [id, v] of Object.entries(VOCAB)) if (v.cat === 'num' || v.cat === 'phrase') pool.add(id);
+  for (const r of RECIPES.filter(isUnlocked)) {
+    pool.add(r.dish);
+    r.ingredients.forEach(([id]) => pool.add(id));
+    r.steps.forEach((st) => { if (st.verb) pool.add(st.verb); if (st.request) pool.add(st.request); });
+  }
+  const srs = S().srs;
+  Object.keys(srs).forEach((id) => { if (VOCAB[id]) pool.add(id); });   // 玩過嘅字一定計入分母
+  const ids = [...pool].filter((id) => VOCAB[id]);
+  const learned = ids.filter((id) => srs[id] && srs[id].box >= 2).length;
+  const mastered = ids.filter((id) => srs[id] && srs[id].box >= 5).length;
+  const seen = ids.filter((id) => srs[id]).length;
+  return { total: ids.length, learned, mastered, seen, unseen: ids.length - seen };
+}
+
 const stars = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
 // 真實食譜卡
@@ -98,7 +116,11 @@ export function openBook(tab = 'recipes') {
         list.append(h('div', { class: 'word-row', onclick: () => say(v.jp, 'word') },
           h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'jp-inline', html: toHTML(v.jp) }), h('span', { class: 'yue' }, v.yue), h('span', { class: 'lvl', title: '熟練度' }, lvl)));
       });
-      content.append(h('div', { class: 'progress-line' }, `識咗 ${learnedCount()} 個 · 見過 ${seenCount()} 個　（🌱→🌸 越溫越熟）`), list);
+      const p = wordProgress();
+      content.append(h('div', { class: 'progress-line' },
+        `識咗 ${p.learned} / ${p.total} 個 · 🌸 熟晒 ${p.mastered} 個`,
+        h('div', { class: 'bar' }, h('i', { style: `width:${p.total ? (p.learned / p.total) * 100 : 0}%` })),
+        h('div', { class: 'sub' }, `見過 ${p.seen} 個 · 仲有 ${p.unseen} 個未見過　（🌱→🌸 越溫越熟）`)), list);
     } else if (t === 'phrases') {
       // 閒聊／再見／落單細節：見過先顯示，按等級分組，點一下聽
       const L = jpLevel();
@@ -131,7 +153,7 @@ export function openBook(tab = 'recipes') {
       });
     } else {
       const s = S();
-      const rows = [['🔥 連續日數', `${s.streak} 日`], ['📅 玩咗', `${s.daysPlayed} 日`], ['🐾 招呼客人', `${s.served} 位`], ['🏮 去餐廳', `${s.restaurantDone} 次`], ['📝 識咗單詞', `${learnedCount()} 個`], ['💕 小黑好感度', `${s.affection}`]];
+      const rows = [['🔥 連續日數', `${s.streak} 日`], ['📅 玩咗', `${s.daysPlayed} 日`], ['🐾 招呼客人', `${s.served} 位`], ['🏮 去餐廳', `${s.restaurantDone} 次`], ['📝 識咗單詞', `${wordProgress().learned} 個`], ['💕 小黑好感度', `${s.affection}`]];
       content.append(h('div', { class: 'stats' }, rows.map(([a, b]) => h('div', { class: 'stat' }, h('span', {}, a), h('b', {}, b)))));
     }
   };
@@ -238,7 +260,7 @@ export function shiftSummary(stat, { onNext, onRest, onShop, firstShift }) {
       h('div', {}, h('b', {}, stat.served), h('span', {}, '位客人')),
       h('div', {}, h('b', {}, `+${stat.coins}`), h('span', {}, '🪙 金幣')),
       h('div', {}, h('b', {}, stat.perfect), h('span', {}, '⭐ 三星')),
-      h('div', {}, h('b', {}, `${learnedCount()}`), h('span', {}, '📝 識咗字')),
+      h('div', {}, h('b', {}, `${wordProgress().learned}`), h('span', {}, '📝 識咗字')),
     ),
     stat.dark ? h('div', { class: 'dark-stars', 'data-stars': stat.dark.stars },
       h('div', { class: 'stars-big' }, ...[1, 2, 3].map((n) => h('span', { class: n <= stat.dark.stars ? 'on' : '' }, '★'))),
