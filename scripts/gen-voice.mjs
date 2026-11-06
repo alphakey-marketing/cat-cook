@@ -5,7 +5,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
 import { REGULARS } from '../src/data/chapters.js';
 import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES, WISHES, STYLES, PLATE_REACT } from '../src/data/dark.js';
 import { SHOP, CUSTOMERS } from '../src/data/shop.js';
@@ -37,12 +37,14 @@ for (const d of dishes) {
   ORDER_TEMPLATES.forEach((t) => tplAdd(t, { dish: d }));
   ORDER_NUM_TEMPLATES.forEach((t) => NUMS.forEach((n) => tplAdd(t, { dish: d, num: n })));
   REPLACE.forEach((t) => tplAdd(t, { dish: d }));
+  KAERU.forEach((t) => tplAdd(t, { dish: d }));
   SOLDOUT.forEach((t) => add(fill(t, { dish: d }).jp, 'cat'));
 }
 Object.values(REACT).flat().forEach((l) => custAdd(l));
 SMALLTALK_LIST.forEach((l) => custAdd(l));
 DETAILS.forEach((l) => custAdd(l));
 TSUIKA.forEach((l) => custAdd(l));
+[...HERASU, ...KYANSERU, ...YAMERU].forEach((l) => custAdd(l));
 // 喫茶店熟客（固定 customer 聲線）
 REGULARS.forEach((r) => CUSTOMERS.slice(0, REGULARS.length).forEach((c) => add(r.jp, c.id)));
 // 熟客最後一步指示、暗黑食堂

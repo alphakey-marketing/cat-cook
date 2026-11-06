@@ -11,7 +11,7 @@ import { CHAPTERS, REGULARS } from './data/chapters.js';
 import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
 import { DARK_ORDER_TEMPLATES } from './data/dark.js';
 import { DARK, resetDark } from './darkstate.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS } from './data/dialogue.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
 import { fill, NUMS } from './lines.js';
@@ -214,6 +214,7 @@ async function shift({ tutorial = false } = {}) {
     $('#shiftinfo').textContent = `客人 ${i + 1} / ${n}`;
     $('#shiftinfo').classList.add('show');
     const res = await serveCustomer({ index: i, tutorial, forceDish });
+    if (res.cancelled) { await wait(700); continue; }   // 取消：唔計服務、保留 forceDish
     forceDish = null;
     stat.served++;
     stat.coins += res.coins;
@@ -358,16 +359,50 @@ async function serveCustomer({ index, tutorial, forceDish }) {
       }
     }
   }
+  // 客人取消：唔煮、唔收錢，客人離場
+  const cancelOrder = () => {
+    clearBubble('cust');
+    world.cat.play('sad', 0.6);
+    toast('客人取消咗訂單，今次冇收入');
+    world.customerOut();
+    return { coins: 0, stars: 0, levelUps: 0, cancelled: true };
+  };
+  const rnd = (a) => a[Math.floor(Math.random() * a.length)];
+  const yueOf = (r) => vocab(r.dish).yue.replace(/（.*?）/g, '');
   if (S().chapter === 'izakaya' && index % 2 === 0) {
-    const ts = pickByLevel(TSUIKA);
-    await askChapter(ts.jp, ts.yue, ['加一份', '取消訂單', '立即埋單'], 0, 'tsuika', '客人想改張單？', lineVoice(cust.id, ts));
-    qty++;
-    toast(`加單成功：共 ${qty} 份`);
+    // 落單後、未煮前改單：加單 / 減少 / 換菜 / 取消（按情況抽，答案位置隨機）
+    const other = unlocked.filter((r) => r.id !== rec.id);
+    const kinds = [['add', 3], ['cancel', 1], ...(qty >= 2 ? [['less', 2]] : []), ...(other.length ? [['swap', 3]] : [])];
+    let roll = Math.random() * kinds.reduce((a, [, w]) => a + w, 0);
+    const kind = (kinds.find(([, w]) => (roll -= w) <= 0) || kinds[0])[0];
+    const swapLabel = (r) => `改做${yueOf(r)}`;
+    const sw = kind === 'swap' ? rnd(other) : null;
+    const T = { add: TSUIKA, less: HERASU, swap: KAERU, cancel: KYANSERU }[kind];
+    const word = { add: 'tsuika', less: 'herasu', swap: 'kaeru', cancel: 'kyanseru' }[kind];
+    const right = { add: '加一份', less: '減一份', cancel: '取消訂單', swap: sw && swapLabel(sw) }[kind];
+    const tpl2 = pickByLevel(T);
+    const ln = sw ? fill(tpl2, { dish: sw.dish }) : tpl2;
+    const decoyPool = ['加一份', '減一份', '取消訂單'];
+    const otherSwap = other.filter((r) => r !== sw);
+    if (otherSwap.length) decoyPool.push(swapLabel(rnd(otherSwap)));
+    const decoys = shuffle(decoyPool.filter((l) => l !== right)).slice(0, 2);
+    await askChapter(ln.jp, ln.yue, [right, ...decoys], 0, word, '客人想改張單？', lineVoice(cust.id, tpl2));
+    if (kind === 'add') { qty++; toast(`加單成功：共 ${qty} 份`); }
+    else if (kind === 'less') { qty--; toast(`減咗一份：共 ${qty} 份`); }
+    else if (kind === 'swap') { rec = sw; srsSeen(rec.dish); srsAnswer(rec.dish, true); toast(`改做 ${yueOf(rec)}`); }
+    else return cancelOrder();
   } else if (S().chapter === 'izakaya') {
     const replacement = unlocked.find(r => r.id !== rec.id);
     const so = fill(pickByLevel(SOLDOUT), { dish: rec.dish });
     await bubble(world, 'cat', so.jp, so.yue, 'cat');
     clearBubble('cat');
+    if (!replacement || Math.random() < 0.25) {
+      // 客人唔要替代品：「取消所有訂單」先係答案
+      const yl = pickByLevel(YAMERU);
+      const alt = replacement ? [vocab(replacement.dish).yue] : [];
+      await askChapter(yl.jp, yl.yue, ['取消所有訂單', vocab(rec.dish).yue, ...alt].slice(0, 3), 0, 'yameru', '沽清後，客人點樣話？', lineVoice(cust.id, yl));
+      return cancelOrder();
+    }
     const d = vocab(replacement.dish);
     const rp = pickByLevel(REPLACE);
     const rl = fill(rp, { dish: replacement.dish });

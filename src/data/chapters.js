@@ -80,6 +80,8 @@ export const CHAPTER_WORDS = [
   ['yaku', '焼{や}く', '燒、烘', 'verb'], ['ageru', '揚{あ}げる', '炸', 'verb'],
   ['ireru', '入{い}れる', '倒入、沖泡', 'verb'], ['musu', '蒸{む}す', '蒸', 'verb'],
   ['tsuika', '追加{ついか}', '加單', 'phrase'], ['urikire', '売{う}り切{き}れ', '沽清', 'phrase'],
+  ['herasu', '減{へ}らす', '減少', 'phrase'], ['kaeru', '変{か}える', '改做、換', 'phrase'],
+  ['kyanseru', 'キャンセル', '取消訂單', 'phrase'], ['yameru', 'やめる', '唔要、算', 'phrase'],
   ['hot', '温{あたた}かい', '熱飲', 'phrase'], ['iced', '冷{つめ}たい', '凍飲', 'phrase'],
   ['less_sugar', '甘{あま}さ控{ひか}えめ', '少甜', 'phrase'], ['no_sugar', '砂糖{さとう}なし', '無糖', 'phrase'],
 ];
