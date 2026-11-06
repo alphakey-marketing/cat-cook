@@ -451,7 +451,13 @@ button { min-height: 44px; }
 .sneak-talk { flex: 1; min-width: 0; }
 .sneak-state { font-weight: 700; font-size: 14px; }
 .sneak-line { min-height: 28px; }
-.sneak-label { font-size: 12px; opacity: .7; margin-top: 4px; }
+.sneak-bars { display: grid; grid-template-columns: auto 1fr auto 1fr; align-items: center; gap: 6px; font-size: 16px; }
+#panel.sneak-panel { gap: 8px; max-height: min(62dvh, calc(100dvh - 120px)); }
+#panel.sneak-panel .sneak-cust { margin: 0; padding: 8px 10px; }
+#panel.sneak-panel .sneak-btn { position: sticky; bottom: 0; z-index: 2; margin-top: 4px; box-shadow: 0 -10px 14px var(--paper); }
+.dress-opt { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.dress-opt b { font-size: 17px; }
+.dress-opt small { font-size: 11px; opacity: .75; }
 .mg-timer.prog i { background: #4caf50; }
 .sneak-btn { width: 100%; margin-top: 10px; touch-action: none; user-select: none; -webkit-user-select: none; }
 .sneak-btn.on { background: #e5534b; border-color: #b8322b; }

@@ -26,13 +26,12 @@ with sync_playwright() as p:
                 page.locator('#modal.show [data-dark="start"]').evaluate('el=>el.click()')
             elif page.locator('#modal.show .card-footer button').count():
                 page.locator('#modal.show .card-footer button').evaluate('el=>el.click()')
-            elif page.locator('[data-dress="go"]').count():
-                if 'gamble' in seen and 'raid' not in seen:
-                    # 擺盤唔啱婆婆口味 → 懷疑度 +1 → 爆
-                    page.locator('[data-dress="plate:grand"]').evaluate('el=>el.click()')
-                    page.locator('[data-dress="garnish:tower"]').evaluate('el=>el.click()')
-                page.locator('[data-dress="pitch:grand"]').evaluate('el=>el.click()')
-                page.locator('[data-dress="go"]').evaluate('el=>el.click()')
+            elif page.locator('#panel.show [data-dress^="style:"]').count():
+                # 擺盤唔啱婆婆口味（豪華）→ 懷疑度 +1 → 爆
+                st = 'gouka' if 'gamble' in seen and 'raid' not in seen else 'simple'
+                page.locator(f'#panel.show [data-dress="style:{st}"]').evaluate('el=>el.closest(".choice").click()')
+            elif page.locator('#panel.show [data-dress^="pitch:"]').count():
+                page.locator('#panel.show [data-dress="pitch:grand"]').evaluate('el=>el.closest(".choice").click()')
             elif page.locator('#panel.show [data-bank]').count():
                 # 第一次繼續搏，之後逼爆懷疑度試突擊，再收手
                 if 'gamble' not in seen:

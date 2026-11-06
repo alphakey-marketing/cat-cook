@@ -46,30 +46,37 @@ with sync_playwright() as p:
         }""", {'kind':kind,'rnd':rnd})
         page.wait_for_selector('[data-sneak="hold"]')
     btn=lambda: page.locator('[data-sneak="hold"]')
-    run_sneak('cough', 0.99)
-    btn().dispatch_event('pointerdown', {'pointerId':1})
-    page.wait_for_function('window.controlDone!==false', timeout=12000)
+    # 識聽預兆：預兆就放手，其餘按住 → 1 分、懷疑度 0；一定出過預兆
+    def play_well(holding=False):
+        tells=0;prev=None
+        for _ in range(400):
+            if page.evaluate('window.controlDone!==false'): break
+            phase=page.evaluate("document.querySelector('.sneak-cust')?.dataset.phase")
+            if phase=='tell' and prev!='tell': tells+=1
+            prev=phase
+            if phase in ('idle','away') and not holding:
+                btn().dispatch_event('pointerdown', {'pointerId':1}); holding=True
+            elif phase in ('tell','look') and holding:
+                btn().dispatch_event('pointerup', {'pointerId':1}); holding=False
+            page.wait_for_timeout(60)
+        if holding: btn().dispatch_event('pointerup', {'pointerId':1})
+        return tells
+    run_sneak('cough', 0.5)
+    tells=play_well()
     sus=page.evaluate("async()=>(await import('/src/darkstate.js')).DARK.suspicion")
-    assert page.evaluate('window.controlDone')==1 and sus==0, (page.evaluate('window.controlDone'), sus)
+    assert page.evaluate('window.controlDone')==1 and sus==0 and tells>=3, (page.evaluate('window.controlDone'), sus, tells)
     page.screenshot(path='docs/art-review/dark-microwave.png')
-    # 句句都係預兆：一直按 = 被捉；之後識聽預兆放手 → 做完 0.9 分
-    run_sneak('bottle', 0)
+    # 一直按住唔理預兆 = 一定被捉；之後識聽預兆放手 → 做完 0.9 分
+    run_sneak('bottle', 0.5)
     btn().dispatch_event('pointerdown', {'pointerId':1})
-    page.wait_for_function("document.querySelector('.sneak-cust').dataset.phase==='look'", timeout=8000)
+    page.wait_for_function("document.querySelector('.sneak-cust').dataset.phase==='look'", timeout=12000)
     page.wait_for_timeout(150)
     page.screenshot(path='docs/art-review/dark-sneak-caught.png')
     assert page.evaluate("async()=>(await import('/src/darkstate.js')).DARK.suspicion")==1
+    box=btn().bounding_box()
+    assert box['y']+box['height']<=844, box  # 唔使捲都撳到
     btn().dispatch_event('pointerup', {'pointerId':1})
-    holding=False
-    for _ in range(200):
-        if page.evaluate('window.controlDone!==false'): break
-        phase=page.evaluate("document.querySelector('.sneak-cust')?.dataset.phase")
-        if phase in ('idle','away') and not holding:
-            btn().dispatch_event('pointerdown', {'pointerId':1}); holding=True
-        elif phase=='tell' and holding:
-            btn().dispatch_event('pointerup', {'pointerId':1}); holding=False
-        page.wait_for_timeout(80)
-    if holding: btn().dispatch_event('pointerup', {'pointerId':1})
+    play_well()
     sus=page.evaluate("async()=>(await import('/src/darkstate.js')).DARK.suspicion")
     assert page.evaluate('window.controlDone')==0.9 and sus==1, (page.evaluate('window.controlDone'), sus)
     page.evaluate("()=>{Math.random=window.__rnd0}")
@@ -120,10 +127,12 @@ with sync_playwright() as p:
                 assert 0<=box['y'] and box['y']+box['height']<=845, box
                 button.evaluate('(el)=>el.click()')
             try:
-                if page.locator('[data-dress="go"]').count():
+                if page.locator('#panel.show [data-dress="style:simple"]').count():
                     if index==0: page.screenshot(path='docs/art-review/dark-dress.png')
-                    page.locator(f'[data-dress="pitch:{tier}"]').evaluate('(el)=>el.click()')
-                    page.locator('[data-dress="go"]').evaluate('(el)=>el.click()')
+                    page.locator('#panel.show [data-dress="style:simple"]').evaluate('(el)=>el.closest(".choice").click()')
+                elif page.locator(f'#panel.show [data-dress="pitch:{tier}"]').count():
+                    if index==0: page.screenshot(path='docs/art-review/dark-pitch.png')
+                    page.locator(f'#panel.show [data-dress="pitch:{tier}"]').evaluate('(el)=>el.closest(".choice").click()')
                 elif page.locator('#panel [data-excuse]').count():
                     kind=page.evaluate("async()=>(await import('/src/darkstate.js')).DARK.probe.kind")
                     if index==6: page.screenshot(path='docs/art-review/dark-probe.png')

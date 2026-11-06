@@ -7,7 +7,7 @@ import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
 import { REGULARS } from '../src/data/chapters.js';
-import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES } from '../src/data/dark.js';
+import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES, WISHES, STYLES } from '../src/data/dark.js';
 import { SHOP, CUSTOMERS } from '../src/data/shop.js';
 import { VOICES, CUSTOMER_VOICES } from '../src/data/voices.js';
 import { audioKey, toSpeech, toReading, kataToHira } from '../src/jp.js';
@@ -53,7 +53,8 @@ DARK_RECIPES.forEach((r) => DARK_ORDER_TEMPLATES.forEach((t) => custAdd(t, t.jp.
 Object.values(DARK_CUST).flat().forEach((l) => custAdd(l));
 Object.values(DARK_REPLY).forEach((l) => add(l.jp, 'cat'));
 Object.values(EXCUSES).forEach((l) => add(l.jp, 'cat'));
-[...TELLS.safe, ...TELLS.turn, ...PROBES].forEach((l) => custAdd(l));
+[...TELLS.safe, ...TELLS.turn, ...PROBES, ...Object.values(WISHES).flat()].forEach((l) => custAdd(l));
+STYLES.forEach((st) => add(st.jp, 'word'));
 // 餐廳
 const R = RESTAURANT;
 Object.entries(R.staff).forEach(([k, l]) => { if (k !== 'pay' && k !== 'pay2') add(l.jp, 'cat'); });

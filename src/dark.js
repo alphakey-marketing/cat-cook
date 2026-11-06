@@ -1,7 +1,7 @@
 import { h, panel, choose, modal, jpLine, bubble, clearBubble, toast, hint, pop, shuffle, pick, wait, $, renderHUD, coinFly } from './ui.js';
 import { sfx } from './audio.js';
 import { S, save, srsSeen, srsAnswer } from './save.js';
-import { PLATING, GARNISHES, HYPE, PERSONAS, PROBES, EXCUSES, REVIEWS, DARK_REPLY, DARK_CUST, darkRatings, dishName } from './data/dark.js';
+import { STYLES, WISHES, HYPE, PERSONAS, PROBES, EXCUSES, REVIEWS, DARK_REPLY, DARK_CUST, darkRatings, dishName } from './data/dark.js';
 import { jpLevel, lineVoice, trackLv } from './data/phrases.js';
 import { CUSTOMERS } from './data/shop.js';
 import { DARK, SUS_MAX, addSus } from './darkstate.js';
@@ -71,40 +71,35 @@ export function introPersona(p) {
   toast(`${p.icon} ${p.name}：${p.hint}`, 3600);
 }
 
-// ---------- 擺盤 + 介紹（一個 panel 揀晒）----------
+// ---------- 擺盤 + 介紹：聽客人日文要求 → 揀風格 → 揀菜名（兩下撳完）----------
+const optJP = (jp, yue, attrs = {}) => h('div', { class: 'dress-opt', ...attrs },
+  h('b', { class: 'jp-inline', html: toHTML(jp) }), yue ? h('small', {}, yue) : null);
 export async function dressDarkDish(rec, world) {
   const P = DARK.persona;
-  const sel = { plate: PLATING[0], garnish: GARNISHES[0], pitch: 'mild' };
-  const row = (key, items, render) => {
-    const btns = items.map((it) => {
-      const b = h('button', { class: 'btn seg-btn', 'data-dress': `${key}:${it.id || it}`, onclick: () => {
-        sel[key] = it; btns.forEach((x) => x.classList.toggle('on', x === b));
-        if (key !== 'pitch') world.styleDish(sel.plate.id, sel.garnish.id);
-        sfx('tap');
-      } }, ...render(it));
-      if (sel[key] === it) b.classList.add('on');
-      return b;
-    });
-    return h('div', { class: 'seg' }, ...btns);
-  };
-  world.styleDish(sel.plate.id, sel.garnish.id);
-  await new Promise((resolve) => {
-    panel(
-      h('div', { class: 'panel-title' }, `${P.icon} ${P.name}：${P.hint}`),
-      h('div', { class: 'sub' }, '① 餐具'), row('plate', PLATING, (it) => [`${it.icon} ${it.label}`]),
-      h('div', { class: 'sub' }, '② 裝飾'), row('garnish', GARNISHES, (it) => [`${it.icon} ${it.label}`]),
-      h('div', { class: 'sub' }, '③ 點介紹？越浮誇紅利越多，但越易被追問'),
-      row('pitch', ['honest', 'mild', 'grand'], (t) => [h('b', { class: 'jp-inline', html: toHTML(dishName(rec, t).jp) }), h('small', {}, `${HYPE[t].label} · 紅利 x${HYPE[t].mult}`)]),
-      h('button', { class: 'btn primary big', 'data-dress': 'go', onclick: resolve }, '🍽️ 上菜'),
-    );
-  });
-  const matches = (sel.plate.id === P.like.plate ? 1 : 0) + (sel.garnish.id === P.like.garnish ? 1 : 0);
-  return { plate: sel.plate, garnish: sel.garnish, pitch: sel.pitch, matches };
+  const L = jpLevel();
+  const cust = CUSTOMERS.find((c) => c.id === DARK.custId) || { id: DARK.custId || 'usagi' };
+  const wishes = WISHES[P.like];
+  const wish = wishes[Math.min(L, wishes.length - 1)];
+  bubble(world, 'cust', wish.jp, L === 0 ? wish.yue : '', lineVoice(cust.id, wish));
+  // ① 風格：日文字揀，lv0 先有廣東話細字
+  const { value: style } = await choose(STYLES.map((st) => ({
+    value: st,
+    el: optJP(`${st.icon} ${st.jp}`, L === 0 ? st.yue : '', { 'data-dress': `style:${st.id}` }),
+  })), { title: h('div', { class: 'panel-title' }, `${P.icon} 客人想要咩擺盤？`), cols: 3 });
+  world.styleDish(style.plate, style.garnish);
+  clearBubble('cust');
+  // ② 介紹：揀講邊個菜名，越浮誇紅利越多但越易被追問
+  const { value: pitch } = await choose(['honest', 'mild', 'grand'].map((t) => ({
+    value: t,
+    el: optJP(dishName(rec, t).jp, `${HYPE[t].label} · 紅利 x${HYPE[t].mult}`, { 'data-dress': `pitch:${t}` }),
+  })), { title: h('div', { class: 'panel-title' }, '🍽️ 上菜！點介紹？越浮誇紅利越多，越易被追問') });
+  const gap = Math.abs(STYLES.findIndex((x) => x.id === style.id) - STYLES.findIndex((x) => x.id === P.like));
+  return { style: style.id, plate: style.plate, garnish: style.garnish, pitch, matches: 2 - gap };
 }
 
 export function darkReport(rec, taste, styling) {
   const ratings = darkRatings(taste, styling.matches, styling.pitch);
-  return { ...ratings, plate: styling.plate.id, garnish: styling.garnish.id, pitch: styling.pitch, matches: styling.matches, outcome: 'none' };
+  return { ...ratings, style: styling.style, plate: styling.plate, garnish: styling.garnish, pitch: styling.pitch, matches: styling.matches, outcome: 'none' };
 }
 
 // 擺盤啱唔啱口味：影響收入同懷疑度

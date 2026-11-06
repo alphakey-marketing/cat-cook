@@ -72,10 +72,10 @@ export const TELLS = {
 // 客人類型：入門有提示，決定擺盤喜好、轉頭節奏、追問機率
 // tell = 預兆長度倍數；look = 望幾耐倍數；gap = 傾偈間隔倍數；turn = 預兆係真轉頭嘅機率
 export const PERSONAS = {
-  tourist: { icon: '🧳', name: '遊客', like: { plate: 'grand', garnish: 'tower' }, hint: '鍾意大碟、裝飾越多越開心；好易信人', ask: -0.25, tell: 1.3, look: 1, gap: 1.2, turn: 0.35, pay: 1, weight: 3 },
-  granny: { icon: '👵', name: '街坊婆婆', like: { plate: 'plain', garnish: 'none' }, hint: '鍾意家常實際；浮誇菜名佢最起疑', ask: 0.3, tell: 1.2, look: 1.4, gap: 1.1, turn: 0.4, pay: 0.9, weight: 3 },
-  influencer: { icon: '📸', name: '網紅', like: { plate: 'grand', garnish: 'accent' }, hint: '要打卡靚相；成日舉機望過嚟', ask: 0, tell: 1, look: 0.8, gap: 0.7, turn: 0.55, pay: 1.2, weight: 3 },
-  critic: { icon: '🧐', name: '食評家', like: { plate: 'bistro', garnish: 'accent' }, hint: '識食又多疑：轉頭快、追問多，但畀錢最多', ask: 0.2, tell: 0.8, look: 1.2, gap: 0.9, turn: 0.5, pay: 1.5, weight: 2, minShift: 1 },
+  tourist: { icon: '🧳', name: '遊客', like: 'gouka', hint: '好易信人', ask: -0.25, tell: 1.3, look: 1, gap: 1.2, turn: 0.35, pay: 1, weight: 3 },
+  granny: { icon: '👵', name: '街坊婆婆', like: 'simple', hint: '浮誇菜名佢最起疑', ask: 0.3, tell: 1.2, look: 1.4, gap: 1.1, turn: 0.4, pay: 0.9, weight: 3 },
+  influencer: { icon: '📸', name: '網紅', like: 'oshare', hint: '成日舉機望過嚟', ask: 0, tell: 1, look: 0.8, gap: 0.7, turn: 0.55, pay: 1.2, weight: 3 },
+  critic: { icon: '🧐', name: '食評家', like: 'simple', hint: '轉頭快、追問多，但畀錢最多', ask: 0.2, tell: 0.8, look: 1.2, gap: 0.9, turn: 0.5, pay: 1.5, weight: 2, minShift: 1 },
 };
 
 // 追問：kind 決定要用邊個藉口先拆到彈（同 phrases.js 相同句子沿用 key 同音檔）
@@ -167,7 +167,7 @@ export const DARK_RECIPES = [
     truth: '鮮味靠調味配搭；亂落大量調味，會蓋過蛋香同飯香。', gag: '「仲差少少！」大廚伸手再攞雞粉，客人即刻遞杯水。', shortcut: '増鮮調味', lesson: 'うま味 = 鮮味。MSG 本身唔係笑柄；唔試味、亂落先係。' },
 ].map(r => ({ ...r, chapter: 'dark', dish: r.id, serves: '1 份', unlock: DARK_UNLOCK[r.id] ? { darkShift: DARK_UNLOCK[r.id] } : {} }));
 
-// 擺盤冇標準答案：要啱客人口味（PERSONAS.like）
+// 擺盤風格：聽客人日文要求揀（PERSONAS.like）；隔籬風格算半啱
 export const PLATING = [
   { id: 'plain', label: '家常餐具', icon: '🍽️' },
   { id: 'bistro', label: '小館靚碟', icon: '✨' },
@@ -178,6 +178,18 @@ export const GARNISHES = [
   { id: 'accent', label: '一點裝飾', icon: '🌿' },
   { id: 'tower', label: '堆成山', icon: '⛰️' },
 ];
+export const STYLES = [
+  { id: 'simple', jp: 'シンプル', yue: '簡單樸素', icon: '🍽️', plate: 'plain', garnish: 'none' },
+  { id: 'oshare', jp: 'おしゃれ', yue: '精緻時尚', icon: '✨', plate: 'bistro', garnish: 'accent' },
+  { id: 'gouka', jp: '豪華{ごうか}', yue: '豪華誇張', icon: '👑', plate: 'grand', garnish: 'tower' },
+];
+// 客人擺盤要求（hi 聲線）：lv0 直接講風格字，lv2 要聽意思
+const wi = (lv, jp, yue) => ({ lv, hi: true, jp, yue });
+export const WISHES = {
+  simple: [wi(0, 'シンプルが いいです', '簡單就好'), wi(1, '飾{かざ}りは いりません', '唔使裝飾'), wi(2, '素材{そざい}の 味{あじ}を 見{み}せてください', '想睇到食材原味')],
+  oshare: [wi(0, 'おしゃれに してください', '整靚啲'), wi(1, '写真{しゃしん}を 撮{と}りたいです', '我想影相'), wi(2, '映{ば}える 感{かん}じで お願{ねが}いします', '要打卡感覺')],
+  gouka: [wi(0, '大{おお}きいのが いいです', '大大份就好'), wi(1, 'たくさん 飾{かざ}ってください', '多啲裝飾'), wi(2, '豪華{ごうか}な 料理{りょうり}が 食{た}べたいです', '想食豪華嘢')],
+};
 
 // 宣傳等級：mult = 浮誇紅利倍數（入黑錢彩池）；ask = 基本追問機率
 export const HYPE = {
@@ -187,7 +199,7 @@ export const HYPE = {
 };
 export const dishName = (rec, tier) => (tier === 'grand' ? { jp: rec.jp, yue: rec.yue } : rec.names[tier]);
 
-// matches = 擺盤啱客人口味幾多項（0-2）
+// matches = 擺盤啱客人口味程度（0-2：2 = 啱，1 = 隔籬風格）
 export function darkRatings(taste, matches, pitch) {
   return { taste: Math.round(taste * 100), look: [55, 80, 100][matches], hype: HYPE[pitch].hype };
 }

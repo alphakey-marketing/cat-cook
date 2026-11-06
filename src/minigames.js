@@ -285,10 +285,13 @@ export async function hold(step, world) {
 export async function sneak(step, world) {
   const L = jpLevel();
   const P = DARK.persona || PERSONAS.tourist;
-  const work = step.work || 2.6;               // 要按住幾多秒先做完
-  const limit = step.limit || 11;              // 時限（秒）
+  const work = step.work || [4.5, 5.5, 6.5][L];   // 要按住幾多秒先做完
   const tellMs = [1500, 1200, 1000][L] * P.tell;
   const lookMs = 1300 * P.look;
+  // 保證有預兆：Lv0 一次、Lv1 兩次、Lv2 三次（多疑客人 +1，最多 3）；第一次一定喺頭一半
+  const nTells = Math.min(3, L + 1 + (P.turn >= 0.5 ? 1 : 0));
+  const marks = { 1: [0.3], 2: [0.2, 0.55], 3: [0.15, 0.4, 0.65] }[nTells].map((m) => m + (Math.random() - 0.5) * 0.08);
+  const limit = step.limit || Math.round(work * 2 + nTells * (tellMs + lookMs) / 1000 + 3); // 時限（秒）
   const voice = hiVoice(DARK.custId || 'usagi');
   const pool = (k) => TELLS[k].filter((x) => x.lv <= L);
   [...pool('safe'), ...pool('turn')].forEach((x) => preload(x.jp, voice));
@@ -300,15 +303,15 @@ export async function sneak(step, world) {
   const cust = h('div', { class: 'sneak-cust', 'data-phase': 'idle' }, face, h('div', { class: 'sneak-talk' }, status, line));
   const prog = h('div', { class: 'mg-timer prog' }, h('i'));
   const timer = h('div', { class: 'mg-timer' }, h('i'));
+  const bars = h('div', { class: 'sneak-bars' }, h('span', { title: '進度' }, '🍳'), prog, h('span', { title: '時間' }, '⏱️'), timer);
   const btn = h('button', { class: 'btn primary big holdbtn sneak-btn', 'data-sneak': 'hold' }, step.btn);
-  const help = L === 0 ? '按住做嘢。客人講嘢後見到 ❓ 就即刻放手！第一下按先開始計時。'
-    : '按住做嘢。聽客人講咩：同朋友傾偈照做；講嘢衝住你嚟就即刻放手！';
-  panel(header(step, help), cust,
-    h('div', { class: 'sneak-label' }, '進度'), prog, h('div', { class: 'sneak-label' }, '時間'), timer, btn);
+  const help = L === 0 ? '按住做嘢；客人講嘢衝你、見到 ❓ → 即刻放手！'
+    : '按住做嘢：傾偈照做，講嘢衝你就即刻放手！';
+  panel(header(step, help), cust, bars, btn).classList.add('sneak-panel');
   say(step.jp, 'cat');
 
   let holding = false, locked = false, started = false, finished = false;
-  let progress = 0, caught = 0, phase = 'away', t0 = 0, last = 0, nextLine = 0, turnAt = 0, lookUntil = 0, dingAt = 0, caughtThis = false;
+  let tellIdx = 0, progress = 0, caught = 0, phase = 'away', t0 = 0, last = 0, nextLine = 0, turnAt = 0, lookUntil = 0, dingAt = 0, caughtThis = false;
   const setPhase = (p) => { phase = p; cust.dataset.phase = p; };
   const release = () => { holding = false; btn.classList.remove('on'); btn.textContent = step.btn; world.cat.setMode('idle'); if (step.ding) world.microwaveLight(false); };
   const onPause = () => release();
@@ -323,8 +326,7 @@ export async function sneak(step, world) {
       sfx('bad'); world.shake(0.4);
       face.textContent = '🤨'; status.textContent = why;
     };
-    const speak = (now) => {
-      const turn = Math.random() < P.turn;
+    const speak = (now, turn) => {
       const l = pickOne(pool(turn ? 'turn' : 'safe'));
       line.replaceChildren(jpLine(l.jp, { yue: L === 0 ? l.yue : '', voice }));
       say(l.jp, voice);
@@ -334,7 +336,10 @@ export async function sneak(step, world) {
     const loop = () => {
       const now = gameNow();
       const dt = (now - last) / 1000; last = now;
-      if (phase === 'away' && now >= nextLine && !dingAt) speak(now);
+      if (phase === 'away' && !dingAt) {
+        if (tellIdx < marks.length && progress >= marks[tellIdx]) { tellIdx++; speak(now, true); }
+        else if (now >= nextLine) speak(now, false);
+      }
       else if (phase === 'tell') {
         if (L === 1 && now >= turnAt - 350) face.textContent = '❓';
         if (now >= turnAt) { setPhase('look'); lookUntil = now + lookMs; caughtThis = false; face.textContent = '👀'; status.textContent = '客人望緊廚房！'; }
@@ -346,7 +351,8 @@ export async function sneak(step, world) {
         }
       }
       if (holding && !dingAt) {
-        progress = Math.min(1, progress + dt / work);
+        // 預兆未出晒 / 客人未轉返去，唔俾做完
+        progress = Math.min(tellIdx < marks.length || phase !== 'away' ? 0.97 : 1, progress + dt / work);
         if (progress >= 1) {
           if (step.ding) { dingAt = now + 450; release(); btn.disabled = true; btn.textContent = '⏳ 就嚟「叮」…'; }
           else return finish(caught ? 0.9 : 1);

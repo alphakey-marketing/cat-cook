@@ -220,7 +220,8 @@ async function shift({ tutorial = false } = {}) {
     if (res.stars === 3) stat.perfect++;
     if (dark) {
       stat.coins += await raid(world, S().settings.subs === 'tap');
-      if (i < n - 1) stat.coins += await bankOrGamble();
+      // 第 2、4 個客人之後先問收手定繼續搏，節奏快啲
+      if ((i === 1 || i === 3) && i < n - 1) stat.coins += await bankOrGamble();
       hidePanel();
     }
     // 升級
