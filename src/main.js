@@ -8,7 +8,7 @@ import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './s
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
 import { CHAPTERS, REGULARS } from './data/chapters.js';
-import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, plateEffect, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
+import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
 import { DARK_ORDER_TEMPLATES } from './data/dark.js';
 import { DARK, resetDark } from './darkstate.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS } from './data/dialogue.js';
@@ -422,7 +422,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   const isSpecial = special() === rec.id;
   let lookMult = 1;
   if (darkResult) {
-    lookMult = plateEffect(darkResult);
+    lookMult = darkResult.lookMult;
     await reactDone;
     await wait(400);
     clearBubble('cust');

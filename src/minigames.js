@@ -4,7 +4,7 @@ import { h, panel, jpLine, pop, shuffle, pick as pickOne, wait, hint, next } fro
 import { gameNow, isPaused, playActivity } from './gameplay.js';
 import { say, sfx, preload } from './audio.js';
 import { vocab } from './data/vocab.js';
-import { S, srsAnswer, srsSeen } from './save.js';
+import { S, save, srsAnswer, srsSeen } from './save.js';
 import { toHTML } from './jp.js';
 import { DARK, addSus } from './darkstate.js';
 import { TELLS, PERSONAS } from './data/dark.js';
@@ -282,38 +282,60 @@ export async function hold(step, world) {
 // 按住 = 做見唔得光嘅嘢。客人間中講嘢：同朋友傾偈 = 冇事；
 // 講嘢衝住你嚟 = 預兆，過一陣就轉頭望。望緊嗰陣仲按住 = 捉到（懷疑度 +1）。
 // 零基礎有 ❓ 視覺提示；初學提示遲啲先出；N3 淨係靠聽。
+// 第一次玩：三步教學（睇一次就唔再出）
+function sneakDemo(step) {
+  const row = (c, t, d) => h('div', { class: `demo-row demo-${c}` }, h('b', {}, t), h('small', {}, d));
+  return new Promise((res) => {
+    const go = h('button', { class: 'btn primary big', 'data-demo': 'go', onclick: () => { S().sneakDemo = true; save(); sfx('tap'); res(); } }, '明白，開始！');
+    panel(
+      h('div', { class: 'panel-title' }, '🤫 偷偷煮：點玩？'),
+      row('safe', '① 🟢 客人傾偈 → 按住掣', '偷偷做嘢，進度條會行'),
+      row('tell', '② 🟡 客人講嘢衝住你 → 即刻放手', '聽完句嘢有少少時間反應'),
+      row('look', '③ 🔴 客人望緊廚房 → 唔好掂', '佢轉返去（變返🟢）再按住；被望到 = 懷疑 +1'),
+      go,
+    );
+  });
+}
+
 export async function sneak(step, world) {
   const L = jpLevel();
   const P = DARK.persona || PERSONAS.tourist;
+  if (!S().sneakDemo) await sneakDemo(step);
   const work = step.work || [4.5, 5.5, 6.5][L];   // 要按住幾多秒先做完
-  const tellMs = [1500, 1200, 1000][L] * P.tell;
+  // 反應時間由客人講完句嘢先開始計（真人要聽完先識反應；聲檔下載慢都唔會蝕）
+  const reactMs = [1500, 1150, 900][L] * P.tell;
   const lookMs = 1300 * P.look;
+  const GRACE = 250;                               // 轉頭頭 0.25 秒內放手都唔算
   // 保證有預兆：Lv0 一次、Lv1 兩次、Lv2 三次（多疑客人 +1，最多 3）；第一次一定喺頭一半
   const nTells = Math.min(3, L + 1 + (P.turn >= 0.5 ? 1 : 0));
   const marks = { 1: [0.3], 2: [0.2, 0.55], 3: [0.15, 0.4, 0.65] }[nTells].map((m) => m + (Math.random() - 0.5) * 0.08);
-  const limit = step.limit || Math.round(work * 2 + nTells * (tellMs + lookMs) / 1000 + 3); // 時限（秒）
+  const limit = step.limit || Math.round(work * 2 + nTells * (2.5 + (reactMs + lookMs) / 1000) + 3); // 時限（秒）
   const voice = hiVoice(DARK.custId || 'usagi');
   const pool = (k) => TELLS[k].filter((x) => x.lv <= L);
   [...pool('safe'), ...pool('turn')].forEach((x) => preload(x.jp, voice));
   if (step.station) world.useStation(step.station);
 
   const face = h('div', { class: 'sneak-face' }, '🗣️');
-  const status = h('div', { class: 'sneak-state' }, `${P.icon} ${P.name}同朋友傾緊偈`);
+  const status = h('div', { class: 'sneak-state' }, `🟢 ${P.icon} ${P.name}同朋友傾緊偈 → 按住做`);
   const line = h('div', { class: 'sneak-line' });
-  const cust = h('div', { class: 'sneak-cust', 'data-phase': 'idle' }, face, h('div', { class: 'sneak-talk' }, status, line));
+  const cust = h('div', { class: 'sneak-cust', 'data-phase': 'idle', 'data-cue': 'safe' }, face, h('div', { class: 'sneak-talk' }, status, line));
   const prog = h('div', { class: 'mg-timer prog' }, h('i'));
   const timer = h('div', { class: 'mg-timer' }, h('i'));
   const bars = h('div', { class: 'sneak-bars' }, h('span', { title: '進度' }, '🍳'), prog, h('span', { title: '時間' }, '⏱️'), timer);
   const btn = h('button', { class: 'btn primary big holdbtn sneak-btn', 'data-sneak': 'hold' }, step.btn);
-  const help = L === 0 ? '按住做嘢；客人講嘢衝你、見到 ❓ → 即刻放手！'
-    : '按住做嘢：傾偈照做，講嘢衝你就即刻放手！';
+  const help = L === 0 ? '🟢 按住做嘢 → 🟡 客人講嘢衝你：放手 → 🟢 佢轉返去：再按住'
+    : L === 1 ? '傾偈就按住；聽到講嘢衝你就放手，佢轉返去再按'
+    : '靠耳仔：傾偈就按住；講嘢衝你就放手';
   panel(header(step, help), cust, bars, btn).classList.add('sneak-panel');
   say(step.jp, 'cat');
 
   let holding = false, locked = false, started = false, finished = false;
-  let tellIdx = 0, progress = 0, caught = 0, phase = 'away', t0 = 0, last = 0, nextLine = 0, turnAt = 0, lookUntil = 0, dingAt = 0, caughtThis = false;
+  let tellIdx = 0, progress = 0, caught = 0, phase = 'away', t0 = 0, last = 0, nextLine = 0, turnAt = 0, lookAt = 0, lookUntil = 0, dingAt = 0, caughtThis = false;
   const setPhase = (p) => { phase = p; cust.dataset.phase = p; };
-  const release = () => { holding = false; btn.classList.remove('on'); btn.textContent = step.btn; world.cat.setMode('idle'); if (step.ding) world.microwaveLight(false); };
+  // cue 決定個框顏色同狀態字（Lv2 預兆唔變色，淨係靠聽）
+  const cue = (c, txt, fc) => { cust.dataset.cue = c; if (txt) status.textContent = txt; if (fc) face.textContent = fc; };
+  const idleText = () => (phase === 'look' ? '🙈 唔好掂！' : phase === 'tell' && cust.dataset.cue === 'tell' ? '✋ 放手！' : step.btn);
+  const release = () => { holding = false; btn.classList.remove('on'); btn.textContent = idleText(); world.cat.setMode('idle'); if (step.ding) world.microwaveLight(false); };
   const onPause = () => release();
   document.addEventListener('gamepause', onPause);
 
@@ -324,14 +346,28 @@ export async function sneak(step, world) {
       caught++; caughtThis = true; locked = holding; release();
       addSus(1); renderDarkbar();
       sfx('bad'); world.shake(0.4);
-      face.textContent = '🤨'; status.textContent = why;
+      pop('👀 被發現！懷疑度 +1', 'miss');
+      cue('caught', `🔴 ${why}｜被發現！放手，等佢轉返去再按`, '🤨');
+      btn.textContent = '🙈 唔好掂！';
+    };
+    const showTell = () => {
+      cue('tell', '🟡 客人講嘢衝住你！即刻放手！', '❓');
+      if (!holding) btn.textContent = '✋ 放手！';
     };
     const speak = (now, turn) => {
       const l = pickOne(pool(turn ? 'turn' : 'safe'));
       line.replaceChildren(jpLine(l.jp, { yue: L === 0 ? l.yue : '', voice }));
-      say(l.jp, voice);
-      if (turn) { setPhase('tell'); turnAt = now + tellMs; if (L === 0) face.textContent = '❓'; }
-      else { face.textContent = '🗣️'; status.textContent = `${P.icon} 同朋友傾緊偈`; nextLine = now + (1200 + Math.random() * 1200) * P.gap; }
+      const spoken = Promise.race([say(l.jp, voice), wait(4000)]);
+      if (turn) {
+        setPhase('tell'); turnAt = Infinity;
+        if (L === 0) showTell();
+        else cue('safe', `🟢 ${P.icon} 客人講緊嘢…聽清楚`, '🗣️');
+        // 講完先開始倒數；Lv1 喺倒數開始先出 ❓
+        spoken.then(() => { if (phase !== 'tell' || finished) return; turnAt = gameNow() + reactMs; if (L === 1) showTell(); });
+      } else {
+        cue('safe', `🟢 ${P.icon} 同朋友傾緊偈 → 按住做`, '🗣️');
+        nextLine = now + (1200 + Math.random() * 1200) * P.gap;
+      }
     };
     const loop = () => {
       const now = gameNow();
@@ -339,14 +375,19 @@ export async function sneak(step, world) {
       if (phase === 'away' && !dingAt) {
         if (tellIdx < marks.length && progress >= marks[tellIdx]) { tellIdx++; speak(now, true); }
         else if (now >= nextLine) speak(now, false);
-      }
-      else if (phase === 'tell') {
-        if (L === 1 && now >= turnAt - 350) face.textContent = '❓';
-        if (now >= turnAt) { setPhase('look'); lookUntil = now + lookMs; caughtThis = false; face.textContent = '👀'; status.textContent = '客人望緊廚房！'; }
+      } else if (phase === 'tell') {
+        if (now >= turnAt) {
+          setPhase('look'); lookAt = now; lookUntil = now + lookMs; caughtThis = false;
+          cue('look', '🔴 客人望緊廚房！唔好掂！', '👀');
+          if (!holding) btn.textContent = '🙈 唔好掂！';
+        }
       } else if (phase === 'look') {
-        if (holding && !caughtThis) getCaught(step.caught);
+        if (holding && !caughtThis && now >= lookAt + GRACE) getCaught(step.caught);
         if (now >= lookUntil) {
-          setPhase('away'); face.textContent = '🗣️'; status.textContent = `${P.icon} 轉返去傾偈`; line.replaceChildren();
+          setPhase('away'); line.replaceChildren();
+          if (!caughtThis) { pop('😌 冇被發現！', 'good'); sfx('good'); }
+          cue('safe', `🟢 ${caughtThis ? '佢' : '冇發現！佢'}轉返去傾偈 → 再按住`, '🗣️');
+          if (!holding) btn.textContent = step.btn;
           nextLine = now + (900 + Math.random() * 900) * P.gap;
         }
       }
@@ -378,13 +419,19 @@ export async function sneak(step, world) {
       world.cat.setMode('stir'); if (step.ding) world.microwaveLight(true);
       if (phase === 'look' && !caughtThis) getCaught(step.caught);
     });
-    const up = () => { locked = false; if (holding) { release(); btn.textContent = `${step.hide}（放手中）`; } };
+    const up = () => {
+      locked = false;
+      if (!holding) return;
+      release();
+      if (phase === 'tell') { cue(L < 2 ? 'tell' : 'hid', `🫣 ${step.hide}…收埋咗，等佢望完`); btn.textContent = '🫣 收埋咗'; }
+      else if (phase === 'away') btn.textContent = step.btn;
+    };
     btn.addEventListener('pointerup', up);
     btn.addEventListener('pointercancel', up);
   });
   document.removeEventListener('gamepause', onPause);
-  if (finished && score >= 1) { pop('冇俾人發現！', 'perfect'); sfx('perfect'); }
-  else if (score >= 0.9) { pop('做完…但俾人望到', 'good'); }
+  if (finished && score >= 1) { pop('完美！冇俾人發現', 'perfect'); sfx('perfect'); }
+  else if (score >= 0.9) { pop('做完！但俾人發現過', 'good'); }
   else { pop('做唔切！', 'miss'); sfx('bad'); hint(`被捉 ${caught} 次；時間唔夠，味道會差啲`, 3000); }
   await wait(500);
   return score;

@@ -1,7 +1,7 @@
 import { h, panel, choose, modal, jpLine, bubble, clearBubble, toast, hint, pop, shuffle, pick, wait, $, renderHUD, coinFly } from './ui.js';
 import { sfx } from './audio.js';
 import { S, save, srsSeen, srsAnswer } from './save.js';
-import { STYLES, WISHES, HYPE, PERSONAS, PROBES, EXCUSES, REVIEWS, DARK_REPLY, DARK_CUST, darkRatings, dishName } from './data/dark.js';
+import { STYLES, WISHES, PLATE_REACT, HYPE, PERSONAS, PROBES, EXCUSES, REVIEWS, DARK_REPLY, DARK_CUST, darkRatings, dishName } from './data/dark.js';
 import { jpLevel, lineVoice, trackLv } from './data/phrases.js';
 import { CUSTOMERS } from './data/shop.js';
 import { DARK, SUS_MAX, addSus } from './darkstate.js';
@@ -13,11 +13,14 @@ const clampRating = (v) => Math.max(1, Math.min(5, Math.round(v * 100) / 100));
 const rate = (d) => { S().darkRating = clampRating((S().darkRating ?? 3) + d); };
 
 // ---------- HUD：👀 懷疑度 · 💰 彩池 · 🔥 combo · ⭐ 評分 ----------
+let shown = null;
 export function renderDarkbar() {
   const el = $('#darkbar');
   if (!el) return;
   el.classList.toggle('show', DARK.active);
-  if (!DARK.active) return;
+  if (!DARK.active) { shown = null; return; }
+  const prev = shown;
+  shown = { sus: DARK.suspicion, pot: DARK.pot };
   const eyes = Array.from({ length: SUS_MAX }, (_, i) => (i < DARK.suspicion ? '●' : '○')).join('');
   el.dataset.sus = DARK.suspicion;
   el.replaceChildren(
@@ -26,6 +29,14 @@ export function renderDarkbar() {
     h('span', { class: 'db-combo' }, `🔥x${DARK.combo.toFixed(2)}`),
     h('span', { class: 'db-rating' }, `⭐${(S().darkRating ?? 3).toFixed(2)}`),
   );
+  if (!prev) return;
+  const flash = (sel, txt, cls, left) => {
+    el.querySelector(sel)?.classList.add('bump');
+    el.append(h('span', { class: `db-delta ${cls}`, style: `left:${left}` }, txt));
+  };
+  const ds = shown.sus - prev.sus, dp = shown.pot - prev.pot;
+  if (ds) flash('.db-sus', `👀 ${ds > 0 ? '+' : ''}${ds} 懷疑`, ds > 0 ? 'up' : 'down', '8px');
+  if (dp) flash('.db-pot', `💰 ${dp > 0 ? '+' : ''}${dp}`, dp > 0 ? 'coin' : 'up', '45%');
 }
 export function hideDarkbar() { DARK.active = false; renderDarkbar(); }
 
@@ -82,33 +93,43 @@ export async function dressDarkDish(rec, world) {
   const wish = wishes[Math.min(L, wishes.length - 1)];
   bubble(world, 'cust', wish.jp, L === 0 ? wish.yue : '', lineVoice(cust.id, wish));
   // ① 風格：日文字揀，lv0 先有廣東話細字
-  const { value: style } = await choose(STYLES.map((st) => ({
+  const sty = await choose(STYLES.map((st) => ({
     value: st,
     el: optJP(`${st.icon} ${st.jp}`, L === 0 ? st.yue : '', { 'data-dress': `style:${st.id}` }),
   })), { title: h('div', { class: 'panel-title' }, `${P.icon} 客人想要咩擺盤？`), cols: 3 });
+  const style = sty.value;
   world.styleDish(style.plate, style.garnish);
+  clearBubble('cust');
+  // 即刻反饋：啱唔啱、懷疑度變化、正確答案（學嘢用）
+  const gap = Math.abs(STYLES.findIndex((x) => x.id === style.id) - STYLES.findIndex((x) => x.id === P.like));
+  const matches = 2 - gap;
+  const want = STYLES.find((x) => x.id === P.like);
+  const ans = sty.grid.querySelector(`[data-dress="style:${want.id}"]`)?.closest('.choice');
+  sty.button.classList.add(matches === 2 ? 'fb-right' : 'fb-wrong');
+  if (matches < 2) ans?.classList.add('fb-answer');
+  const lookMult = [0.85, 1, 1.25][matches];
+  if (matches === 2) { addSus(-1); pop('⭕ 擺盤正中！懷疑 -1、收入 x1.25', 'perfect'); sfx('perfect'); }
+  else if (matches === 1) { pop('🔺 差少少：收入照舊', 'good'); sfx('good'); }
+  else { addSus(1); pop('❌ 擺盤唔啱！懷疑 +1、收入 x0.85', 'miss'); sfx('bad'); }
+  renderDarkbar();
+  if (matches < 2) hint(`客人講「${wish.yue}」→ 要 ${want.icon} ${want.jp.replace(/\{[^}]*\}/g, '')}（${want.yue}）`, 4000);
+  const r = PLATE_REACT[matches];
+  await Promise.race([bubble(world, 'cust', r.jp, r.yue, lineVoice(cust.id, r)), wait(3000)]);
+  await wait(500);
   clearBubble('cust');
   // ② 介紹：揀講邊個菜名，越浮誇紅利越多但越易被追問
   const { value: pitch } = await choose(['honest', 'mild', 'grand'].map((t) => ({
     value: t,
     el: optJP(dishName(rec, t).jp, `${HYPE[t].label} · 紅利 x${HYPE[t].mult}`, { 'data-dress': `pitch:${t}` }),
   })), { title: h('div', { class: 'panel-title' }, '🍽️ 上菜！點介紹？越浮誇紅利越多，越易被追問') });
-  const gap = Math.abs(STYLES.findIndex((x) => x.id === style.id) - STYLES.findIndex((x) => x.id === P.like));
-  return { style: style.id, plate: style.plate, garnish: style.garnish, pitch, matches: 2 - gap };
+  return { style: style.id, plate: style.plate, garnish: style.garnish, pitch, matches, lookMult };
 }
 
 export function darkReport(rec, taste, styling) {
   const ratings = darkRatings(taste, styling.matches, styling.pitch);
-  return { ...ratings, style: styling.style, plate: styling.plate, garnish: styling.garnish, pitch: styling.pitch, matches: styling.matches, outcome: 'none' };
+  return { ...ratings, style: styling.style, plate: styling.plate, garnish: styling.garnish, pitch: styling.pitch, matches: styling.matches, lookMult: styling.lookMult ?? 1, outcome: 'none' };
 }
 
-// 擺盤啱唔啱口味：影響收入同懷疑度
-export function plateEffect(report) {
-  const m = report.matches;
-  if (m === 2) { addSus(-1); pop('擺盤正中客人口味！', 'perfect'); return 1.25; }
-  if (m === 0) { addSus(1); pop('客人對擺盤皺眉…', 'miss'); return 0.85; }
-  return 1;
-}
 
 // ---------- 追問：揀啱藉口 ----------
 const say_ = (world, cust, list) => { const l = list[Math.min(jpLevel(), 2)] || list[0]; return bubble(world, 'cust', l.jp, l.yue, lineVoice(cust.id, l)); };
@@ -134,8 +155,15 @@ async function askProbe(world, cust, listen, withHonest, title) {
   const ans = await choose(excuseOpts(probe, withHonest), { title: h('div', { class: 'panel-title' }, title) });
   clearBubble('cust');
   const right = ans.value === probe.kind;
-  if (ans.value !== 'honest') { srsAnswer(probe.key, right); trackLv(probe.lv, right); }
-  if (!right && ans.value !== 'honest') hint(`佢問：「${probe.yue}」→ 應該答「${EXCUSES[probe.kind].yue}」`, 3500);
+  if (ans.value !== 'honest') {
+    srsAnswer(probe.key, right); trackLv(probe.lv, right);
+    ans.button.classList.add(right ? 'fb-right' : 'fb-wrong');
+    if (!right) ans.grid.querySelector(`[data-excuse="${probe.kind}"]`)?.closest('.choice')?.classList.add('fb-answer');
+    pop(right ? '⭕ 藉口啱題！' : '❌ 答非所問…', right ? 'good' : 'miss');
+    sfx(right ? 'good' : 'bad');
+    if (!right) hint(`佢問：「${probe.yue}」→ 應該答「${EXCUSES[probe.kind].yue}」`, 3500);
+    await wait(900);
+  }
   const mine = ans.value === 'honest' ? DARK_REPLY.honest : EXCUSES[ans.value];
   await bubble(world, 'cat', mine.jp, mine.yue, 'cat');
   clearBubble('cat');
@@ -149,13 +177,13 @@ export function askChance(tier) {
 
 // 返回 outcome：none | honest | believe | expose
 export async function interrogate(world, cust, report, listen) {
-  if (report.pitch === 'honest') return (report.outcome = 'plain');
-  if (Math.random() >= askChance(report.pitch)) return (report.outcome = 'none');
+  if (report.pitch === 'honest') { pop('🙂 如實介紹：冇紅利、冇風險', 'good'); return (report.outcome = 'plain'); }
+  if (Math.random() >= askChance(report.pitch)) { pop('😌 客人冇追問！紅利入彩池', 'perfect'); sfx('good'); await wait(700); return (report.outcome = 'none'); }
   const { answer, right } = await askProbe(world, cust, listen, true, '🤨 客人追問！揀啱藉口（聽清楚佢問咩）');
   let outcome;
-  if (answer === 'honest') { outcome = 'honest'; await say_(world, cust, DARK_CUST.forgive); sfx('good'); }
-  else if (Math.random() < (right ? Math.max(0.5, 1 - DARK.suspicion * 0.1) : 0.15)) { outcome = 'believe'; await say_(world, cust, DARK_CUST.believe); sfx('perfect'); }
-  else { outcome = 'expose'; await say_(world, cust, DARK_CUST.expose); sfx('bad'); world.shake(0.4); }
+  if (answer === 'honest') { outcome = 'honest'; pop('🙇 老實交代：收入 x0.8、懷疑 -1', 'good'); await say_(world, cust, DARK_CUST.forgive); sfx('good'); }
+  else if (Math.random() < (right ? Math.max(0.5, 1 - DARK.suspicion * 0.1) : 0.15)) { outcome = 'believe'; pop('✅ 客人信咗！紅利入彩池', 'perfect'); await say_(world, cust, DARK_CUST.believe); sfx('perfect'); }
+  else { outcome = 'expose'; pop('💥 被揭穿！冇收入、彩池減半、懷疑 +2', 'miss'); await say_(world, cust, DARK_CUST.expose); sfx('bad'); world.shake(0.4); }
   clearBubble('cust');
   return (report.outcome = outcome);
 }

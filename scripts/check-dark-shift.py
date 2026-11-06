@@ -52,8 +52,8 @@ with sync_playwright() as p:
                 if choices.count() and '客人要' in text:
                     wanted=page.evaluate("async()=>(await import('/src/data/vocab.js')).vocab(window.__order).yue")
                     choices.filter(has=page.locator(f'[aria-label="{wanted}"], img[alt="{wanted}"]')).first.evaluate('el=>el.click()')
-                elif choices.count():
-                    choices.first.evaluate('el=>el.click()')
+                elif choices.count() and not page.locator('#panel.show [data-bank], #panel.show [data-raid], #panel.show [data-dress], #panel.show [data-excuse]').count():
+                    choices.first.evaluate('el=>el.click()')  # 特別面板留返畀上面處理
         except Exception:
             pass
         # 等舊面板消失先做下一步，唔好撳到殘留嘅掣

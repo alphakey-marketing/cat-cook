@@ -44,6 +44,10 @@ with sync_playwright() as p:
           const step=DARK_RECIPES.flatMap(r=>r.steps).find(s=>s.kind===kind);
           __game.minigames.sneak(step,__world).then(v=>window.controlDone=v);
         }""", {'kind':kind,'rnd':rnd})
+        page.wait_for_selector('[data-sneak="hold"], [data-demo="go"]')
+        if page.locator('#panel.show [data-demo="go"]').count():
+            page.screenshot(path='docs/art-review/dark-sneak-demo.png')
+            page.locator('[data-demo="go"]').click()
         page.wait_for_selector('[data-sneak="hold"]')
     btn=lambda: page.locator('[data-sneak="hold"]')
     # 識聽預兆：預兆就放手，其餘按住 → 1 分、懷疑度 0；一定出過預兆
@@ -70,7 +74,7 @@ with sync_playwright() as p:
     run_sneak('bottle', 0.5)
     btn().dispatch_event('pointerdown', {'pointerId':1})
     page.wait_for_function("document.querySelector('.sneak-cust').dataset.phase==='look'", timeout=12000)
-    page.wait_for_timeout(150)
+    page.wait_for_function("document.querySelector('.sneak-cust').dataset.cue==='caught'", timeout=3000)
     page.screenshot(path='docs/art-review/dark-sneak-caught.png')
     assert page.evaluate("async()=>(await import('/src/darkstate.js')).DARK.suspicion")==1
     box=btn().bounding_box()

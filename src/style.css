@@ -445,8 +445,22 @@ button { min-height: 44px; }
 @media (max-width: 720px) { #darkbar { top: calc(100px + var(--safe-t)); font-size: 12px; gap: 8px; } }
 
 .sneak-cust { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: #eef7ee; border: 2px solid #9bd39b; margin: 8px 0; transition: background .2s, border-color .2s; }
-.sneak-cust[data-phase="tell"] { background: #fff6dc; border-color: #f2c14e; }
-.sneak-cust[data-phase="look"] { background: #ffe1dc; border-color: #e5534b; }
+.sneak-cust[data-cue="tell"] { background: #fff6dc; border-color: #f2c14e; animation: cueShake .35s 2; }
+.sneak-cust[data-cue="look"], .sneak-cust[data-cue="caught"] { background: #ffe1dc; border-color: #e5534b; }
+.sneak-cust[data-cue="caught"] { animation: cueShake .3s 2; }
+.sneak-cust[data-cue="hid"] { background: #eef1f7; border-color: #9aa8c7; }
+@keyframes cueShake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.sneak-btn.on { filter: brightness(1.05); }
+.dress-opt.fb-good { color: #2e7d32; } .dress-opt.fb-bad { color: #c62828; }
+.choice.fb-right { outline: 3px solid #4caf50; background: #e8f6e9; }
+.choice.fb-wrong { outline: 3px solid #e5534b; background: #ffe9e6; }
+.choice.fb-answer { outline: 3px dashed #4caf50; }
+#darkbar > span { display: inline-block; }
+#darkbar .bump { animation: dbBump .6s; }
+@keyframes dbBump { 30% { transform: scale(1.35); color: #ffd54a; } }
+.db-delta { position: absolute; top: 100%; font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: #2a1d2e; animation: dbDelta 1.4s forwards; }
+.db-delta.up { color: #ff7a6b; } .db-delta.down { color: #7be38a; } .db-delta.coin { color: #ffd54a; }
+@keyframes dbDelta { 0% { opacity: 0; transform: translateY(-6px); } 15% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(8px); } }
 .sneak-face { font-size: 38px; line-height: 1; min-width: 44px; text-align: center; }
 .sneak-talk { flex: 1; min-width: 0; }
 .sneak-state { font-weight: 700; font-size: 14px; }
@@ -469,3 +483,7 @@ button { min-height: 44px; }
 .dark-goals p { margin: 6px 0; font-weight: 700; }
 .dark-stars { margin: 10px 0; text-align: center; }
 .dark-stars .goal { font-size: 14px; margin: 3px 0; }
+
+.demo-row { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 12px; border: 2px solid; }
+.demo-row b { font-size: 16px; } .demo-row small { font-size: 12px; opacity: .8; }
+.demo-safe { background: #eef7ee; border-color: #9bd39b; } .demo-tell { background: #fff6dc; border-color: #f2c14e; } .demo-look { background: #ffe1dc; border-color: #e5534b; }
