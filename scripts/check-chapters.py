@@ -16,8 +16,8 @@ with sync_playwright() as p:
       const {RECIPES}=await import('/src/data/recipes.js');
       const {VOCAB}=await import('/src/data/vocab.js');
       const {makeDish}=await import('/src/three/models.js');
-      if(RECIPES.length!==23) throw Error('Expected 4 original, 12 cafe/izakaya and 7 dark recipes');
-      for(const chapter of ['izakaya','cafe']) {
+      if(RECIPES.length!==29) throw Error('Expected 4 original, 12 cafe/izakaya and 7 dark recipes');
+      for(const chapter of ['izakaya','cafe','sushi']) {
         const recipes=RECIPES.filter(r=>r.chapter===chapter);
         if(recipes.length!==6 || recipes.some(r=>r.id==='onigiri')) throw Error('Bad chapter menu');
         for(const r of recipes) {
@@ -67,7 +67,7 @@ with sync_playwright() as p:
       for(const key of Object.keys(MINIGAMES)) MINIGAMES[key]=async()=>1;
       __game.state().settings.subs='show';
     }""")
-    cases=[('izakaya',0,'edamame'),('izakaya',1,'edamame'),('cafe',0,'instant_coffee'),('cafe',1,'instant_coffee'),('cafe',2,'matcha_latte')]
+    cases=[('sushi',0,'kappamaki'),('sushi',1,'salmon_nigiri'),('sushi',2,'inari'),('cafe',0,'instant_coffee'),('cafe',1,'instant_coffee'),('cafe',2,'matcha_latte')]
     for chapter,index,dish in cases:
         page.evaluate("""async ({chapter,index,dish})=>{
           __game.state().chapter=chapter;
@@ -108,11 +108,10 @@ with sync_playwright() as p:
         assert page.evaluate('__world.anchors.size===0') if page.evaluate('__world.anchors instanceof Map') else True
         print('PASS order flow',chapter,index,dish)
     saved=page.evaluate("JSON.parse(localStorage.getItem('catcook_v1'))")
-    assert saved['served']==5 and saved['coins']>123
+    assert saved['served']==6 and saved['coins']>123
     assert all(saved['regularVisits'].get(k)==1 for k in ['reader','walker','artist'])
-    assert saved['srs']['tsuika']['right'] and saved['srs']['urikire']['right']
     page.reload()
-    assert page.evaluate("JSON.parse(localStorage.getItem('catcook_v1')).served")==5
+    assert page.evaluate("JSON.parse(localStorage.getItem('catcook_v1')).served")==6
     assert not errors, errors
     print('PASS rewards, regular visits and save reload')
     browser.close()

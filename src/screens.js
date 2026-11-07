@@ -46,7 +46,19 @@ export function wordProgress() {
   const learned = ids.filter((id) => srs[id] && srs[id].box >= 2).length;
   const mastered = ids.filter((id) => srs[id] && srs[id].box >= 5).length;
   const seen = ids.filter((id) => srs[id]).length;
-  return { total: ids.length, learned, mastered, seen, unseen: ids.length - seen };
+  // 分章節：每章用到嘅字（共用字喺每章都計）；食堂章額外計數字同常用句
+  const chapters = CHAPTERS.map((c) => {
+    const set = new Set();
+    if (c.id === 'home') for (const [id, v] of Object.entries(VOCAB)) if (v.cat === 'num' || v.cat === 'phrase') set.add(id);
+    for (const r of RECIPES.filter((x) => (x.chapter || 'home') === c.id && isUnlocked(x))) {
+      set.add(r.dish);
+      r.ingredients.forEach(([id]) => set.add(id));
+      r.steps.forEach((st) => { if (st.verb) set.add(st.verb); if (st.request) set.add(st.request); });
+    }
+    const list = [...set].filter((id) => VOCAB[id]);
+    return { id: c.id, name: c.name.split('・')[0], icon: c.icon, total: list.length, learned: list.filter((id) => srs[id] && srs[id].box >= 2).length };
+  });
+  return { total: ids.length, learned, mastered, seen, unseen: ids.length - seen, chapters };
 }
 
 const stars = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
@@ -120,7 +132,9 @@ export function openBook(tab = 'recipes') {
       content.append(h('div', { class: 'progress-line' },
         `識咗 ${p.learned} / ${p.total} 個 · 🌸 熟晒 ${p.mastered} 個`,
         h('div', { class: 'bar' }, h('i', { style: `width:${p.total ? (p.learned / p.total) * 100 : 0}%` })),
-        h('div', { class: 'sub' }, `見過 ${p.seen} 個 · 仲有 ${p.unseen} 個未見過　（🌱→🌸 越溫越熟）`)), list);
+        h('div', { class: 'sub' }, `見過 ${p.seen} 個 · 仲有 ${p.unseen} 個未見過　（🌱→🌸 越溫越熟）`),
+        ...p.chapters.filter((c) => c.total).map((c) => h('div', { class: 'sub' }, `${c.icon} ${c.name} ${c.learned} / ${c.total}`,
+          h('div', { class: 'bar' }, h('i', { style: `width:${(c.learned / c.total) * 100}%` }))))), list);
     } else if (t === 'phrases') {
       // 閒聊／再見／落單細節：見過先顯示，按等級分組，點一下聽
       const L = jpLevel();

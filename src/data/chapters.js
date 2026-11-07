@@ -3,6 +3,7 @@ export const CHAPTERS = [
   { id: 'home', name: '小黑食堂', jp: '食堂{しょくどう}', icon: '🏠', intro: '由飯糰開始，練好基本功。' },
   { id: 'izakaya', name: '居酒屋・夜間營業', jp: '居酒屋{いざかや}', icon: '🏮', intro: '六款新料理，練習加單同沽清應對。' },
   { id: 'cafe', name: '喫茶店・午後小休', jp: '喫茶店{きっさてん}', icon: '☕', intro: '六款餐飲，記住熟客嘅冷熱同甜度喜好。' },
+  { id: 'sushi', name: '壽司店・師傅出手', jp: 'お寿司{すし}屋{や}', icon: '🍣', intro: '六款壽司，練習握、卷、揀魚同醋飯。' },
   { id: 'dark', name: '暗黑食堂・主廚，叮好喇！', jp: '裏{うら}メニュー', icon: '🌙', intro: '七款捷徑料理，擺盤、改名，再揭開後廚秘密。' },
 ];
 
@@ -20,7 +21,14 @@ export const NEW_INGREDIENTS = [
   ['milk', '牛乳{ぎゅうにゅう}', '牛奶', '🥛', 'cyl', 0xfff8e8],
   ['pan_bread', '食{しょく}パン', '厚切方包', '🍞', 'box', 0xecc38a],
   ['butter', 'バター', '牛油', '🧈', 'box', 0xf6d779],
+  ['sushi_su', '寿司酢{すしず}', '壽司醋', '🫙', 'cyl', 0xf1dfa8],
+  ['kyuri', 'きゅうり', '青瓜', '🥒', 'cyl', 0x5aa24a],
+  ['maguro', 'まぐろ', '吞拿魚', '🐟', 'box', 0xc8323c],
+  ['aburaage', '油揚{あぶらあ}げ', '豆腐卜', '🟫', 'box', 0xc98a3c],
+  ['wasabi', 'わさび', '山葵', '🟢', 'sphere', 0x8fbf4a],
 ];
+// 壽司章節未有手繪圖，料理／材料先用 emoji 後備（vocab.js 讀呢個表）
+export const SUSHI_NO_ART = ['sushi_su', 'kyuri', 'maguro', 'aburaage', 'wasabi', 'kappamaki', 'tekkamaki', 'tamago_nigiri', 'salmon_nigiri', 'inari', 'chirashi'];
 
 const pickStep = (ids) => ({ type: 'pick', need: ids, decoys: ['nori', 'miso'], jp: '材料{ざいりょう}を 選{えら}んで', yue: '揀啱材料', tip: '聽日文，再揀材料。' });
 const action = (type, verb, jp, yue, tip) => ({ type, verb, jp, yue, tip, anim: type === 'timing' ? 'wrap' : 'stir', turns: 2, rounds: 2, zone: type === 'hold' ? [0.45, 0.7] : 0.24 });
@@ -74,11 +82,36 @@ export const CHAPTER_RECIPES = [
     ingredients: [['komugiko', '自發粉 100g（此處取代普通麵粉）'], ['tamago', '雞蛋 1 隻'], ['milk', '牛奶 80ml'], ['satou', '糖 15g'], ['butter', '牛油 5g']],
     howto: ['蛋、奶同糖拌勻，加自發粉輕拌至冇乾粉。', '平底鑊薄搽牛油，小火倒入麵糊。', '表面冒泡、邊緣凝固時反面，再煎至中心熟透。'],
     steps: [pickStep(['komugiko', 'tamago', 'milk']), action('stir', 'mazeru', '生地{きじ}を 混{ま}ぜて', '輕拌麵糊', '唔好攪過頭。'), action('timing', 'yaku', '裏返{うらがえ}して', '冒泡就反面', '等啱時機！')] },
+  { id: 'kappamaki', chapter: 'sushi', jp: 'かっぱ巻{ま}き', yue: '青瓜卷', emoji: '🥒', price: 240, station: 'board', serves: '6 件', time: '20 分鐘',
+    ingredients: [['gohan', '熟白飯 200g'], ['sushi_su', '壽司醋 2 湯匙'], ['nori', '紫菜 1 張'], ['kyuri', '青瓜 1/2 條']],
+    howto: ['熱飯拌入壽司醋，用扇扇涼至體溫。', '青瓜切成長條；紫菜粗面向上，鋪薄薄一層飯，近身處放青瓜。', '用竹簾捲實，濕刀切成 6 件。'],
+    steps: [pickStep(['gohan', 'sushi_su', 'kyuri']), action('stir', 'mazeru', '酢飯{すめし}を 混{ま}ぜて', '醋拌飯', '轉圈拌勻醋飯。'), action('timing', 'maku', 'のりで 巻{ま}いて', '捲起青瓜卷', '撳準時機捲實！')] },
+  { id: 'tekkamaki', chapter: 'sushi', jp: '鉄火巻{てっかま}き', yue: '吞拿魚卷', emoji: '🍣', price: 360, station: 'board', serves: '6 件', time: '25 分鐘',
+    ingredients: [['gohan', '熟白飯 200g'], ['sushi_su', '壽司醋 2 湯匙'], ['nori', '紫菜 1 張'], ['maguro', '刺身級吞拿魚 80g'], ['wasabi', '山葵 少許']],
+    howto: ['醋飯同上，扇涼。', '吞拿魚用刺身級，切成長條；飯上抹少少山葵，放魚條。', '捲實，濕刀切件；魚肉要新鮮，即日食用。'],
+    steps: [pickStep(['gohan', 'maguro', 'wasabi']), action('timing', 'kiru', 'まぐろを 切{き}って', '切吞拿魚條', '輕力一刀切好。'), action('timing', 'maku', 'のりで 巻{ま}いて', '捲起魚卷', '撳準時機捲實！')] },
+  { id: 'tamago_nigiri', chapter: 'sushi', jp: '玉子{たまご}の 握{にぎ}り', yue: '玉子握壽司', emoji: '🍣', price: 200, station: 'board', serves: '4 件', time: '25 分鐘',
+    ingredients: [['gohan', '熟白飯 200g'], ['sushi_su', '壽司醋 2 湯匙'], ['tamago', '雞蛋 3 隻'], ['satou', '砂糖 1 湯匙'], ['shoyu', '豉油 1 茶匙']],
+    howto: ['蛋、糖同豉油拌勻，用方形鑊煎成厚蛋卷，放涼切條。', '醋飯輕輕握成長方形小團，唔好捏太實。', '蛋條放飯上，可用細條紫菜束緊。'],
+    steps: [pickStep(['tamago', 'satou', 'gohan']), action('stir', 'mazeru', '卵{たまご}を 混{ま}ぜて', '拌勻蛋液', '轉圈拌勻。'), action('timing', 'nigiru', 'ご飯{はん}を 握{にぎ}って', '握成飯團', '輕輕握，唔好太實。')] },
+  { id: 'salmon_nigiri', chapter: 'sushi', jp: 'サーモンの 握{にぎ}り', yue: '三文魚握壽司', emoji: '🍣', price: 320, station: 'board', serves: '4 件', time: '20 分鐘',
+    ingredients: [['gohan', '熟白飯 200g'], ['sushi_su', '壽司醋 2 湯匙'], ['sake_fish', '刺身級三文魚 100g'], ['wasabi', '山葵 少許']],
+    howto: ['醋飯扇涼，手沾醋水防黐手。', '三文魚斜刀切成薄片。', '握一小團飯，抹少少山葵，蓋上魚片輕壓成形。'],
+    steps: [pickStep(['gohan', 'sake_fish', 'wasabi']), action('timing', 'kiru', '鮭{さけ}を 切{き}って', '斜刀切魚片', '一刀拉切，唔好壓爛。'), action('timing', 'nigiru', 'ご飯{はん}を 握{にぎ}って', '握成飯團', '輕輕握。')] },
+  { id: 'inari', chapter: 'sushi', jp: 'いなり寿司{ずし}', yue: '稻荷壽司', emoji: '🟫', price: 220, station: 'pot', serves: '6 個', time: '30 分鐘',
+    ingredients: [['aburaage', '豆腐卜 3 塊'], ['dashi', '高湯 150ml'], ['shoyu', '豉油 1 湯匙'], ['satou', '砂糖 1 湯匙'], ['gohan', '熟白飯 200g']],
+    howto: ['豆腐卜淋熱水去油，切半成袋。', '高湯、豉油同糖煮滾，豆腐卜小火煮約 10 分鐘至入味。', '壓乾汁，輕輕塞入醋飯。'],
+    steps: [pickStep(['aburaage', 'dashi', 'shoyu']), action('hold', 'niru', '油揚{あぶらあ}げを 煮{に}て', '煮入味', '小火煮，綠色位放手。'), action('timing', 'tsumeru', 'ご飯{はん}を 詰{つ}めて', '塞入醋飯', '輕手塞滿。')] },
+  { id: 'chirashi', chapter: 'sushi', jp: 'ちらし寿司{ずし}', yue: '散壽司', emoji: '🍱', price: 420, station: 'board', serves: '1 碗', time: '25 分鐘',
+    ingredients: [['gohan', '熟白飯 250g'], ['sushi_su', '壽司醋 2 湯匙'], ['sake_fish', '刺身級三文魚 60g'], ['tamago', '蛋絲 1 隻份'], ['nori', '紫菜絲 少許']],
+    howto: ['醋飯扇涼，盛入碗。', '三文魚切片；蛋煎薄片切絲。', '將魚片、蛋絲同紫菜絲散放飯面。'],
+    steps: [pickStep(['gohan', 'sake_fish', 'tamago']), action('stir', 'mazeru', '酢飯{すめし}を 混{ま}ぜて', '拌勻醋飯', '轉圈拌勻。'), action('timing', 'noseru', '具{ぐ}を のせて', '擺上配料', '撳準，漂亮擺盤。')] },
 ].map(r => ({ ...r, dish: r.id, unlock: {}, }));
 
 export const CHAPTER_WORDS = [
   ['yaku', '焼{や}く', '燒、烘', 'verb'], ['ageru', '揚{あ}げる', '炸', 'verb'],
   ['ireru', '入{い}れる', '倒入、沖泡', 'verb'], ['musu', '蒸{む}す', '蒸', 'verb'],
+  ['maku', '巻{ま}く', '捲', 'verb'], ['tsumeru', '詰{つ}める', '塞入', 'verb'],
   ['tsuika', '追加{ついか}', '加單', 'phrase'], ['urikire', '売{う}り切{き}れ', '沽清', 'phrase'],
   ['herasu', '減{へ}らす', '減少', 'phrase'], ['kaeru', '変{か}える', '改做、換', 'phrase'],
   ['kyanseru', 'キャンセル', '取消訂單', 'phrase'], ['yameru', 'やめる', '唔要、算', 'phrase'],

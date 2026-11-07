@@ -203,6 +203,34 @@ export function makeDish(id) {
     const foam = sph(0.062, 0xffffff, 1, 0.4, 1); foam.position.y = 0.18; g.add(foam);
     const h = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.012, 6, 12, Math.PI), mat(0xe8f4ff, { transparent: true, opacity: 0.6 }));
     h.rotation.z = -Math.PI / 2; h.position.set(0.06, 0.09, 0); g.add(h);
+  } else if (['kappamaki', 'tekkamaki'].includes(id)) {
+    g.add(plate(0.27));
+    const fill = id === 'kappamaki' ? 0x6fb255 : 0xc8323c;
+    for (let i = 0; i < 4; i++) {
+      const x = (i % 2 - 0.5) * 0.17, z = (Math.floor(i / 2) - 0.5) * 0.17;
+      const roll = cyl(0.07, 0.07, 0.07, 0x17261b); roll.position.set(x, 0.07, z); g.add(roll);
+      const rice = cyl(0.056, 0.056, 0.01, 0xfdfdf5); rice.position.set(x, 0.108, z); g.add(rice);
+      const core = cyl(0.026, 0.026, 0.012, fill); core.position.set(x, 0.112, z); g.add(core);
+    }
+  } else if (['tamago_nigiri', 'salmon_nigiri'].includes(id)) {
+    g.add(plate(0.27));
+    for (let i = 0; i < 2; i++) {
+      const x = (i - 0.5) * 0.2;
+      const rice = box(0.15, 0.06, 0.08, 0xfdfdf5); rice.position.set(x, 0.07, 0); g.add(rice);
+      const top = box(0.17, 0.03, 0.095, id === 'salmon_nigiri' ? 0xff8c66 : 0xf7c531); top.position.set(x, 0.115, 0); g.add(top);
+      if (id === 'tamago_nigiri') { const band = box(0.03, 0.04, 0.1, 0x17261b); band.position.set(x, 0.11, 0); g.add(band); }
+    }
+  } else if (id === 'inari') {
+    g.add(plate(0.27));
+    for (let i = 0; i < 3; i++) {
+      const pouch = sph(0.09, 0xc98a3c, 1.1, 0.7, 0.9); pouch.position.set((i - 1) * 0.17, 0.07, (i % 2) * 0.05); g.add(pouch);
+      const rice = cyl(0.045, 0.045, 0.01, 0xfdfdf5); rice.position.set((i - 1) * 0.17, 0.125, (i % 2) * 0.05); g.add(rice);
+    }
+  } else if (id === 'chirashi') {
+    g.add(bowl(0.24, 0.13, 0x2c4f8f, 0xf2efe6));
+    const rice = cyl(0.21, 0.21, 0.04, 0xfdfdf5); rice.position.y = 0.12; g.add(rice);
+    for (let i = 0; i < 5; i++) { const f = box(0.08, 0.02, 0.05, 0xff8c66); f.position.set(Math.cos(i * 1.3) * 0.1, 0.15, Math.sin(i * 1.3) * 0.1); f.rotation.y = i; g.add(f); }
+    for (let i = 0; i < 6; i++) { const e = box(0.05, 0.012, 0.012, 0xf7c531); e.position.set(Math.cos(i * 2.1) * 0.07, 0.16, Math.sin(i * 2.1) * 0.07); e.rotation.y = i; g.add(e); }
   }
   return g;
 }

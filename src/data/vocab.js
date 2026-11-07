@@ -1,6 +1,6 @@
 // 詞彙表。 jp 用 漢字{かな} 寫法。 m = 3D 小模型（材料用）
 // cat: ing 材料 / verb 動作 / phrase 句子 / num 數字 / dish 菜
-import { NEW_INGREDIENTS, CHAPTER_RECIPES, CHAPTER_WORDS } from './chapters.js';
+import { NEW_INGREDIENTS, CHAPTER_RECIPES, CHAPTER_WORDS, SUSHI_NO_ART } from './chapters.js';
 import { DARK_INGREDIENTS, DARK_RECIPES, DARK_WORDS } from './dark.js';
 export const VOCAB = {
   // ---- 材料 ----
@@ -71,8 +71,8 @@ export const VOCAB = {
   iie: { jp: 'いいえ', yue: '唔係／唔使', emoji: '❌', cat: 'phrase' },
 };
 
-for (const [id, jp, yue, emoji, s, c] of [...NEW_INGREDIENTS, ...DARK_INGREDIENTS]) VOCAB[id] = { jp, yue, emoji, cat: 'ing', m: { s, c, sc: [0.12, 0.1, 0.12] } };
-for (const r of [...CHAPTER_RECIPES, ...DARK_RECIPES]) VOCAB[r.id] = { jp: r.jp, yue: r.yue, emoji: r.emoji, cat: 'dish' };
+for (const [id, jp, yue, emoji, s, c] of [...NEW_INGREDIENTS, ...DARK_INGREDIENTS]) VOCAB[id] = { jp, yue, emoji, cat: 'ing', m: { s, c, sc: [0.12, 0.1, 0.12] }, ...(SUSHI_NO_ART.includes(id) ? { textIcon: true } : {}) };
+for (const r of [...CHAPTER_RECIPES, ...DARK_RECIPES]) VOCAB[r.id] = { jp: r.jp, yue: r.yue, emoji: r.emoji, cat: 'dish', ...(SUSHI_NO_ART.includes(r.id) ? { textIcon: true } : {}) };
 for (const [id, jp, yue, cat] of [...CHAPTER_WORDS, ...DARK_WORDS]) VOCAB[id] = { jp, yue, cat, emoji: cat === 'verb' ? '🥄' : '💬', textIcon: true };
 
 export function vocab(id) {

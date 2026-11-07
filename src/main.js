@@ -191,7 +191,7 @@ function hub() {
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
-    }, art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', dark: '暗黑' }[c.id]}`))),
+    }, (c.id === 'sushi' ? h('span', { class: 'food-icon' }, '🍣') : art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', dark: 'dish_dark_ding' }[c.id])), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', dark: '暗黑' }[c.id]}`))),
     h('div', { class: 'panel-title' }, chapter.name),
     h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
     chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,

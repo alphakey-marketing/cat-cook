@@ -147,7 +147,6 @@ RECIPES.push(...CHAPTER_RECIPES, ...DARK_RECIPES);
 // 圖鑑用：未做嘅菜（剪影）
 export const COMING_SOON = [
   { id: 'tempura', emoji: '🍤', jp: '天{てん}ぷら', yue: '天婦羅' },
-  { id: 'sushi', emoji: '🍣', jp: 'お寿司{すし}', yue: '壽司' },
   { id: 'curry', emoji: '🍛', jp: 'カレーライス', yue: '咖喱飯' },
   { id: 'gyoza', emoji: '🥟', jp: '餃子{ぎょうざ}', yue: '餃子' },
   { id: 'tamagoyaki', emoji: '🍳', jp: '卵焼{たまごや}き', yue: '玉子燒' },
