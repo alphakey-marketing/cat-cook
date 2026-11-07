@@ -1516,6 +1516,168 @@
       "width": 1254,
       "height": 1254,
       "transparent": true
+    },
+    {
+      "id": "dish_shoyu_ramen",
+      "file": "dish_shoyu_ramen.png",
+      "group": "chapter-dishes",
+      "subject": "Japanese shoyu ramen in one small cream ceramic bowl with red rim and tiny cream blossom decoration. Clearly transparent deep amber-brown soy broth, yellow wavy noodles, TWO round brown chashu slices with pale meat spirals and chopped green scallions. No egg, no corn, no extra dishes.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "dish_shio_ramen",
+      "file": "dish_shio_ramen.png",
+      "group": "chapter-dishes",
+      "subject": "Japanese shio ramen in one small cream ceramic bowl with red rim. Clearly pale clear straw-gold salt broth, yellow wavy noodles, a few rectangular tan menma bamboo-shoot strips and green scallions. Light transparent broth distinct from brown soy ramen and milky pork ramen. No pork slices, no egg.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "dish_miso_ramen",
+      "file": "dish_miso_ramen.png",
+      "group": "chapter-dishes",
+      "subject": "Japanese miso ramen in one small cream ceramic bowl with red rim. Opaque warm ochre-brown miso broth, yellow noodles, a small pile of pale bean sprouts with yellow tips and green scallions. Distinct golden-brown cloudy soup, no pork slices, no egg, no corn.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "dish_tonkotsu_ramen",
+      "file": "dish_tonkotsu_ramen.png",
+      "group": "chapter-dishes",
+      "subject": "Japanese tonkotsu ramen in one small cream ceramic bowl with red rim. Opaque milky ivory pork-bone broth, thin yellow noodles, two brown chashu slices, HALF a soft boiled egg with golden yolk and green scallions. Clearly white creamy broth, no orange miso broth.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "dish_tsukemen",
+      "file": "dish_tsukemen.png",
+      "group": "chapter-dishes",
+      "subject": "Japanese tsukemen as ONE combined isolated icon: a cream plate with a neat mound of thick yellow cooked noodles, and a SEPARATE smaller cream dipping bowl beside it containing concentrated dark-brown dipping broth, a chashu slice, menma strips and scallions. Both vessels red edged, noodles stay on plate, not submerged. Keep both vessels large and close together for 48px legibility.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "dish_chahan",
+      "file": "dish_chahan.png",
+      "group": "chapter-dishes",
+      "subject": "Japanese egg fried rice, a compact golden dome on one cream red-rimmed plate. Distinct small yellow egg pieces and green scallions among loose golden rice grains. No seasoning shaker, no packets, no meat, no cutlery. Simple freshly wok-fried rice dish.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "ing_menma",
+      "file": "ing_menma.png",
+      "group": "chapter-ingredients",
+      "subject": "A small pile of several short rectangular tan golden-brown seasoned menma bamboo-shoot strips with simple lengthwise fibrous lines, one leaning across the others. No whole green bamboo, no leaves, no plate, no ramen.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "ing_tonkotsu_soup",
+      "file": "ing_tonkotsu_soup.png",
+      "group": "chapter-ingredients",
+      "subject": "A small cream ceramic handled stock pitcher with red rim, filled with opaque milky ivory pork-bone broth, clear visible pale liquid surface and one tiny cream steam curl. Concentrate on the creamy white soup ingredient. No noodles, no toppings, no bones, no text.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_onigiri",
+      "file": "goods_onigiri.png",
+      "group": "chapter-konbini",
+      "subject": "One Japanese convenience-store triangular onigiri, cream rice and dark green nori visible inside a simple clear triangular wrapper with folded seams. One tiny unlettered red pull tab. No plate or leaf.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_bento",
+      "file": "goods_bento.png",
+      "group": "chapter-konbini",
+      "subject": "One Japanese convenience-store bento in a compact dark-brown rectangular divided tray with clear lid rim: white rice on one side, golden fried chicken, yellow rolled egg and tiny green vegetables in separate sections on the other. No writing, no chopsticks.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_sandwich",
+      "file": "goods_sandwich.png",
+      "group": "chapter-konbini",
+      "subject": "Two triangular white-bread egg sandwiches, pale golden egg filling visibly between crustless cream bread slices, together in a clear triangular convenience-store wrapper with a tiny plain green seal. No text, no plate.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_ocha",
+      "file": "goods_ocha.png",
+      "group": "chapter-konbini",
+      "subject": "One short rounded clear plastic bottle of amber-green ready-to-drink Japanese tea with a green screw cap and a simple unlettered cream label showing a small green tea-leaf pictogram. No cup, no letters.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_coffee",
+      "file": "goods_coffee.png",
+      "group": "chapter-konbini",
+      "subject": "One short squat Japanese canned coffee, warm brown cylindrical metal can with cream top and bottom rims, simple cream panel with a tiny brown coffee-bean pictogram. Closed pull-tab on top. No cup, no lettering or numbers.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_chips",
+      "file": "goods_chips.png",
+      "group": "chapter-konbini",
+      "subject": "One small puffy convenience-store potato-chip bag, muted red and warm gold packaging, crimped top and bottom, a cream unlettered panel with a simple golden potato-chip pictogram. Two golden curved potato chips beside it. No text, no logos.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_ice",
+      "file": "goods_ice.png",
+      "group": "chapter-konbini",
+      "subject": "One small packaged ice cream cup, cream-and-muted-blue paper cup with the edge of a peeled-back lid revealing pale vanilla ice cream with a simple soft scoop shape. Tiny cream blossom pictogram on cup. No writing, no cone, no spoon.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_nikuman",
+      "file": "goods_nikuman.png",
+      "group": "chapter-konbini",
+      "subject": "One plump ivory steamed Japanese meat bun with pleated pinched top on a small square of cream paper, a small cutaway section clearly showing brown minced-meat filling. No plate, no dumpling crescent, no text.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_curry_pack",
+      "file": "goods_curry_pack.png",
+      "group": "chapter-konbini",
+      "subject": "One upright sealed retort curry pouch, muted gold flexible packaging with crimped seams and a warm red unlettered panel showing a tiny simple bowl pictogram of brown curry and white rice. Pouch is the main object, no separate served meal, no writing.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
+    },
+    {
+      "id": "goods_pudding",
+      "file": "goods_pudding.png",
+      "group": "chapter-konbini",
+      "subject": "One Japanese convenience-store custard pudding in a small clear plastic cup, pale golden custard and a clearly visible dark caramel layer at the bottom, flat red-and-cream foil lid closed on top. No lettering, no plate, no cherry.",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true
     }
   ]
 }
