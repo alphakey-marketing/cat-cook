@@ -1,6 +1,6 @@
 {
-  "expected": 168,
-  "present": 168,
+  "expected": 186,
+  "present": 186,
   "errors": [],
   "assets": [
     {
@@ -2857,6 +2857,312 @@
         240,
         1156,
         1079
+      ]
+    },
+    {
+      "file": "dish_shoyu_ramen.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        137,
+        187,
+        1096,
+        1100
+      ]
+    },
+    {
+      "file": "dish_shio_ramen.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        114,
+        212,
+        1112,
+        1107
+      ]
+    },
+    {
+      "file": "dish_miso_ramen.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        141,
+        206,
+        1108,
+        1132
+      ]
+    },
+    {
+      "file": "dish_tonkotsu_ramen.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        137,
+        189,
+        1111,
+        1124
+      ]
+    },
+    {
+      "file": "dish_tsukemen.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        69,
+        172,
+        1172,
+        1156
+      ]
+    },
+    {
+      "file": "dish_chahan.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        132,
+        271,
+        1095,
+        1121
+      ]
+    },
+    {
+      "file": "ing_menma.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        160,
+        305,
+        1076,
+        1021
+      ]
+    },
+    {
+      "file": "ing_tonkotsu_soup.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        200,
+        113,
+        1076,
+        1154
+      ]
+    },
+    {
+      "file": "goods_onigiri.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        159,
+        155,
+        1079,
+        1098
+      ]
+    },
+    {
+      "file": "goods_bento.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        103,
+        231,
+        1152,
+        1063
+      ]
+    },
+    {
+      "file": "goods_sandwich.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        156,
+        166,
+        1086,
+        1098
+      ]
+    },
+    {
+      "file": "goods_ocha.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        308,
+        105,
+        927,
+        1157
+      ]
+    },
+    {
+      "file": "goods_coffee.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        290,
+        133,
+        960,
+        1158
+      ]
+    },
+    {
+      "file": "goods_chips.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        125,
+        161,
+        1110,
+        1140
+      ]
+    },
+    {
+      "file": "goods_ice.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        215,
+        157,
+        1027,
+        1109
+      ]
+    },
+    {
+      "file": "goods_nikuman.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        107,
+        245,
+        1145,
+        1118
+      ]
+    },
+    {
+      "file": "goods_curry_pack.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        212,
+        135,
+        1013,
+        1122
+      ]
+    },
+    {
+      "file": "goods_pudding.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        191,
+        203,
+        1048,
+        1076
       ]
     }
   ]

@@ -5,6 +5,7 @@ export const CHAPTERS = [
   { id: 'cafe', name: '喫茶店・午後小休', jp: '喫茶店{きっさてん}', icon: '☕', intro: '六款餐飲，記住熟客嘅冷熱同甜度喜好。' },
   { id: 'sushi', name: '壽司店・師傅出手', jp: 'お寿司{すし}屋{や}', icon: '🍣', intro: '六款壽司，練習握、卷、揀魚同醋飯。' },
   { id: 'ramen', name: '拉麵店・食券機', jp: 'ラーメン屋{や}', icon: '🍜', intro: '先喺食券機買券，再答麵硬度同湯濃淡。' },
+  { id: 'konbini', name: '便利店・收銀員', jp: 'コンビニ', icon: '🏪', intro: '今次你係收銀員：掃碼、聽客人要求、收錢找續。' },
   { id: 'dark', name: '暗黑食堂・主廚，叮好喇！', jp: '裏{うら}メニュー', icon: '🌙', intro: '七款捷徑料理，擺盤、改名，再揭開後廚秘密。' },
 ];
 
@@ -30,9 +31,8 @@ export const NEW_INGREDIENTS = [
   ['menma', 'メンマ', '筍乾', '🎋', 'box', 0xc9a55a],
   ['tonkotsu_soup', '豚骨{とんこつ}スープ', '豬骨濃湯', '🥣', 'cyl', 0xf0e2c8],
 ];
-// 壽司料理／材料已補齊手繪圖；保留後備表供日後新增素材用。
-// 拉麵店暫用 emoji 圖示（日後補手繪圖就由呢度移除）
-export const TEXT_ICON_IDS = ['menma', 'tonkotsu_soup', 'shoyu_ramen', 'shio_ramen', 'miso_ramen', 'tonkotsu_ramen', 'tsukemen', 'chahan'];
+// 壽司及拉麵料理／材料已補齊手繪圖；保留後備表供日後新增素材用。
+export const TEXT_ICON_IDS = [];
 
 const pickStep = (ids) => ({ type: 'pick', need: ids, decoys: ['nori', 'miso'], jp: '材料{ざいりょう}を 選{えら}んで', yue: '揀啱材料', tip: '聽日文，再揀材料。' });
 const action = (type, verb, jp, yue, tip) => ({ type, verb, jp, yue, tip, anim: type === 'timing' ? 'wrap' : 'stir', turns: 2, rounds: 2, zone: type === 'hold' ? [0.45, 0.7] : 0.24 });

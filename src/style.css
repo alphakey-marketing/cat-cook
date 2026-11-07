@@ -499,3 +499,5 @@ button { min-height: 44px; }
 /* 拉麵店食券機 */
 .ticket-btn{position:relative;border:2px dashed #b3261e;background:#fff8e6;border-radius:6px;padding:6px 4px}
 .ticket-price{display:block;font-weight:700;color:#b3261e;font-size:14px;margin-top:2px}
+.scan-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.scan-total{text-align:center;font-weight:700;font-size:18px;padding:8px 0}

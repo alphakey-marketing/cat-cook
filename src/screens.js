@@ -1,4 +1,5 @@
 import { art, vocabArt } from './art.js';
+import { KONBINI_WORD_IDS } from './data/konbini.js';
 // 各種彈出畫面：食譜卡、圖鑑、商店、設定、收工總結
 import { h, modal, jpLine, applySettings, renderHUD, toast, closeModal } from './ui.js';
 import { RECIPES, COMING_SOON } from './data/recipes.js';
@@ -55,6 +56,7 @@ export function wordProgress() {
       r.ingredients.forEach(([id]) => set.add(id));
       r.steps.forEach((st) => { if (st.verb) set.add(st.verb); if (st.request) set.add(st.request); });
     }
+    if (c.id === 'konbini') KONBINI_WORD_IDS.forEach((id) => set.add(id));
     const list = [...set].filter((id) => VOCAB[id]);
     return { id: c.id, name: c.name.split('・')[0], icon: c.icon, total: list.length, learned: list.filter((id) => srs[id] && srs[id].box >= 2).length };
   });

@@ -294,6 +294,98 @@
       "id": "ing_wasabi",
       "group": "ingredients",
       "subject": "A small mound of muted fresh green wasabi paste with a ridged swirl on a tiny cream ceramic dish with red rim. One short knobbly green wasabi root beside the dish. No sushi."
+    },
+    {
+      "id": "dish_shoyu_ramen",
+      "group": "dishes",
+      "subject": "Japanese shoyu ramen in one small cream ceramic bowl with red rim and tiny cream blossom decoration. Clearly transparent deep amber-brown soy broth, yellow wavy noodles, TWO round brown chashu slices with pale meat spirals and chopped green scallions. No egg, no corn, no extra dishes."
+    },
+    {
+      "id": "dish_shio_ramen",
+      "group": "dishes",
+      "subject": "Japanese shio ramen in one small cream ceramic bowl with red rim. Clearly pale clear straw-gold salt broth, yellow wavy noodles, a few rectangular tan menma bamboo-shoot strips and green scallions. Light transparent broth distinct from brown soy ramen and milky pork ramen. No pork slices, no egg.",
+      "editPrompt": "Use case: background-extraction. Edit target: the single attached Cat-Cook game icon. Change ONLY the empty background: remove every stray background pixel, especially the nearly invisible pixel at the upper-left canvas corner. The entire empty background and ALL FOUR corners must be exactly fully transparent alpha=0, with a generous clean transparent margin. Preserve the subject, its silhouette, proportions, composition, colors, dark-brown outline, gouache grain, food and ceramic/paper details exactly. Do not add anything or redraw the subject. No checkerboard, backdrop, tile, text or shadow outside the subject. Return a genuine transparent PNG."
+    },
+    {
+      "id": "dish_miso_ramen",
+      "group": "dishes",
+      "subject": "Japanese miso ramen in one small cream ceramic bowl with red rim. Opaque warm ochre-brown miso broth, yellow noodles, a small pile of pale bean sprouts with yellow tips and green scallions. Distinct golden-brown cloudy soup, no pork slices, no egg, no corn."
+    },
+    {
+      "id": "dish_tonkotsu_ramen",
+      "group": "dishes",
+      "subject": "Japanese tonkotsu ramen in one small cream ceramic bowl with red rim. Opaque milky ivory pork-bone broth, thin yellow noodles, two brown chashu slices, HALF a soft boiled egg with golden yolk and green scallions. Clearly white creamy broth, no orange miso broth."
+    },
+    {
+      "id": "dish_tsukemen",
+      "group": "dishes",
+      "subject": "Japanese tsukemen as ONE combined isolated icon: a cream plate with a neat mound of thick yellow cooked noodles, and a SEPARATE smaller cream dipping bowl beside it containing concentrated dark-brown dipping broth, a chashu slice, menma strips and scallions. Both vessels red edged, noodles stay on plate, not submerged. Keep both vessels large and close together for 48px legibility."
+    },
+    {
+      "id": "dish_chahan",
+      "group": "dishes",
+      "subject": "Japanese egg fried rice, a compact golden dome on one cream red-rimmed plate. Distinct small yellow egg pieces and green scallions among loose golden rice grains. No seasoning shaker, no packets, no meat, no cutlery. Simple freshly wok-fried rice dish."
+    },
+    {
+      "id": "ing_menma",
+      "group": "ingredients",
+      "subject": "A small pile of several short rectangular tan golden-brown seasoned menma bamboo-shoot strips with simple lengthwise fibrous lines, one leaning across the others. No whole green bamboo, no leaves, no plate, no ramen."
+    },
+    {
+      "id": "ing_tonkotsu_soup",
+      "group": "ingredients",
+      "subject": "A small cream ceramic handled stock pitcher with red rim, filled with opaque milky ivory pork-bone broth, clear visible pale liquid surface and one tiny cream steam curl. Concentrate on the creamy white soup ingredient. No noodles, no toppings, no bones, no text."
+    },
+    {
+      "id": "goods_onigiri",
+      "group": "konbini",
+      "subject": "One Japanese convenience-store triangular onigiri, cream rice and dark green nori visible inside a simple clear triangular wrapper with folded seams. One tiny unlettered red pull tab. No plate or leaf."
+    },
+    {
+      "id": "goods_bento",
+      "group": "konbini",
+      "subject": "One Japanese convenience-store bento in a compact dark-brown rectangular divided tray with clear lid rim: white rice on one side, golden fried chicken, yellow rolled egg and tiny green vegetables in separate sections on the other. No writing, no chopsticks."
+    },
+    {
+      "id": "goods_sandwich",
+      "group": "konbini",
+      "subject": "Two triangular white-bread egg sandwiches, pale golden egg filling visibly between crustless cream bread slices, together in a clear triangular convenience-store wrapper with a tiny plain green seal. No text, no plate."
+    },
+    {
+      "id": "goods_ocha",
+      "group": "konbini",
+      "subject": "One short rounded clear plastic bottle of amber-green ready-to-drink Japanese tea with a green screw cap and a simple unlettered cream label showing a small green tea-leaf pictogram. No cup, no letters."
+    },
+    {
+      "id": "goods_coffee",
+      "group": "konbini",
+      "subject": "One short squat Japanese canned coffee, warm brown cylindrical metal can with cream top and bottom rims, simple cream panel with a tiny brown coffee-bean pictogram. Closed pull-tab on top. No cup, no lettering or numbers."
+    },
+    {
+      "id": "goods_chips",
+      "group": "konbini",
+      "subject": "One small puffy convenience-store potato-chip bag, muted red and warm gold packaging, crimped top and bottom, a cream unlettered panel with a simple golden potato-chip pictogram. Two golden curved potato chips beside it. No text, no logos."
+    },
+    {
+      "id": "goods_ice",
+      "group": "konbini",
+      "subject": "One small packaged ice cream cup, cream-and-muted-blue paper cup with the edge of a peeled-back lid revealing pale vanilla ice cream with a simple soft scoop shape. Tiny cream blossom pictogram on cup. No writing, no cone, no spoon."
+    },
+    {
+      "id": "goods_nikuman",
+      "group": "konbini",
+      "subject": "One plump ivory steamed Japanese meat bun with pleated pinched top on a small square of cream paper, a small cutaway section clearly showing brown minced-meat filling. No plate, no dumpling crescent, no text.",
+      "editPrompt": "Use case: background-extraction. Edit target: the single attached Cat-Cook game icon. Change ONLY the empty background: remove every stray background pixel, especially the nearly invisible pixel at the upper-left canvas corner. The entire empty background and ALL FOUR corners must be exactly fully transparent alpha=0, with a generous clean transparent margin. Preserve the subject, its silhouette, proportions, composition, colors, dark-brown outline, gouache grain, food and ceramic/paper details exactly. Do not add anything or redraw the subject. No checkerboard, backdrop, tile, text or shadow outside the subject. Return a genuine transparent PNG."
+    },
+    {
+      "id": "goods_curry_pack",
+      "group": "konbini",
+      "subject": "One upright sealed retort curry pouch, muted gold flexible packaging with crimped seams and a warm red unlettered panel showing a tiny simple bowl pictogram of brown curry and white rice. Pouch is the main object, no separate served meal, no writing."
+    },
+    {
+      "id": "goods_pudding",
+      "group": "konbini",
+      "subject": "One Japanese convenience-store custard pudding in a small clear plastic cup, pale golden custard and a clearly visible dark caramel layer at the bottom, flat red-and-cream foil lid closed on top. No lettering, no plate, no cherry."
     }
   ]
 }

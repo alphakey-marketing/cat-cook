@@ -34,7 +34,7 @@ with sync_playwright() as p:
             if choices.count():
                 if '食券機' in title:
                     seen['ticket'] = True
-                    assert page.locator('#panel .ticket-price').count() >= 1
+                    page.wait_for_selector('#panel .ticket-price', timeout=3000)
                     wanted = page.evaluate("async id=>(await import('/src/data/vocab.js')).vocab(id).yue", dish)
                     t = choices.filter(has=page.locator(f'[aria-label="{wanted}"], img[alt="{wanted}"], .emo:has-text("{wanted}")')).first
                     if not t.count(): t = choices.first

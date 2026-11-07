@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
+import { K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK } from '../src/data/konbini.js';
 import { REGULARS, WASABI_REQUESTS, SOY_ASK, RAMEN_REQUESTS } from '../src/data/chapters.js';
 import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES, WISHES, STYLES, PLATE_REACT } from '../src/data/dark.js';
 import { SHOP, CUSTOMERS } from '../src/data/shop.js';
@@ -44,6 +45,9 @@ for (const d of dishes) {
 for (const d of NIGIRI) ORDER_NUM_TEMPLATES.forEach((t) => KAN.forEach((n) => tplAdd(t, { dish: d, num: n })));
 WASABI_REQUESTS.forEach((w) => custAdd({ lv: 0 }, w.jp));
 custAdd({ lv: 0 }, SOY_ASK.jp);
+Object.values(K_STEPS).forEach((st) => { add(st.ask.jp, 'cat'); custAdd({ lv: 0 }, st.yes.jp); custAdd({ lv: 0 }, st.no.jp); });
+K_PAY.forEach((p) => custAdd({ lv: 0 }, p.jp));
+[K_PAY_ASK, K_THANKS, K_OTSURI_ASK].forEach((l) => add(l.jp, 'cat'));
 Object.values(RAMEN_REQUESTS).flat().forEach((r) => custAdd({ lv: 0 }, r.jp));
 Object.values(REACT).flat().forEach((l) => custAdd(l));
 SMALLTALK_LIST.forEach((l) => custAdd(l));

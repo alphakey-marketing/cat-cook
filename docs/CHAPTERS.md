@@ -33,3 +33,18 @@
 - **豉油沾法**：握壽司上菜後，客人問「お醤油は どう つけますか？」，答沾魚面。
 
 驗證：`python scripts/check-sushi.py`（需 Vite 在 5173）。
+
+## 拉麵店・食券機
+
+- **食券機**：每位客人都要先聽客人落單，再喺食券機（`ticket-btn`，顯示價錢）買啱嘅券，取代「客人要咩」。
+- **麵硬度／湯濃淡**：買券後按 `ramenPlan` 輪流抽「麵」或「湯」要求（`RAMEN_REQUESTS`），煮完前用 `request` 小遊戲揀做法。炒飯冇呢類要求。
+- 6 款料理及 2 款材料已補齊手繪圖，食券機、圖鑑、食譜及材料選項共用圖片，`TEXT_ICON_IDS` 已清空。
+- 驗證：`python scripts/check-ramen.py 0|1|2`（無頭瀏覽器連跑太多次會 crash，分三批）。
+
+## 便利店・收銀員（玩家做店員）
+
+- 流程由 `cashierServe` 負責，唔經 `serveCustomer`：逐件掃碼 → 報合計 → 客人答袋／叮熱／筷子／積分卡 → 付款方式 → 現金要找續（`yenJP` 產生日文金額）。
+- 貓店員講問句（聲線 `cat`），客人答覆用客人聲線；玩家揀啱做法，揀錯會重聽，錯誤次數決定星級。
+- 資料喺 `src/data/konbini.js`；單詞（`k_*`）計入章節進度。
+- 10 款貨品已補齊獨立包裝手繪圖，由 `GOODS.art` 接入掃碼選項；素材詳情見 `docs/RAMEN_KONBINI_ART.md`。
+- 驗證：`python scripts/check-konbini.py`。

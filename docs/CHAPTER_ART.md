@@ -16,3 +16,5 @@
 檢查：`python scripts/check-art.py`、`python scripts/check-chapter-art.py`、`python scripts/check-dark.py`、`python scripts/check-window-recipe.py`、`npm run build`。
 
 2026-11-07 補齊壽司章節六款料理及五款材料，章節素材合共 57 張。原稿、提示詞、預覽及接入詳情見 [SUSHI_ART.md](SUSHI_ART.md)。
+
+同日再補拉麵店六款料理、兩款材料及便利店十款貨品，章節素材合共 75 張。詳見 [RAMEN_KONBINI_ART.md](RAMEN_KONBINI_ART.md)。
