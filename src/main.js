@@ -7,14 +7,14 @@ import { unlockAudio, say, sfx, preload, onSfx, setMood } from './audio.js';
 import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './save.js';
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
-import { CHAPTERS, REGULARS } from './data/chapters.js';
+import { CHAPTERS, REGULARS, WASABI_REQUESTS, SOY_ASK, SOY_OPTIONS } from './data/chapters.js';
 import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
 import { DARK_ORDER_TEMPLATES } from './data/dark.js';
 import { DARK, resetDark } from './darkstate.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
-import { fill, NUMS } from './lines.js';
+import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
 import { isUnlocked, recipeCard, openBook, openShop, openSettings, shiftSummary, apply } from './screens.js';
 import { hash, toHTML } from './jp.js';
 
@@ -191,7 +191,7 @@ function hub() {
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
-    }, (c.id === 'sushi' ? h('span', { class: 'food-icon' }, '🍣') : art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', dark: 'dish_dark_ding' }[c.id])), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', dark: '暗黑' }[c.id]}`))),
+    }, art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', dark: '暗黑' }[c.id]}`))),
     h('div', { class: 'panel-title' }, chapter.name),
     h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
     chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,
@@ -207,7 +207,7 @@ async function shift({ tutorial = false } = {}) {
   const n = tutorial ? 1 : 5;
   const stat = { served: 0, coins: 0, perfect: 0 };
   let forceDish = null;
-  const plan = S().chapter === 'izakaya' && !tutorial ? izakayaPlan(n) : null;
+  const plan = S().chapter === 'izakaya' && !tutorial ? izakayaPlan(n) : S().chapter === 'sushi' && !tutorial ? sushiPlan(n) : null;
   // 暗黑食堂：成更懷疑度／彩池
   const dark = S().chapter === 'dark' && !tutorial;
   if (dark) { resetDark(); await darkShiftIntro(); }
@@ -263,6 +263,22 @@ function pickCustomer(index, tutorial) {
 }
 
 // 居酒屋每更計劃：3 次改單（取消一定有 + 另外 2 種）、2 次沽清（1 換菜 + 1 唔要替代品）
+// 壽司店：每位客人最多一種專屬互動（貫數量／山葵要求／豉油沾法），輪流出現
+function sushiPlan(n) {
+  const out = [];
+  while (out.length < n) out.push(...shuffle(['kan', 'wasabi', 'soy']));
+  return out.slice(0, n);
+}
+function sushiKind(rec, planned) {
+  const ok = {
+    kan: NIGIRI.includes(rec.dish),
+    wasabi: ['salmon_nigiri', 'tekkamaki'].includes(rec.dish),
+    soy: NIGIRI.includes(rec.dish),
+  };
+  if (planned && ok[planned]) return planned;
+  return Object.keys(ok).find((k) => ok[k]) || null;
+}
+
 function izakayaPlan(n) {
   const ch = shuffle([...shuffle(['add', 'less', 'swap']).slice(0, 2), 'cancel']);
   const so = shuffle(['replace', 'decline']);
@@ -280,7 +296,9 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
   if (import.meta.env.DEV) window.__order = rec.dish; // 測試用
   // 計劃減少：客人一定先叫 2–3 份，之後先減一份
   const planned = s.chapter === 'izakaya' && !tutorial ? plan?.[index] : null;
-  const withNum = planned === 'less' || (s.level >= 2 && !tutorial && rec.chapter !== 'dark' && Math.random() < 0.45);
+  const sushiK = s.chapter === 'sushi' && !tutorial ? sushiKind(rec, plan?.[index]) : null;
+  const NM = numsFor(rec.dish);
+  const withNum = planned === 'less' || sushiK === 'kan' || (s.level >= 2 && !tutorial && rec.chapter !== 'dark' && Math.random() < 0.45);
   let qty = planned === 'less' ? 2 + Math.floor(Math.random() * 2) : withNum ? 1 + Math.floor(Math.random() * 3) : 1;
   // 按日文程度抽句；高級句用共用聲線（慳音檔）
   const isDark = rec.chapter === 'dark';
@@ -289,7 +307,7 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
   // 暗黑食堂：客人照浮誇菜單名落單（自然日文）
   const line = isDark
     ? { jp: tpl.jp.replace('{dish}', rec.jp), yue: tpl.yue.replace('{dishYue}', rec.yue) }
-    : fill(tpl, withNum ? { dish: rec.dish, num: NUMS[qty - 1] } : { dish: rec.dish });
+    : fill(tpl, withNum ? { dish: rec.dish, num: NM[qty - 1] } : { dish: rec.dish });
   const voice = lineVoice(cust.id, tpl);
   preload(line.jp, voice);
   // 食後反應句預先揀好兼預載：手機網慢都唔使上菜先下載
@@ -322,14 +340,14 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
     const pickDish = await choose(opts, { title: h('div', { class: 'panel-title' }, '🐾 客人要咩？'), cols: Math.min(opts.length, 2) });
     let pickQty = 1;
     if (pickDish.value === rec.dish && withNum) {
-      const qo = await choose(NUMS.map((id, i) => ({ value: i + 1, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, vocabArt(vocab(id))), h('span', { class: 'jp-inline', html: toHTML(vocab(id).jp) })) })), { title: h('div', { class: 'panel-title' }, '要幾多個？'), cols: 3 });
+      const qo = await choose(NM.map((id, i) => ({ value: i + 1, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, vocabArt(vocab(id))), h('span', { class: 'jp-inline', html: toHTML(vocab(id).jp) })) })), { title: h('div', { class: 'panel-title' }, '要幾多個？'), cols: 3 });
       pickQty = qo.value;
     }
     if (pickDish.value === rec.dish && pickQty === qty) {
       orderOk = true;
       sfx('good');
       srsAnswer(rec.dish, tries === 0);
-      if (withNum) srsAnswer(NUMS[qty - 1], tries === 0);
+      if (withNum) srsAnswer(NM[qty - 1], tries === 0);
     } else {
       tries++;
       sfx('bad');
@@ -433,6 +451,17 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
     }] };
   }
 
+  // 壽司店：山葵要求（煮完前再問一次點整）
+  if (sushiK === 'wasabi') {
+    const wr = WASABI_REQUESTS[Math.floor(Math.random() * WASABI_REQUESTS.length)];
+    preference = wr.id;
+    rec = { ...rec, steps: [...rec.steps, {
+      type: 'request', request: wr.id, jp: wr.jp, yue: wr.yue, voice: cust.id,
+      title: '客人對山葵有要求，點整？', retry: '再聽一次：留意客人想要幾多山葵。',
+      actions: WASABI_REQUESTS.map((x) => ({ id: x.id, icon: x.icon, label: x.label, detail: x.detail })),
+    }] };
+  }
+
   // 第一次煮呢個菜：睇食譜
   if (!s.cooked[rec.id]) {
     await new Promise((res) => recipeCard(rec, { onStart: res }));
@@ -455,6 +484,11 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
   world.setView('serve');
   world.slideDishToCustomer();
   await wait(500);
+  // 壽司店：上菜後客人問豉油沾法
+  if (sushiK === 'soy') {
+    clearBubble('cust');
+    await askChapter(SOY_ASK.jp, SOY_ASK.yue, SOY_OPTIONS, 0, 'shoyu_tsukeru', '壽司應該點沾豉油？');
+  }
   const react = reacts[stars];
   const reactVoice = lineVoice(cust.id, react);
   world.customerJump();

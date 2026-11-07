@@ -1,6 +1,6 @@
 {
-  "expected": 157,
-  "present": 157,
+  "expected": 168,
+  "present": 168,
   "errors": [],
   "assets": [
     {
@@ -2670,6 +2670,193 @@
         109,
         983,
         1170
+      ]
+    },
+    {
+      "file": "dish_kappamaki.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        99,
+        167,
+        1131,
+        1144
+      ]
+    },
+    {
+      "file": "dish_tekkamaki.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        106,
+        175,
+        1142,
+        1155
+      ]
+    },
+    {
+      "file": "dish_tamago_nigiri.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        105,
+        219,
+        1142,
+        1096
+      ]
+    },
+    {
+      "file": "dish_salmon_nigiri.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        116,
+        240,
+        1115,
+        1096
+      ]
+    },
+    {
+      "file": "dish_inari.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        101,
+        219,
+        1141,
+        1077
+      ]
+    },
+    {
+      "file": "dish_chirashi.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        161,
+        190,
+        1066,
+        1127
+      ]
+    },
+    {
+      "file": "ing_sushi_su.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        287,
+        119,
+        960,
+        1135
+      ]
+    },
+    {
+      "file": "ing_kyuri.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        144,
+        172,
+        1063,
+        1097
+      ]
+    },
+    {
+      "file": "ing_maguro.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        87,
+        255,
+        1170,
+        1078
+      ]
+    },
+    {
+      "file": "ing_aburaage.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        111,
+        232,
+        1129,
+        1048
+      ]
+    },
+    {
+      "file": "ing_wasabi.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_range": [
+        0,
+        255
+      ],
+      "subject_bounds": [
+        148,
+        240,
+        1156,
+        1079
       ]
     }
   ]

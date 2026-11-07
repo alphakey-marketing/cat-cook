@@ -51,6 +51,9 @@ export const VOCAB = {
   mittsu: { jp: '三{みっ}つ', yue: '三個', emoji: '3️⃣', cat: 'num' },
   hitori: { jp: '一人{ひとり}', yue: '一個人', emoji: '🧍', cat: 'num' },
   futari: { jp: '二人{ふたり}', yue: '兩個人', emoji: '👫', cat: 'num' },
+  ikkan: { jp: '一貫{いっかん}', yue: '一件（握壽司）', emoji: '1️⃣', cat: 'num', textIcon: true },
+  nikan: { jp: '二貫{にかん}', yue: '兩件（握壽司）', emoji: '2️⃣', cat: 'num', textIcon: true },
+  sankan: { jp: '三貫{さんかん}', yue: '三件（握壽司）', emoji: '3️⃣', cat: 'num', textIcon: true },
   sannin: { jp: '三人{さんにん}', yue: '三個人', emoji: '👨‍👩‍👧', cat: 'num' },
 
   // ---- 句子 ----

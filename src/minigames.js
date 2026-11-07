@@ -465,7 +465,7 @@ export async function season(step) {
 
 // Requests test meaning through a kitchen action, rather than copying a Japanese word.
 export async function request(step) {
-  const actions = [
+  const actions = step.actions || [
     { id: 'hot', icon: '♨️', label: '保持熱飲', detail: '用熱杯盛裝' },
     { id: 'iced', icon: '🧊', label: '加冰做凍飲', detail: '用凍杯盛裝' },
     { id: 'less_sugar', icon: '🥄', label: '減少糖量', detail: '只落半份糖' },
@@ -489,7 +489,7 @@ export async function request(step) {
       await next('做好喇，出餐！', h('div', { class: 'panel-title' }, '啱喇！客人嘅意思係：'), jpLine(v.jp, { yue: v.yue, voice: 'word', autoplay: true }));
       return Math.max(0.3, 1 - mistakes * 0.2);
     }
-    mistakes++; sfx('bad'); hint('再聽一次：留意客人講緊冷熱，定係甜度。', 3500);
+    mistakes++; sfx('bad'); hint(step.retry || '再聽一次：留意客人講緊冷熱，定係甜度。', 3500);
   }
 }
 

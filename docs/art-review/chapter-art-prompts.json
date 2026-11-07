@@ -239,6 +239,61 @@
       "id": "ing_oyster_sauce",
       "subject": "A short rounded dark-brown oyster-sauce bottle with muted green cap, cream label bearing a small oyster-shell pictogram and no lettering. Clearly thick dark sauce, not soy sauce with red cap.",
       "group": "ingredients"
+    },
+    {
+      "id": "dish_kappamaki",
+      "group": "dishes",
+      "subject": "Three cucumber hosomaki sushi pieces on a small cream plate with red rim. Dark nori OUTSIDE, cream rice ring and vivid green cucumber center visible on round cut faces. No fish."
+    },
+    {
+      "id": "dish_tekkamaki",
+      "group": "dishes",
+      "subject": "Three tuna hosomaki sushi pieces on a small cream plate with red rim. Dark nori OUTSIDE, cream rice ring and deep red raw tuna center visible on round cut faces. No cucumber or salmon."
+    },
+    {
+      "id": "dish_tamago_nigiri",
+      "group": "dishes",
+      "subject": "Two tamago nigiri sushi: thick golden rolled omelette slabs on small oblong cream rice mounds, each bound by one narrow dark nori strip, on a cream plate with red rim."
+    },
+    {
+      "id": "dish_salmon_nigiri",
+      "group": "dishes",
+      "subject": "Two salmon nigiri sushi: orange raw salmon slices with simple pale diagonal fat lines draped over compact cream oblong rice mounds, on a cream plate with red rim. No nori wrapping."
+    },
+    {
+      "id": "dish_inari",
+      "group": "dishes",
+      "subject": "Two golden-brown inari sushi tofu pouches filled with cream rice, one open top visibly showing rice grains. On a small cream plate with red rim. No fish or nori."
+    },
+    {
+      "id": "dish_chirashi",
+      "group": "dishes",
+      "subject": "A small cream ceramic bowl with red rim of chirashi sushi: cream sushi rice visibly topped with orange salmon sashimi slices, thin golden egg ribbons and a few dark nori strips. Distinct separated colorful toppings."
+    },
+    {
+      "id": "ing_sushi_su",
+      "group": "ingredients",
+      "subject": "A small rounded clear glass bottle of pale golden sushi vinegar with a green cap and a simple cream blossom emblem, no lettering. Light translucent liquid, distinct from dark soy sauce."
+    },
+    {
+      "id": "ing_kyuri",
+      "group": "ingredients",
+      "subject": "One fresh dark green cucumber angled diagonally, with two round cucumber slices showing pale green flesh and a few tiny cream seeds. No plate, no sushi."
+    },
+    {
+      "id": "ing_maguro",
+      "group": "ingredients",
+      "subject": "A deep ruby-red raw tuna loin block with two thick cut slices leaning beside it, subtle darker red muscle lines. Clearly red tuna flesh, no orange salmon, no whole fish, no rice."
+    },
+    {
+      "id": "ing_aburaage",
+      "group": "ingredients",
+      "subject": "Two rectangular golden fried tofu sheets, one cut open to show a hollow pocket with pale interior. Soft porous golden-brown skin, no rice filling, no plate, no sushi."
+    },
+    {
+      "id": "ing_wasabi",
+      "group": "ingredients",
+      "subject": "A small mound of muted fresh green wasabi paste with a ridged swirl on a tiny cream ceramic dish with red rim. One short knobbly green wasabi root beside the dish. No sushi."
     }
   ]
 }

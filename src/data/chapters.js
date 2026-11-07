@@ -27,8 +27,8 @@ export const NEW_INGREDIENTS = [
   ['aburaage', '油揚{あぶらあ}げ', '豆腐卜', '🟫', 'box', 0xc98a3c],
   ['wasabi', 'わさび', '山葵', '🟢', 'sphere', 0x8fbf4a],
 ];
-// 壽司章節未有手繪圖，料理／材料先用 emoji 後備（vocab.js 讀呢個表）
-export const SUSHI_NO_ART = ['sushi_su', 'kyuri', 'maguro', 'aburaage', 'wasabi', 'kappamaki', 'tekkamaki', 'tamago_nigiri', 'salmon_nigiri', 'inari', 'chirashi'];
+// 壽司料理／材料已補齊手繪圖；保留後備表供日後新增素材用。
+export const SUSHI_NO_ART = [];
 
 const pickStep = (ids) => ({ type: 'pick', need: ids, decoys: ['nori', 'miso'], jp: '材料{ざいりょう}を 選{えら}んで', yue: '揀啱材料', tip: '聽日文，再揀材料。' });
 const action = (type, verb, jp, yue, tip) => ({ type, verb, jp, yue, tip, anim: type === 'timing' ? 'wrap' : 'stir', turns: 2, rounds: 2, zone: type === 'hold' ? [0.45, 0.7] : 0.24 });
@@ -111,6 +111,8 @@ export const CHAPTER_RECIPES = [
 export const CHAPTER_WORDS = [
   ['yaku', '焼{や}く', '燒、烘', 'verb'], ['ageru', '揚{あ}げる', '炸', 'verb'],
   ['ireru', '入{い}れる', '倒入、沖泡', 'verb'], ['musu', '蒸{む}す', '蒸', 'verb'],
+  ['sabinuki', 'さび抜{ぬ}き', '唔落山葵', 'phrase'], ['wasabi_ooi', 'わさび 多{おお}め', '多啲山葵', 'phrase'],
+  ['wasabi_sukunai', 'わさび 少{すく}なめ', '少啲山葵', 'phrase'], ['shoyu_tsukeru', '醤油{しょうゆ}を つける', '沾豉油', 'phrase'],
   ['maku', '巻{ま}く', '捲', 'verb'], ['tsumeru', '詰{つ}める', '塞入', 'verb'],
   ['tsuika', '追加{ついか}', '加單', 'phrase'], ['urikire', '売{う}り切{き}れ', '沽清', 'phrase'],
   ['herasu', '減{へ}らす', '減少', 'phrase'], ['kaeru', '変{か}える', '改做、換', 'phrase'],
@@ -118,6 +120,15 @@ export const CHAPTER_WORDS = [
   ['hot', '温{あたた}かい', '熱飲', 'phrase'], ['iced', '冷{つめ}たい', '凍飲', 'phrase'],
   ['less_sugar', '甘{あま}さ控{ひか}えめ', '少甜', 'phrase'], ['no_sugar', '砂糖{さとう}なし', '無糖', 'phrase'],
 ];
+
+// 壽司店山葵要求：客人句子 + 對應做法
+export const WASABI_REQUESTS = [
+  { id: 'sabinuki', jp: 'さび抜{ぬ}きで お願{ねが}いします。', yue: '唔該，唔好落山葵。', label: '唔落山葵', detail: '飯同魚中間唔搽', icon: '🚫' },
+  { id: 'wasabi_ooi', jp: 'わさびを 多{おお}めに お願{ねが}いします。', yue: '唔該，山葵多啲。', label: '多落山葵', detail: '搽厚少少', icon: '🟢' },
+  { id: 'wasabi_sukunai', jp: 'わさびは 少{すく}なめで お願{ねが}いします。', yue: '山葵少啲，唔該。', label: '少落山葵', detail: '只搽薄薄一層', icon: '🥄' },
+];
+export const SOY_ASK = { jp: 'お醤油{しょうゆ}は どう つけますか？', yue: '豉油應該點沾？' };
+export const SOY_OPTIONS = ['沾魚面，輕輕一點', '沾飯面', '成件浸落豉油碟'];
 
 export const REGULARS = [
   { id: 'reader', name: '讀書常客', request: 'hot', jp: 'いつもの、温{あたた}かいので お願{ねが}いします。', yue: '同平時一樣，要熱嘅。' },

@@ -6,12 +6,12 @@ import { execFileSync } from 'node:child_process';
 import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
-import { REGULARS } from '../src/data/chapters.js';
+import { REGULARS, WASABI_REQUESTS, SOY_ASK } from '../src/data/chapters.js';
 import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES, WISHES, STYLES, PLATE_REACT } from '../src/data/dark.js';
 import { SHOP, CUSTOMERS } from '../src/data/shop.js';
 import { VOICES, CUSTOMER_VOICES } from '../src/data/voices.js';
 import { audioKey, toSpeech, toReading, kataToHira } from '../src/jp.js';
-import { fill, NUMS } from '../src/lines.js';
+import { fill, NUMS, KAN, NIGIRI } from '../src/lines.js';
 
 const HOST = process.env.VV || 'http://127.0.0.1:50021';
 const OUT = path.resolve('public/audio');
@@ -40,6 +40,10 @@ for (const d of dishes) {
   KAERU.forEach((t) => tplAdd(t, { dish: d }));
   SOLDOUT.forEach((t) => add(fill(t, { dish: d }).jp, 'cat'));
 }
+// 壽司店專屬：貫數量落單、山葵要求、豉油沾法
+for (const d of NIGIRI) ORDER_NUM_TEMPLATES.forEach((t) => KAN.forEach((n) => tplAdd(t, { dish: d, num: n })));
+WASABI_REQUESTS.forEach((w) => custAdd({ lv: 0 }, w.jp));
+custAdd({ lv: 0 }, SOY_ASK.jp);
 Object.values(REACT).flat().forEach((l) => custAdd(l));
 SMALLTALK_LIST.forEach((l) => custAdd(l));
 DETAILS.forEach((l) => custAdd(l));

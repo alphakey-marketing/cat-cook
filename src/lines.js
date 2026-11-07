@@ -2,6 +2,10 @@
 import { VOCAB } from './data/vocab.js';
 
 export const NUMS = ['hitotsu', 'futatsu', 'mittsu'];
+// 握壽司用「貫」做量詞
+export const KAN = ['ikkan', 'nikan', 'sankan'];
+export const NIGIRI = ['tamago_nigiri', 'salmon_nigiri'];
+export const numsFor = (dish) => (NIGIRI.includes(dish) ? KAN : NUMS);
 
 export function fill(tpl, vars) {
   let jp = tpl.jp;
