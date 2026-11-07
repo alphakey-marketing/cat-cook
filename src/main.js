@@ -207,13 +207,14 @@ async function shift({ tutorial = false } = {}) {
   const n = tutorial ? 1 : 5;
   const stat = { served: 0, coins: 0, perfect: 0 };
   let forceDish = null;
+  const plan = S().chapter === 'izakaya' && !tutorial ? izakayaPlan(n) : null;
   // 暗黑食堂：成更懷疑度／彩池
   const dark = S().chapter === 'dark' && !tutorial;
   if (dark) { resetDark(); await darkShiftIntro(); }
   for (let i = 0; i < n; i++) {
     $('#shiftinfo').textContent = `客人 ${i + 1} / ${n}`;
     $('#shiftinfo').classList.add('show');
-    const res = await serveCustomer({ index: i, tutorial, forceDish });
+    const res = await serveCustomer({ index: i, tutorial, forceDish, plan });
     if (res.cancelled) { await wait(700); continue; }   // 取消：唔計服務、保留 forceDish
     forceDish = null;
     stat.served++;
@@ -261,7 +262,14 @@ function pickCustomer(index, tutorial) {
   return pool[0];
 }
 
-async function serveCustomer({ index, tutorial, forceDish }) {
+// 居酒屋每更計劃：3 次改單（取消一定有 + 另外 2 種）、2 次沽清（1 換菜 + 1 唔要替代品）
+function izakayaPlan(n) {
+  const ch = shuffle([...shuffle(['add', 'less', 'swap']).slice(0, 2), 'cancel']);
+  const so = shuffle(['replace', 'decline']);
+  return Array.from({ length: n }, (_, i) => (i % 2 === 0 ? ch[i / 2] : so[(i - 1) / 2]));
+}
+
+async function serveCustomer({ index, tutorial, forceDish, plan }) {
   const s = S();
   const lv0 = s.level;
   const cust = s.chapter === 'cafe' ? CUSTOMERS[index % REGULARS.length] : pickCustomer(index, tutorial);
@@ -270,8 +278,10 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   const dishId = forceDish || srsPick(unlocked.map((r) => r.dish));
   let rec = unlocked.find((r) => r.dish === dishId) || unlocked[0];
   if (import.meta.env.DEV) window.__order = rec.dish; // 測試用
-  const withNum = s.level >= 2 && !tutorial && rec.chapter !== 'dark' && Math.random() < 0.45;
-  let qty = withNum ? 1 + Math.floor(Math.random() * 3) : 1;
+  // 計劃減少：客人一定先叫 2–3 份，之後先減一份
+  const planned = s.chapter === 'izakaya' && !tutorial ? plan?.[index] : null;
+  const withNum = planned === 'less' || (s.level >= 2 && !tutorial && rec.chapter !== 'dark' && Math.random() < 0.45);
+  let qty = planned === 'less' ? 2 + Math.floor(Math.random() * 2) : withNum ? 1 + Math.floor(Math.random() * 3) : 1;
   // 按日文程度抽句；高級句用共用聲線（慳音檔）
   const isDark = rec.chapter === 'dark';
   if (isDark) { qty = 1; DARK.persona = pickPersona(); DARK.custId = cust.id; }
@@ -369,12 +379,13 @@ async function serveCustomer({ index, tutorial, forceDish }) {
   };
   const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   const yueOf = (r) => vocab(r.dish).yue.replace(/（.*?）/g, '');
-  if (S().chapter === 'izakaya' && index % 2 === 0) {
+  if (S().chapter === 'izakaya' && (planned ? !['replace', 'decline'].includes(planned) : index % 2 === 0)) {
     // 落單後、未煮前改單：加單 / 減少 / 換菜 / 取消（按情況抽，答案位置隨機）
     const other = unlocked.filter((r) => r.id !== rec.id);
     const kinds = [['add', 3], ['cancel', 1], ...(qty >= 2 ? [['less', 2]] : []), ...(other.length ? [['swap', 3]] : [])];
     let roll = Math.random() * kinds.reduce((a, [, w]) => a + w, 0);
-    const kind = (kinds.find(([, w]) => (roll -= w) <= 0) || kinds[0])[0];
+    let kind = planned || (kinds.find(([, w]) => (roll -= w) <= 0) || kinds[0])[0];
+    if ((kind === 'swap' && !other.length) || (kind === 'less' && qty < 2)) kind = 'add';
     const swapLabel = (r) => `改做${yueOf(r)}`;
     const sw = kind === 'swap' ? rnd(other) : null;
     const T = { add: TSUIKA, less: HERASU, swap: KAERU, cancel: KYANSERU }[kind];
@@ -396,7 +407,7 @@ async function serveCustomer({ index, tutorial, forceDish }) {
     const so = fill(pickByLevel(SOLDOUT), { dish: rec.dish });
     await bubble(world, 'cat', so.jp, so.yue, 'cat');
     clearBubble('cat');
-    if (!replacement || Math.random() < 0.25) {
+    if (!replacement || (planned ? planned === 'decline' : Math.random() < 0.25)) {
       // 客人唔要替代品：「取消所有訂單」先係答案
       const yl = pickByLevel(YAMERU);
       const alt = replacement ? [vocab(replacement.dish).yue] : [];
