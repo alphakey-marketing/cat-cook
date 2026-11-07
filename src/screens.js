@@ -71,7 +71,7 @@ export function recipeCard(r, { onStart = null } = {}) {
   );
   if (onStart) {
     const [hero, ...realRecipe] = [...body.children];
-    const labels = { pick: '聽日文揀材料', mash: '連撳搓飯糰', timing: '指針入綠色區時撳掣', stir: '手指畫圈攪拌', hold: '長按加熱，綠色區放手', sneak: '按住偷偷做；客人講嘢衝你就放手', season: '先試味再調味', request: '聽客人要求，揀實際做法' };
+    const labels = { pick: '聽日文揀材料', mash: '連撳搓飯糰', timing: '指針入綠色區時撳掣', stir: '手指畫圈攪拌', hold: '長按加熱，綠色區放手', sneak: '點一下開始偷偷做；客人講嘢衝你就再點一下停', season: '先試味再調味', request: '聽客人要求，揀實際做法' };
     const details = h('details', { class: 'real-recipe' }, h('summary', {}, '📖 睇真實食譜、份量同烹調時間'), ...realRecipe);
     body.replaceChildren(hero, h('h3', {}, '今次遊戲步驟'), h('ol', { class: 'howto game-steps' }, r.steps.map(step => h('li', {}, labels[step.type]))), details);
   }
