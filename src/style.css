@@ -495,3 +495,7 @@ button { min-height: 44px; }
 .btn.sneak-btn[data-state="look"], .btn.sneak-btn[data-state="look"]:active { background: #8e1b22; border-color: #5e1015; }
 .sneak-bars.on .prog i { animation: progPulse .5s infinite alternate; }
 @keyframes progPulse { to { filter: brightness(1.3); } }
+
+/* 拉麵店食券機 */
+.ticket-btn{position:relative;border:2px dashed #b3261e;background:#fff8e6;border-radius:6px;padding:6px 4px}
+.ticket-price{display:block;font-weight:700;color:#b3261e;font-size:14px;margin-top:2px}

@@ -10,6 +10,6 @@
 - 素材對照：`docs/art-review/sushi-art.png`，含 96px／48px、淺底／深底預覽。
 - 遊戲食譜預覽：`docs/art-review/sushi-recipe.png`。
 
-沿用 `register-chapter-art.py` 更新 manifest，再用 `prepare-art.py` 匯出 WebP。`SUSHI_NO_ART` 清空，料理、材料及章節按鈕接上手繪圖。原有三文魚、白飯、紫菜等共用材料繼續使用既有素材。
+沿用 `register-chapter-art.py` 更新 manifest，再用 `prepare-art.py` 匯出 WebP。`TEXT_ICON_IDS` 清空，料理、材料及章節按鈕接上手繪圖。原有三文魚、白飯、紫菜等共用材料繼續使用既有素材。
 
 驗證：`python scripts/check-art.py`、`python scripts/check-chapter-art.py`（需 Vite 在 5173）、`npm run build`。章節素材檢查包含 57 張圖片載入、五個圖像章節按鈕，以及六款壽司食譜在 320×568、390×844、844×390 嘅實際顯示。

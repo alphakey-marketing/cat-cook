@@ -119,9 +119,19 @@ export function makeDish(id) {
     for (let i = 0; i < 3; i++) {
       const l = sph(0.03, 0x4caf50, 1, 0.15, 1.6); l.position.set((Math.random() - 0.5) * 0.08, 0.22, (Math.random() - 0.5) * 0.08); l.rotation.y = i * 2; g.add(l);
     }
-  } else if (id === 'ramen') {
+  } else if (id === 'chahan') {
+    g.add(plate(0.3));
+    const heap = sph(0.2, 0xe8c46a, 1, 0.45, 1); heap.position.y = 0.07; g.add(heap);
+    for (let i = 0; i < 8; i++) { const e = box(0.04, 0.02, 0.04, i % 2 ? 0xf7d94a : 0x6cc24a); e.position.set(Math.cos(i * 0.8) * 0.12, 0.17, Math.sin(i * 0.8) * 0.12); e.rotation.y = i; g.add(e); }
+  } else if (id === 'tsukemen') {
+    g.add(plate(0.3));
+    for (let i = 0; i < 6; i++) { const n = new THREE.Mesh(new THREE.TorusGeometry(0.07 + i * 0.01, 0.012, 6, 20), mat(0xf3d77a)); n.rotation.x = Math.PI / 2; n.position.set(-0.05, 0.03 + i * 0.012, 0); g.add(n); }
+    const dip = bowl(0.12, 0.09, 0x2c2c2c, 0x111111); dip.position.set(0.2, 0, 0.06); g.add(dip);
+    const soup = cyl(0.1, 0.1, 0.01, 0x7a4a24); soup.position.set(0.2, 0.08, 0.06); g.add(soup);
+  } else if (['ramen', 'shoyu_ramen', 'shio_ramen', 'miso_ramen', 'tonkotsu_ramen'].includes(id)) {
+    const brothCol = { shoyu_ramen: 0x8a4a1f, shio_ramen: 0xf0dca0, miso_ramen: 0xc98a3c, tonkotsu_ramen: 0xf2e6cf }[id] || 0xd29b5b;
     const b = bowl(0.27, 0.17, 0xb3261e, 0x111111); g.add(b);
-    const broth = new THREE.Mesh(new THREE.CircleGeometry(0.235, 32), mat(0xd29b5b, { roughness: 0.15 }));
+    const broth = new THREE.Mesh(new THREE.CircleGeometry(0.235, 32), mat(brothCol, { roughness: 0.15 }));
     broth.rotation.x = -Math.PI / 2; broth.position.y = 0.15; g.add(broth);
     for (let i = 0; i < 7; i++) {
       const n = new THREE.Mesh(new THREE.TorusGeometry(0.05 + Math.random() * 0.06, 0.008, 6, 20), mat(0xf3d77a));

@@ -4,6 +4,7 @@ export const CHAPTERS = [
   { id: 'izakaya', name: '居酒屋・夜間營業', jp: '居酒屋{いざかや}', icon: '🏮', intro: '六款新料理，練習加單同沽清應對。' },
   { id: 'cafe', name: '喫茶店・午後小休', jp: '喫茶店{きっさてん}', icon: '☕', intro: '六款餐飲，記住熟客嘅冷熱同甜度喜好。' },
   { id: 'sushi', name: '壽司店・師傅出手', jp: 'お寿司{すし}屋{や}', icon: '🍣', intro: '六款壽司，練習握、卷、揀魚同醋飯。' },
+  { id: 'ramen', name: '拉麵店・食券機', jp: 'ラーメン屋{や}', icon: '🍜', intro: '先喺食券機買券，再答麵硬度同湯濃淡。' },
   { id: 'dark', name: '暗黑食堂・主廚，叮好喇！', jp: '裏{うら}メニュー', icon: '🌙', intro: '七款捷徑料理，擺盤、改名，再揭開後廚秘密。' },
 ];
 
@@ -26,9 +27,12 @@ export const NEW_INGREDIENTS = [
   ['maguro', 'まぐろ', '吞拿魚', '🐟', 'box', 0xc8323c],
   ['aburaage', '油揚{あぶらあ}げ', '豆腐卜', '🟫', 'box', 0xc98a3c],
   ['wasabi', 'わさび', '山葵', '🟢', 'sphere', 0x8fbf4a],
+  ['menma', 'メンマ', '筍乾', '🎋', 'box', 0xc9a55a],
+  ['tonkotsu_soup', '豚骨{とんこつ}スープ', '豬骨濃湯', '🥣', 'cyl', 0xf0e2c8],
 ];
 // 壽司料理／材料已補齊手繪圖；保留後備表供日後新增素材用。
-export const SUSHI_NO_ART = [];
+// 拉麵店暫用 emoji 圖示（日後補手繪圖就由呢度移除）
+export const TEXT_ICON_IDS = ['menma', 'tonkotsu_soup', 'shoyu_ramen', 'shio_ramen', 'miso_ramen', 'tonkotsu_ramen', 'tsukemen', 'chahan'];
 
 const pickStep = (ids) => ({ type: 'pick', need: ids, decoys: ['nori', 'miso'], jp: '材料{ざいりょう}を 選{えら}んで', yue: '揀啱材料', tip: '聽日文，再揀材料。' });
 const action = (type, verb, jp, yue, tip) => ({ type, verb, jp, yue, tip, anim: type === 'timing' ? 'wrap' : 'stir', turns: 2, rounds: 2, zone: type === 'hold' ? [0.45, 0.7] : 0.24 });
@@ -106,6 +110,30 @@ export const CHAPTER_RECIPES = [
     ingredients: [['gohan', '熟白飯 250g'], ['sushi_su', '壽司醋 2 湯匙'], ['sake_fish', '刺身級三文魚 60g'], ['tamago', '蛋絲 1 隻份'], ['nori', '紫菜絲 少許']],
     howto: ['醋飯扇涼，盛入碗。', '三文魚切片；蛋煎薄片切絲。', '將魚片、蛋絲同紫菜絲散放飯面。'],
     steps: [pickStep(['gohan', 'sake_fish', 'tamago']), action('stir', 'mazeru', '酢飯{すめし}を 混{ま}ぜて', '拌勻醋飯', '轉圈拌勻。'), action('timing', 'noseru', '具{ぐ}を のせて', '擺上配料', '撳準，漂亮擺盤。')] },
+  { id: 'shoyu_ramen', chapter: 'ramen', jp: '醤油{しょうゆ}ラーメン', yue: '豉油拉麵', emoji: '🍜', price: 800, station: 'pot', serves: '1 碗', time: '30 分鐘',
+    ingredients: [['men', '拉麵 1 球'], ['dashi', '雞骨高湯 400ml'], ['shoyu', '豉油 2 湯匙'], ['chashu', '叉燒 2 片'], ['negi', '蔥花 少許']],
+    howto: ['高湯煮滾，加豉油調成湯底。', '麵放滾水煮約 2 分鐘，瀝乾。', '麵放碗中淋湯，擺上叉燒同蔥花。'],
+    steps: [pickStep(['men', 'shoyu', 'chashu']), action('hold', 'yuderu', '麺{めん}を ゆでて', '煮麵', '控制時間，綠色位放手。'), action('timing', 'noseru', 'チャーシューを のせて', '擺上叉燒', '撳準綠色位。')] },
+  { id: 'shio_ramen', chapter: 'ramen', jp: '塩{しお}ラーメン', yue: '鹽味拉麵', emoji: '🍜', price: 800, station: 'pot', serves: '1 碗', time: '30 分鐘',
+    ingredients: [['men', '拉麵 1 球'], ['dashi', '清湯 400ml'], ['shio', '鹽 1 茶匙'], ['menma', '筍乾 數條'], ['negi', '蔥花 少許']],
+    howto: ['清湯煮滾，用鹽調味，味道清淡。', '麵煮好瀝乾放碗。', '淋湯，加筍乾同蔥花。'],
+    steps: [pickStep(['men', 'shio', 'menma']), action('hold', 'yuderu', '麺{めん}を ゆでて', '煮麵', '控制時間，綠色位放手。'), action('stir', 'mazeru', 'スープを 混{ま}ぜて', '攪勻湯底', '轉圈拌勻。')] },
+  { id: 'miso_ramen', chapter: 'ramen', jp: '味噌{みそ}ラーメン', yue: '味噌拉麵', emoji: '🍜', price: 900, station: 'pot', serves: '1 碗', time: '30 分鐘',
+    ingredients: [['men', '拉麵 1 球'], ['dashi', '高湯 400ml'], ['miso', '味噌 2 湯匙'], ['moyashi', '芽菜 一把'], ['negi', '蔥花 少許']],
+    howto: ['高湯煮滾後熄火，溶入味噌。', '麵煮好放碗，淋湯。', '加炒香芽菜同蔥花。'],
+    steps: [pickStep(['men', 'miso', 'moyashi']), action('stir', 'tokasu', '味噌{みそ}を 溶{と}かして', '溶開味噌', '轉圈拌勻。'), action('hold', 'yuderu', '麺{めん}を ゆでて', '煮麵', '控制時間，綠色位放手。')] },
+  { id: 'tonkotsu_ramen', chapter: 'ramen', jp: '豚骨{とんこつ}ラーメン', yue: '豬骨拉麵', emoji: '🍜', price: 950, station: 'pot', serves: '1 碗', time: '40 分鐘',
+    ingredients: [['men', '細麵 1 球'], ['tonkotsu_soup', '豬骨濃湯 400ml'], ['chashu', '叉燒 2 片'], ['tamago', '溏心蛋 半隻'], ['negi', '蔥花 少許']],
+    howto: ['濃白豬骨湯煮熱。', '細麵煮約 1 分鐘，偏硬。', '倒湯放麵，擺叉燒、溏心蛋同蔥花。'],
+    steps: [pickStep(['men', 'tonkotsu_soup', 'tamago']), action('hold', 'yuderu', '麺{めん}を ゆでて', '煮麵', '細麵好快熟，控制時間。'), action('timing', 'noseru', '卵{たまご}を のせて', '擺上溏心蛋', '撳準綠色位。')] },
+  { id: 'tsukemen', chapter: 'ramen', jp: 'つけ麺{めん}', yue: '沾麵', emoji: '🍝', price: 1000, station: 'pot', serves: '1 人', time: '35 分鐘',
+    ingredients: [['men', '粗麵 1 球'], ['shoyu', '豉油 2 湯匙'], ['dashi', '濃縮魚介湯 150ml'], ['chashu', '叉燒 2 片'], ['negi', '蔥花 少許']],
+    howto: ['粗麵煮熟後用冰水過冷，令麵更彈牙。', '濃湯另碗盛，加叉燒同蔥花。', '麵同沾汁分開上，用麵沾湯食。'],
+    steps: [pickStep(['men', 'dashi', 'chashu']), action('hold', 'yuderu', '麺{めん}を ゆでて', '煮粗麵', '控制時間，綠色位放手。'), action('timing', 'noseru', 'チャーシューを のせて', '擺料落沾汁', '撳準綠色位。')] },
+  { id: 'chahan', chapter: 'ramen', jp: 'チャーハン', yue: '炒飯', emoji: '🍚', price: 700, station: 'pot', serves: '1 碗', time: '20 分鐘',
+    ingredients: [['gohan', '熟白飯 250g'], ['tamago', '雞蛋 1 隻'], ['negi', '蔥花 2 湯匙'], ['shoyu', '豉油 1 茶匙'], ['abura', '油 1 湯匙']],
+    howto: ['鑊燒熱落油，倒入蛋液快炒。', '放飯炒散，加蔥花。', '鑊邊淋豉油，炒勻即成。'],
+    steps: [pickStep(['gohan', 'tamago', 'negi']), action('stir', 'itameru', 'ご飯{はん}を 炒{いた}めて', '炒飯', '轉圈拌勻。'), action('hold', 'yaku', '強火{つよび}で 焼{や}いて', '炒出鑊氣', '控制火候，唔好燒焦。')] },
 ].map(r => ({ ...r, dish: r.id, unlock: {}, }));
 
 export const CHAPTER_WORDS = [
@@ -113,6 +141,9 @@ export const CHAPTER_WORDS = [
   ['ireru', '入{い}れる', '倒入、沖泡', 'verb'], ['musu', '蒸{む}す', '蒸', 'verb'],
   ['sabinuki', 'さび抜{ぬ}き', '唔落山葵', 'phrase'], ['wasabi_ooi', 'わさび 多{おお}め', '多啲山葵', 'phrase'],
   ['wasabi_sukunai', 'わさび 少{すく}なめ', '少啲山葵', 'phrase'], ['shoyu_tsukeru', '醤油{しょうゆ}を つける', '沾豉油', 'phrase'],
+  ['men_katame', '麺{めん}は かため', '麵要硬啲', 'phrase'], ['men_futsuu', '麺{めん}は ふつう', '麵正常', 'phrase'], ['men_yawaraka', '麺{めん}は やわらかめ', '麵要淋啲', 'phrase'],
+  ['aji_koime', '味{あじ}は 濃{こ}いめ', '味道濃啲', 'phrase'], ['aji_futsuu', '味{あじ}は ふつう', '味道正常', 'phrase'], ['aji_usume', '味{あじ}は 薄{うす}め', '味道淡啲', 'phrase'],
+  ['itameru', '炒{いた}める', '炒', 'verb'],
   ['maku', '巻{ま}く', '捲', 'verb'], ['tsumeru', '詰{つ}める', '塞入', 'verb'],
   ['tsuika', '追加{ついか}', '加單', 'phrase'], ['urikire', '売{う}り切{き}れ', '沽清', 'phrase'],
   ['herasu', '減{へ}らす', '減少', 'phrase'], ['kaeru', '変{か}える', '改做、換', 'phrase'],
@@ -127,6 +158,19 @@ export const WASABI_REQUESTS = [
   { id: 'wasabi_ooi', jp: 'わさびを 多{おお}めに お願{ねが}いします。', yue: '唔該，山葵多啲。', label: '多落山葵', detail: '搽厚少少', icon: '🟢' },
   { id: 'wasabi_sukunai', jp: 'わさびは 少{すく}なめで お願{ねが}いします。', yue: '山葵少啲，唔該。', label: '少落山葵', detail: '只搽薄薄一層', icon: '🥄' },
 ];
+// 拉麵店：麵硬度／湯濃淡要求
+export const RAMEN_REQUESTS = {
+  noodle: [
+    { id: 'men_katame', jp: '麺{めん}は かために お願{ねが}いします。', yue: '麵硬啲，唔該。', label: '煮硬啲', detail: '少煮 30 秒', icon: '💪' },
+    { id: 'men_futsuu', jp: '麺{めん}は ふつうで お願{ねが}いします。', yue: '麵正常就得，唔該。', label: '煮正常', detail: '照食譜時間', icon: '👌' },
+    { id: 'men_yawaraka', jp: '麺{めん}は やわらかめで お願{ねが}いします。', yue: '麵淋啲，唔該。', label: '煮淋啲', detail: '多煮 30 秒', icon: '🫧' },
+  ],
+  soup: [
+    { id: 'aji_koime', jp: '味{あじ}は 濃{こ}いめで お願{ねが}いします。', yue: '味道濃啲，唔該。', label: '湯底濃啲', detail: '多落醬汁', icon: '🧂' },
+    { id: 'aji_futsuu', jp: '味{あじ}は ふつうで お願{ねが}いします。', yue: '味道正常就得，唔該。', label: '湯底正常', detail: '照食譜調味', icon: '👌' },
+    { id: 'aji_usume', jp: '味{あじ}は 薄{うす}めで お願{ねが}いします。', yue: '味道淡啲，唔該。', label: '湯底淡啲', detail: '少落醬汁', icon: '💧' },
+  ],
+};
 export const SOY_ASK = { jp: 'お醤油{しょうゆ}は どう つけますか？', yue: '豉油應該點沾？' };
 export const SOY_OPTIONS = ['沾魚面，輕輕一點', '沾飯面', '成件浸落豉油碟'];
 

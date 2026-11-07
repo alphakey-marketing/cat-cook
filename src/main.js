@@ -7,7 +7,7 @@ import { unlockAudio, say, sfx, preload, onSfx, setMood } from './audio.js';
 import { S, save, checkIn, addXP, srsAnswer, srsSeen, srsPick, today } from './save.js';
 import { RECIPES, recipe } from './data/recipes.js';
 import { VOCAB, vocab } from './data/vocab.js';
-import { CHAPTERS, REGULARS, WASABI_REQUESTS, SOY_ASK, SOY_OPTIONS } from './data/chapters.js';
+import { CHAPTERS, REGULARS, WASABI_REQUESTS, SOY_ASK, SOY_OPTIONS, RAMEN_REQUESTS } from './data/chapters.js';
 import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
 import { DARK_ORDER_TEMPLATES } from './data/dark.js';
 import { DARK, resetDark } from './darkstate.js';
@@ -191,7 +191,7 @@ function hub() {
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
-    }, art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', dark: '暗黑' }[c.id]}`))),
+    }, art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', ramen: 'dish_ramen', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', ramen: '拉麵店', dark: '暗黑' }[c.id]}`))),
     h('div', { class: 'panel-title' }, chapter.name),
     h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
     chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,
@@ -207,7 +207,7 @@ async function shift({ tutorial = false } = {}) {
   const n = tutorial ? 1 : 5;
   const stat = { served: 0, coins: 0, perfect: 0 };
   let forceDish = null;
-  const plan = S().chapter === 'izakaya' && !tutorial ? izakayaPlan(n) : S().chapter === 'sushi' && !tutorial ? sushiPlan(n) : null;
+  const plan = S().chapter === 'izakaya' && !tutorial ? izakayaPlan(n) : S().chapter === 'sushi' && !tutorial ? sushiPlan(n) : S().chapter === 'ramen' && !tutorial ? ramenPlan(n) : null;
   // 暗黑食堂：成更懷疑度／彩池
   const dark = S().chapter === 'dark' && !tutorial;
   if (dark) { resetDark(); await darkShiftIntro(); }
@@ -279,6 +279,16 @@ function sushiKind(rec, planned) {
   return Object.keys(ok).find((k) => ok[k]) || null;
 }
 
+// 拉麵店：每位客人買完券後，要求麵硬度或湯濃淡（輪流）；炒飯冇呢類要求
+function ramenPlan(n) {
+  const out = [];
+  while (out.length < n) out.push(...shuffle(['noodle', 'soup']));
+  return out.slice(0, n);
+}
+function ramenKind(rec, planned) {
+  return rec.dish === 'chahan' ? null : (planned || 'noodle');
+}
+
 function izakayaPlan(n) {
   const ch = shuffle([...shuffle(['add', 'less', 'swap']).slice(0, 2), 'cancel']);
   const so = shuffle(['replace', 'decline']);
@@ -297,6 +307,7 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
   // 計劃減少：客人一定先叫 2–3 份，之後先減一份
   const planned = s.chapter === 'izakaya' && !tutorial ? plan?.[index] : null;
   const sushiK = s.chapter === 'sushi' && !tutorial ? sushiKind(rec, plan?.[index]) : null;
+  const ramenK = s.chapter === 'ramen' && !tutorial ? ramenKind(rec, plan?.[index]) : null;
   const NM = numsFor(rec.dish);
   const withNum = planned === 'less' || sushiK === 'kan' || (s.level >= 2 && !tutorial && rec.chapter !== 'dark' && Math.random() < 0.45);
   let qty = planned === 'less' ? 2 + Math.floor(Math.random() * 2) : withNum ? 1 + Math.floor(Math.random() * 3) : 1;
@@ -331,13 +342,15 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
   let tries = 0;
   let orderOk = false;
   if (tutorial && index === 0) hint('客人講緊要咩，聽完揀啱嘅菜！', 3500);
+  const ticketMode = s.chapter === 'ramen' && !tutorial;
   while (!orderOk) {
     bubble(world, 'cust', line.jp, line.yue, voice, { hidden: listen });
     const opts = shuffle(unlocked).map((r) => {
       const v = vocab(r.dish);
-      return { value: r.dish, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'jp-inline', html: toHTML(v.jp) })) };
+      return { value: r.dish, el: h('div', { class: ticketMode ? 'dish-opt ticket-btn' : 'dish-opt' }, h('span', { class: 'emo' }, vocabArt(v)), h('span', { class: 'jp-inline', html: toHTML(v.jp) }), ticketMode ? h('span', { class: 'ticket-price' }, `${r.price}円`) : null) };
     });
-    const pickDish = await choose(opts, { title: h('div', { class: 'panel-title' }, '🐾 客人要咩？'), cols: Math.min(opts.length, 2) });
+    const pickDish = await choose(opts, { title: h('div', { class: 'panel-title' }, ticketMode ? '🎫 食券機：幫客人買券' : '🐾 客人要咩？'), cols: Math.min(opts.length, 2) });
+    if (ticketMode) sfx('coin');
     let pickQty = 1;
     if (pickDish.value === rec.dish && withNum) {
       const qo = await choose(NM.map((id, i) => ({ value: i + 1, el: h('div', { class: 'dish-opt' }, h('span', { class: 'emo' }, vocabArt(vocab(id))), h('span', { class: 'jp-inline', html: toHTML(vocab(id).jp) })) })), { title: h('div', { class: 'panel-title' }, '要幾多個？'), cols: 3 });
@@ -459,6 +472,20 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
       type: 'request', request: wr.id, jp: wr.jp, yue: wr.yue, voice: cust.id,
       title: '客人對山葵有要求，點整？', retry: '再聽一次：留意客人想要幾多山葵。',
       actions: WASABI_REQUESTS.map((x) => ({ id: x.id, icon: x.icon, label: x.label, detail: x.detail })),
+    }] };
+  }
+
+  // 拉麵店：買券後，客人再講麵硬度／湯濃淡
+  if (ramenK) {
+    const list = RAMEN_REQUESTS[ramenK];
+    const rr = list[Math.floor(Math.random() * list.length)];
+    preference = rr.id;
+    toast(`🎫 收到食券：${vocab(rec.dish).yue}`);
+    rec = { ...rec, steps: [...rec.steps, {
+      type: 'request', request: rr.id, jp: rr.jp, yue: rr.yue, voice: cust.id,
+      title: ramenK === 'noodle' ? '客人對麵條有要求，點整？' : '客人對湯底有要求，點整？',
+      retry: '再聽一次：留意客人講麵硬度，定係湯濃淡。',
+      actions: list.map((x) => ({ id: x.id, icon: x.icon, label: x.label, detail: x.detail })),
     }] };
   }
 
