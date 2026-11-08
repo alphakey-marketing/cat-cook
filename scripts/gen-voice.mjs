@@ -113,6 +113,13 @@ totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill
   add(GUEST_THANKS.jp, 'usagi'); STAFF_RUDE_H.forEach((r) => r && add(r.jp, 'cat'));
   REQUESTS.forEach((lvl) => lvl.forEach((q) => { add(q.ok.jp, 'usagi'); add(q.reply.jp, 'cat'); }));
   BYE_STAFF.forEach((b) => add(b.jp, 'cat'));
+  // 前台視角：分房要求（客人 usagi）同「X號室はいかがでしょうか」（玩家 cat）
+  for (let fl = 2; fl <= 9; fl++) {
+    add(`${floorJP(fl)}が いいです。`, 'usagi');
+    add(`${floorJP(fl)}の 部屋{へや}を お願{ねが}いします。`, 'usagi');
+    for (let k = 1; k <= 9; k++) add(`${roomJP(fl * 100 + k)}は いかがでしょうか。`, 'cat');
+  }
+  ['できるだけ 高{たか}い 階{かい}の 部屋{へや}が いいんですが。', 'できるだけ 低{ひく}い 階{かい}の 部屋{へや}が いいんですが。', '静{しず}かで、 エレベーターから 遠{とお}い 部屋{へや}を お願{ねが}いできますか。'].forEach((j) => add(j, 'usagi'));
   CHECKOUT.forEach((c) => { add(c.reply.jp, 'cat'); add(c.reply.jp, 'kuma'); });
   CHECKOUT.forEach((c) => add(c.ok.jp, 'usagi'));
   CHECKIN.forEach((c) => { for (let i = 0; i < 2; i++) add(subp(c.ok.jp, G[i].jp, G[1 - i].jp), 'usagi'); });

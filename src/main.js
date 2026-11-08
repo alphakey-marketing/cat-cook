@@ -684,6 +684,12 @@ async function ekiServe({ index }) {
   return { coins, stars, levelUps: S().level - lv0 };
 }
 
+// 選項試聽掣：只播放，唔會當係揀答案
+const spkOpt = (jp, voice = 'cat') => h('span', {
+  class: 'mini-spk', role: 'button', tabindex: 0, 'aria-label': '試聽',
+  onclick: (e) => { e.stopPropagation(); e.preventDefault(); sfx('tap'); say(jp, voice); },
+}, '🔊');
+
 // ===== 酒店：前台視角，客人提出要求，玩家揀啱嘅職員答覆 =====
 async function hotelStaffServe({ index }) {
   const s = S();
@@ -709,13 +715,43 @@ async function hotelStaffServe({ index }) {
     const wr = shuffle(pool).slice(0, rude ? 1 : 2).map((r) => ({ ...r, why: '呢句答咗另一個要求，客人問嘅唔係呢樣' }));
     req = { task: r0.task, ok: r0.ok, reply: r0.reply, items: [r0.reply, ...wr, ...(rude ? [rude] : [])] };
   } else if (mode === 'checkin') {
+    // 客人講要求（樓層／靜／高低），玩家睇房況揀合適嘅房
     const ci = CHECKIN[lvA];
-    const tpl = ROOM_REPLY[lvA];
-    const mk = (fl, rm) => { const v = mkVars(fl, rm); return { jp: fill(tpl.jp, v), yue: fill(tpl.yue, v) }; };
-    const others = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9].filter((k) => k !== room % 100)).slice(0, rude ? 1 : 2);
-    const wr = others.map((k, i) => { const fl = i === 0 ? ((floor % 8) + 2) : floor; return { ...mk(fl, fl * 100 + k), why: `分配嘅係 ${room} 號房，呢句講錯房號` }; });
-    const okR = mk(floor, room);
-    req = { task: `客人入住，你分配 ${room} 號房（${nights} 晚）`, ok: { jp: fill(ci.ok.jp, V), yue: fill(ci.ok.yue, V) }, reply: okR, items: [okR, ...wr, ...(rude ? [rude] : [])] };
+    const fls = shuffle([2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3).sort((x, y) => x - y);
+    const rmOf = (f) => f * 100 + 1 + Math.floor(Math.random() * 9);
+    let guest, okRoom, wrongRooms, why, tags = {};
+    if (lvA <= 1) {
+      const t = pick(fls);
+      guest = lvA === 0
+        ? { jp: `${floorJP(t)}が いいです。`, yue: `我想要 ${t} 樓。` }
+        : { jp: `${floorJP(t)}の 部屋{へや}を お願{ねが}いします。`, yue: `唔該，我要 ${t} 樓嘅房。` };
+      okRoom = rmOf(t); wrongRooms = fls.filter((f) => f !== t).slice(0, 2).map(rmOf); why = `客人想要 ${t} 樓`;
+    } else if (lvA === 2) {
+      const high = Math.random() < 0.5;
+      guest = high
+        ? { jp: 'できるだけ 高{たか}い 階{かい}の 部屋{へや}が いいんですが。', yue: '想盡量要高層嘅房。' }
+        : { jp: 'できるだけ 低{ひく}い 階{かい}の 部屋{へや}が いいんですが。', yue: '想盡量要低層嘅房。' };
+      const t = high ? fls[2] : fls[0];
+      okRoom = rmOf(t); wrongRooms = fls.filter((f) => f !== t).map(rmOf); why = high ? '客人要高層，揀最高樓層' : '客人要低層，揀最低樓層';
+      [okRoom, ...wrongRooms].forEach((r) => { tags[r] = `${Math.floor(r / 100)} 樓`; });
+    } else {
+      guest = { jp: '静{しず}かで、 エレベーターから 遠{とお}い 部屋{へや}を お願{ねが}いできますか。', yue: '可唔可以要安靜、遠離升降機嘅房？' };
+      const fs = shuffle([2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3);
+      const rooms = fs.map(rmOf);
+      okRoom = rooms[0]; wrongRooms = rooms.slice(1);
+      tags[okRoom] = '走廊盡頭，遠離升降機・安靜';
+      tags[wrongRooms[0]] = '升降機隔籬';
+      tags[wrongRooms[1]] = '近製冰機・較嘈';
+      why = '客人要安靜、遠離升降機嘅房';
+    }
+    const mkItem = (r, ok) => ({ jp: roomJP(r), yue: `${r} 號房`, tag: tags[r] || '', voice: 'word', why: ok ? '' : `呢間唔合客人要求：${why}` });
+    req = {
+      pre: { jp: fill(ci.ok.jp, V), yue: fill(ci.ok.yue, V) },
+      task: '客人入住：聽佢嘅要求，揀合適嘅房間',
+      ok: guest,
+      reply: { jp: `${roomJP(okRoom)}は いかがでしょうか。`, yue: `${okRoom} 號房可以嗎？` },
+      items: [mkItem(okRoom, true), ...wrongRooms.map((r) => mkItem(r, false))],
+    };
   } else {
     const co = CHECKOUT[lvA];
     const bye = co.reply;
@@ -737,6 +773,7 @@ async function hotelStaffServe({ index }) {
   sfx('door');
   await world.hotelStaffIn({ id: 'usagi', color: 0xfaf6f0, ear: 'long' }, true);
   await next('你係前台 ▶', h('div', { class: 'panel-title' }, '🛎️ 今次你做酒店前台。聽客人講乜，揀啱嘅回答。'));
+  if (req.pre) { await bubble(world, 'cust', req.pre.jp, req.pre.yue, 'usagi', { hidden: listen }); clearBubble('cust'); }
   await bubble(world, 'cust', req.ok.jp, req.ok.yue, 'usagi', { hidden: listen });
   clearBubble('cust');
 
@@ -744,7 +781,8 @@ async function hotelStaffServe({ index }) {
   const correct = idx.indexOf(0);
   const opt = (it) => h('div', { class: 'dish-opt' },
     h('span', { class: 'jp-inline', html: toHTML(it.jp) }),
-    showYue && it.yue ? h('small', {}, it.yue) : null);
+    it.tag ? h('small', {}, it.tag) : (showYue && it.yue ? h('small', {}, it.yue) : null),
+    spkOpt(it.jp, it.voice || 'cat'));
   const title = h('div', { class: 'panel-title' },
     jpLine(req.ok.jp, { yue: req.ok.yue, voice: 'usagi', hidden: listen }),
     h('div', { class: 'sub' }, `客人情況：${req.task}。你點答？`));
@@ -801,9 +839,10 @@ async function hotelServe({ index }) {
   const sub = (t, v = vars) => t.replace(/\{(py|p|q|nn|n|fn|f|rn|r)\}/g, (_, k) => v[k]);
   let mistakes = 0;
 
-  const opt = (jp, yue, small) => h('div', { class: 'dish-opt' },
+  const opt = (jp, yue, small, voice = 'cat') => h('div', { class: 'dish-opt' },
     h('span', { class: 'jp-inline', html: toHTML(jp) }),
-    small ? h('small', {}, small) : (showYue && yue ? h('small', {}, yue) : null));
+    small ? h('small', {}, small) : (showYue && yue ? h('small', {}, yue) : null),
+    spkOpt(jp, voice));
   const card = (line, voice, caption, auto = true) => h('div', { class: 'panel-title' },
     line ? jpLine(line.jp, { yue: line.yue, voice, hidden: listen, autoplay: auto }) : null,
     caption ? h('div', { class: 'sub' }, caption) : null);
@@ -861,7 +900,7 @@ async function hotelServe({ index }) {
     ...(() => {
       const items = [room, ...wrongRooms];
       const idx = shuffle(items.map((_, i) => i));
-      return { options: idx.map((i) => ({ el: opt(roomJP(items[i]), '', String(items[i])), why: `前台講嘅係 ${room} 號房` })), correct: idx.indexOf(0) };
+      return { options: idx.map((i) => ({ el: opt(roomJP(items[i]), '', String(items[i]), 'word'), why: `前台講嘅係 ${room} 號房` })), correct: idx.indexOf(0) };
     })(),
   });
   world.cat.happy();
