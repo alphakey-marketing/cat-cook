@@ -501,3 +501,9 @@ button { min-height: 44px; }
 .ticket-price{display:block;font-weight:700;color:#b3261e;font-size:14px;margin-top:2px}
 .scan-item{display:flex;flex-direction:column;align-items:center;gap:2px}
 .scan-total{text-align:center;font-weight:700;font-size:18px;padding:8px 0}
+.lv-grid-title { margin-top: 10px; font-weight: 700; }
+.lv-grid-row { display: grid; grid-template-columns: 64px repeat(4, 1fr); gap: 4px; align-items: stretch; margin-top: 4px; font-size: 12px; }
+.lv-cell { background: rgba(0,0,0,.05); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+.lv-cell.done { background: rgba(80,180,100,.2); }
+.lv-cell.cur { outline: 2px solid #f0a040; }
+.lv-cell small { opacity: .75; }

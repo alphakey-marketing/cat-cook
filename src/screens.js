@@ -14,6 +14,7 @@ import { VOICES } from './data/voices.js';
 import { S, save, reset, learnedCount, seenCount, msToMidnight } from './save.js';
 import { say, sfx, setBGM } from './audio.js';
 import { toHTML } from './jp.js';
+import { unitProgress, LEVEL_LEARN, CHAPTER_DONE_RATIO, PROGRESS_ROWS } from './data/progress.js';
 import { LEVELS, jpLevel, SMALLTALK_LIST, DETAILS, REACT } from './data/phrases.js';
 
 export function isUnlocked(r) {
@@ -140,7 +141,16 @@ export function openBook(tab = 'recipes') {
         h('div', { class: 'bar' }, h('i', { style: `width:${p.total ? (p.learned / p.total) * 100 : 0}%` })),
         h('div', { class: 'sub' }, `見過 ${p.seen} 個 · 仲有 ${p.unseen} 個未見過　（🌱→🌸 越溫越熟）`),
         ...p.chapters.filter((c) => c.total).map((c) => h('div', { class: 'sub' }, `${c.icon} ${c.name} ${c.learned} / ${c.total}`,
-          h('div', { class: 'bar' }, h('i', { style: `width:${(c.learned / c.total) * 100}%` }))))), list);
+          h('div', { class: 'bar' }, h('i', { style: `width:${(c.learned / c.total) * 100}%` })))),
+        h('div', { class: 'lv-grid-title' }, '🎓 各章各級進度（學晒 = 90%）'),
+        ...PROGRESS_ROWS.map(({ id: ch, label }) => h('div', { class: 'lv-grid-row' },
+          h('b', {}, label),
+          ...LEVELS.map((l) => {
+            const u = unitProgress(ch, l.id), done = u.ratio >= CHAPTER_DONE_RATIO;
+            return h('div', { class: `lv-cell ${done ? 'done' : ''} ${jpLevel() === l.id ? 'cur' : ''}`, title: LEVEL_LEARN[ch][l.id] },
+              h('span', {}, `${done ? '✅' : l.icon} ${l.name}`), h('small', {}, `${u.done} / ${u.total}`),
+              h('div', { class: 'bar' }, h('i', { style: `width:${u.ratio * 100}%` })));
+          })))), list);
     } else if (t === 'phrases') {
       // 閒聊／再見／落單細節：見過先顯示，按等級分組，點一下聽
       const L = jpLevel();
@@ -245,7 +255,7 @@ export function openSettings(world) {
     lvBox.replaceChildren(...LEVELS.map((l) => h('button', {
       class: `btn ${jpLevel() === l.id ? 'primary' : ''}`,
       onclick: () => { S().jpLevel = l.id; save(); sfx('tap'); drawLvBox(); },
-    }, `${l.icon} ${l.name}`, h('small', {}, l.desc))));
+    }, `${l.icon} ${l.name}`, h('small', {}, l.learn || l.desc))));
   };
   drawLvBox();
   const credits = Object.values(VOICES).map((v) => `VOICEVOX:${v.name}`).filter((v, i, a) => a.indexOf(v) === i).join('、');

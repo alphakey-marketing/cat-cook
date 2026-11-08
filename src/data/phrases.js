@@ -5,10 +5,10 @@ import { S, save, today } from '../save.js';
 import { hash } from '../jp.js';
 
 export const LEVELS = [
-  { id: 0, icon: '🌱', name: '零基礎', desc: '假名都未識' },
-  { id: 1, icon: '🌿', name: 'N5', desc: '識假名、簡單字、基本句型' },
-  { id: 2, icon: '🌳', name: 'N4–N3', desc: '想練聽力同實用句子' },
-  { id: 3, icon: '🏔️', name: 'N1', desc: '敬語、長句、事故廣播' },
+  { id: 0, icon: '🌱', name: '零基礎', desc: '假名都未識', learn: '單字加「ください」，由最簡單開始' },
+  { id: 1, icon: '🌿', name: 'N5', desc: '識假名、簡單字、基本句型', learn: '完整禮貌句：「〜をお願いします」' },
+  { id: 2, icon: '🌳', name: 'N4–N3', desc: '想練聽力同實用句子', learn: '委婉有禮貌嘅要求、特急、換房' },
+  { id: 3, icon: '🏔️', name: 'N1', desc: '敬語、長句、事故廣播', learn: '投訴、交涉、敬語、事故廣播' },
 ];
 
 // 共用聲線：高等級／新句只做呢兩把聲，客人按 id 固定配一把
