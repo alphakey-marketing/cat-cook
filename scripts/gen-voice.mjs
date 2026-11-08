@@ -113,6 +113,7 @@ totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill
   add(GUEST_THANKS.jp, 'usagi'); STAFF_RUDE_H.forEach((r) => r && add(r.jp, 'cat'));
   REQUESTS.forEach((lvl) => lvl.forEach((q) => { add(q.ok.jp, 'usagi'); add(q.reply.jp, 'cat'); }));
   BYE_STAFF.forEach((b) => add(b.jp, 'cat'));
+  CHECKOUT.forEach((c) => { add(c.reply.jp, 'cat'); add(c.reply.jp, 'kuma'); });
   CHECKOUT.forEach((c) => add(c.ok.jp, 'usagi'));
   CHECKIN.forEach((c) => { for (let i = 0; i < 2; i++) add(subp(c.ok.jp, G[i].jp, G[1 - i].jp), 'usagi'); });
   CHECKOUT.forEach((c) => { add(c.ok.jp, 'cat'); c.bad.forEach((b) => add(b.jp, 'cat')); });

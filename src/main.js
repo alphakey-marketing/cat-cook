@@ -718,7 +718,7 @@ async function hotelStaffServe({ index }) {
     req = { task: `客人入住，你分配 ${room} 號房（${nights} 晚）`, ok: { jp: fill(ci.ok.jp, V), yue: fill(ci.ok.yue, V) }, reply: okR, items: [okR, ...wr, ...(rude ? [rude] : [])] };
   } else {
     const co = CHECKOUT[lvA];
-    const bye = BYE_STAFF[lvA];
+    const bye = co.reply;
     const tpl = ROOM_REPLY[lvA];
     const wr = [{ ...WELCOME, why: '客人係離開，唔係剛到' }, { jp: fill(tpl.jp, V), yue: fill(tpl.yue, V), why: '呢句係入住時先講' }];
     req = { task: '客人退房', ok: co.ok, reply: bye, items: [bye, ...wr.slice(0, rude ? 1 : 2), ...(rude ? [rude] : [])] };
@@ -877,7 +877,7 @@ async function hotelServe({ index }) {
   await next('第二日 ▶', h('div', { class: 'panel-title' }, '🌅 住完喇，落去前台退房。'));
   await ask({ caption: '🧳 你想退房', word: 'hotel_checkout', lv: lvA, ...mix([co.ok, ...co.bad]) });
   await say2('cat', co.ok);
-  await say2('cust', BYE_STAFF[lvA]);
+  await say2('cust', co.reply);
   world.customerOut(true);
 
   // ⑤ 結算
