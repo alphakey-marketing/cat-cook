@@ -7,6 +7,8 @@ import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
 import { K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK } from '../src/data/konbini.js';
+import { DESTS, PLAT, TYPES, M_DEST, M_COUNT, M_TOTAL, M_TAKE, ASK, REPLY, ANN, INCIDENT_ANN, INCIDENTS, CAT_THANKS, STAFF_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from '../src/data/eki.js';
+import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from '../src/data/hotel.js';
 import { REGULARS, WASABI_REQUESTS, SOY_ASK, RAMEN_REQUESTS } from '../src/data/chapters.js';
 import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES, WISHES, STYLES, PLATE_REACT } from '../src/data/dark.js';
 import { SHOP, CUSTOMERS } from '../src/data/shop.js';
@@ -72,6 +74,44 @@ Object.entries(R.staff).forEach(([k, l]) => { if (k !== 'pay' && k !== 'pay2') a
 const totals = new Set();
 for (const f of R.foods) for (const d of R.drinks) for (const p of R.people) totals.add((R.prices[f] + R.prices[d]) * p.n);
 totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill(R.staff.pay2, { price: t }).jp, 'cat'); });
+// 車站：駅員 kuma、廣播 usagi、貓 cat（玩家句）
+{
+  const sub = (t, d) => t.replace(/\{d\}/g, d.jp).replace(/\{dy\}/g, d.yue).replace(/\{n\}/g, PLAT[d.platform]).replace(/\{p\}/g, d.platform);
+  [M_DEST, M_COUNT, INCIDENT_ANN].forEach((l) => add(l.jp, 'usagi'));
+  add(M_TAKE.jp, 'kuma'); add(STAFF_THANKS.jp, 'kuma'); add(CAT_THANKS.jp, 'cat');
+  const fares = new Set();
+  for (const d of DESTS) {
+    for (let n = 1; n <= 3; n++) { fares.add(d.fare * n); fares.add(d.fare * (n + 1)); fares.add(d.fare * (n > 1 ? n - 1 : n + 2)); fares.add(d.fare + 10); }
+    ASK.forEach((a) => { add(sub(a.ok.jp, d), 'cat'); a.bad.forEach((b) => add(sub(b.jp, d), 'cat')); });
+    REPLY.forEach((r) => add(sub(r.jp, d), 'kuma'));
+    for (let lv = 0; lv < 4; lv++) for (const t of TYPES) add(ANN(lv, d.platform, t, d).jp, 'usagi');
+    for (const t of TYPES) for (const o of DESTS) for (const pl of [1, 2, 3, 4]) { add(ANN(0, pl, t, o).jp, 'usagi'); }
+  }
+  fares.forEach((f) => add(M_TOTAL(f).jp, 'usagi'));
+  // 駅員視角：遊客 usagi 問，貓答
+  add(TOURIST_THANKS.jp, 'usagi');
+  OVERSHOOT.forEach((o) => { if (o) { add(o.tourist.jp, 'usagi'); add(o.ok.jp, 'cat'); o.bad.forEach((b) => add(b.jp, 'cat')); } });
+  STAFF_RUDE.forEach((r) => add(r.jp, 'cat'));
+  for (const d of DESTS) ASK.forEach((a) => add(sub(a.ok.jp, d), 'usagi'));
+  for (const d of DESTS) for (const o of DESTS) REPLY.forEach((r) => add(sub(r.jp, { ...d, platform: o.platform }), 'cat'));
+  INCIDENTS.forEach((i) => { add(i.ok.jp, 'cat'); i.bad.forEach((b) => add(b.jp, 'cat')); add(i.reply.jp, 'kuma'); });
+}
+// 酒店：職員 kuma、玩家句 cat
+{
+  const G = [{ jp: '一人{ひとり}' }, { jp: '二人{ふたり}' }];
+  add(WELCOME.jp, 'kuma'); BYE_STAFF.forEach((b) => add(b.jp, 'kuma'));
+  const subp = (t, p, q) => t.replace(/\{p\}/g, p).replace(/\{q\}/g, q);
+  CHECKIN.forEach((c) => { for (let i = 0; i < 2; i++) { add(subp(c.ok.jp, G[i].jp, G[1 - i].jp), 'cat'); c.bad.forEach((b) => add(subp(b.jp, G[i].jp, G[1 - i].jp), 'cat')); } });
+  for (let fl = 2; fl <= 9; fl++) for (let k = 1; k <= 9; k++) for (let n = 1; n <= 3; n++) {
+    const room = fl * 100 + k;
+    ROOM_REPLY.forEach((r) => add(r.jp.replace(/\{n\}/g, NIGHTS[n]).replace(/\{f\}/g, floorJP(fl)).replace(/\{r\}/g, roomJP(room)), 'kuma'));
+    if (n === 1) add(roomJP(room), 'word');
+  }
+  REQUESTS.forEach((lvl) => lvl.forEach((q) => { add(q.ok.jp, 'cat'); q.bad.forEach((b) => add(b.jp, 'cat')); add(q.reply.jp, 'kuma'); }));
+  add(GUEST_THANKS.jp, 'usagi'); STAFF_RUDE_H.forEach((r) => r && add(r.jp, 'cat'));
+  REQUESTS.forEach((lvl) => lvl.forEach((q) => { add(q.ok.jp, 'usagi'); add(q.reply.jp, 'cat'); }));
+  CHECKOUT.forEach((c) => { add(c.ok.jp, 'cat'); c.bad.forEach((b) => add(b.jp, 'cat')); });
+}
 R.people.forEach((p) => add(p.jp, 'word'));
 for (const n of NUMS) {
   R.foods.forEach((f) => add(fill(R.you.order, { food: f, num: n }).jp, 'word'));

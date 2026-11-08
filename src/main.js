@@ -11,11 +11,13 @@ import { CHAPTERS, REGULARS, WASABI_REQUESTS, SOY_ASK, SOY_OPTIONS, RAMEN_REQUES
 import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
 import { DARK_ORDER_TEMPLATES } from './data/dark.js';
 import { DARK, resetDark } from './darkstate.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS } from './data/dialogue.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS, drawLv } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
 import { GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
 import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
+import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
+import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, PICK_ROOM, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from './data/hotel.js';
 import { isUnlocked, recipeCard, openBook, openShop, openSettings, shiftSummary, apply } from './screens.js';
 import { hash, toHTML } from './jp.js';
 
@@ -100,14 +102,15 @@ async function firstRun() {
 
   const lv = await choose([
     { label: '<b>🌱 零基礎</b><small>假名都未識</small>', value: 0 },
-    { label: '<b>🌿 識少少</b><small>識假名、簡單字</small>', value: 1 },
-    { label: '<b>🌳 N3 或以上</b><small>想練聽力同實用句子</small>', value: 2 },
+    { label: '<b>🌿 N5</b><small>識假名、簡單字、基本句型</small>', value: 1 },
+    { label: '<b>🌳 N4–N3</b><small>想練聽力同實用句子</small>', value: 2 },
+    { label: '<b>🏔️ N1</b><small>敬語、長句、事故廣播</small>', value: 3 },
   ], { title: h('div', { class: 'panel-title' }, '你嘅日文程度係？（之後可以喺 ⚙️ 改）') });
   const st = S().settings;
   S().jpLevel = lv.value;
   if (lv.value === 0) Object.assign(st, { furigana: true, romaji: true, yue: true, subs: 'show' });
   if (lv.value === 1) Object.assign(st, { furigana: true, romaji: false, yue: true, subs: 'show' });
-  if (lv.value === 2) Object.assign(st, { furigana: true, romaji: false, yue: false, subs: 'tap' });
+  if (lv.value >= 2) Object.assign(st, { furigana: true, romaji: false, yue: false, subs: 'tap' });
   applySettings();
   S().started = true;
   S().lastGift = today();
@@ -176,6 +179,7 @@ function levelNudgeCard() {
 function hub() {
   busy = false;
   clearBubble();
+  world.setTheme(S().chapter);
   world.setView('kitchen');
   world.catFace('front');
   const sp = special();
@@ -184,7 +188,7 @@ function hub() {
   refreshMenu();
   const chapter = CHAPTERS.find(c => c.id === S().chapter) || CHAPTERS[0];
   const actions = h('div', { class: 'hub-btns' },
-    h('button', { class: 'btn primary big', 'data-action': 'open-shift', onclick: () => { sfx('tap'); shift({}); } }, '🏮 開舖'),
+    h('button', { class: 'btn primary big', 'data-action': 'open-shift', onclick: () => { sfx('tap'); shift({}); } }, chapter.id === 'hotel' ? '🛎️ 入住酒店' : chapter.id === 'eki' ? '🎫 出發旅行' : '🏮 開舖'),
     h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🍱 去日本餐廳' : '🔒 日本餐廳'),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店'));
@@ -192,7 +196,7 @@ function hub() {
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
-    }, art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', ramen: 'dish_shoyu_ramen', konbini: 'goods_bento', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', ramen: '拉麵店', konbini: '便利店', dark: '暗黑' }[c.id]}`))),
+    }, c.id === 'eki' ? '🚉' : c.id === 'hotel' ? '🏨' : art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', ramen: 'dish_shoyu_ramen', konbini: 'goods_bento', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', ramen: '拉麵店', konbini: '便利店', eki: '車站', hotel: '酒店', dark: '暗黑' }[c.id]}`))),
     h('div', { class: 'panel-title' }, chapter.name),
     h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
     chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,
@@ -205,7 +209,8 @@ function hub() {
 async function shift({ tutorial = false } = {}) {
   busy = true;
   resetUsed();
-  const n = tutorial ? 1 : 5;
+  world.setTheme(S().chapter);
+  const n = tutorial ? 1 : ['eki', 'hotel'].includes(S().chapter) ? 3 : 5;
   const stat = { served: 0, coins: 0, perfect: 0 };
   let forceDish = null;
   const plan = S().chapter === 'izakaya' && !tutorial ? izakayaPlan(n) : S().chapter === 'sushi' && !tutorial ? sushiPlan(n) : S().chapter === 'ramen' && !tutorial ? ramenPlan(n) : null;
@@ -213,9 +218,9 @@ async function shift({ tutorial = false } = {}) {
   const dark = S().chapter === 'dark' && !tutorial;
   if (dark) { resetDark(); await darkShiftIntro(); }
   for (let i = 0; i < n; i++) {
-    $('#shiftinfo').textContent = `客人 ${i + 1} / ${n}`;
+    $('#shiftinfo').textContent = ['eki', 'hotel'].includes(S().chapter) ? `旅程 ${i + 1} / ${n}` : `客人 ${i + 1} / ${n}`;
     $('#shiftinfo').classList.add('show');
-    const res = S().chapter === 'konbini' && !tutorial ? await cashierServe({ index: i }) : await serveCustomer({ index: i, tutorial, forceDish, plan });
+    const res = S().chapter === 'eki' && !tutorial ? await (i === 1 ? ekiStaffServe({ index: i }) : ekiServe({ index: i })) : S().chapter === 'hotel' && !tutorial ? await (i === 1 ? hotelStaffServe({ index: i }) : hotelServe({ index: i })) : S().chapter === 'konbini' && !tutorial ? await cashierServe({ index: i }) : await serveCustomer({ index: i, tutorial, forceDish, plan });
     if (res.cancelled) { await wait(700); continue; }   // 取消：唔計服務、保留 forceDish
     forceDish = null;
     stat.served++;
@@ -234,6 +239,7 @@ async function shift({ tutorial = false } = {}) {
     }
   }
   $('#shiftinfo').classList.remove('show');
+  world.catTo('kitchen');
   if (dark) { stat.coins += bankAtEnd(); stat.dark = darkStars(stat); hideDarkbar(); }
   S().shifts++;
   S().chapterShifts[S().chapter] = (S().chapterShifts[S().chapter] || 0) + 1;
@@ -307,7 +313,8 @@ async function cashierServe({ index }) {
   const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   let mistakes = 0;
   hidePanel();
-  world.setView('kitchen');
+  world.catTo('kon');
+  world.setView('kon', true);
   world.catFace('customer');
   sfx('door');
   await world.customerIn(cust);
@@ -409,6 +416,448 @@ async function cashierServe({ index }) {
   await bubble(world, 'cust', bye.jp, bye.yue, lineVoice(cust.id, bye));
   clearBubble('cust');
   world.customerOut();
+  milestones();
+  return { coins, stars, levelUps: S().level - lv0 };
+}
+
+// ===== 車站：玩家做遊客 =====
+// ===== 車站：玩家做駅員（聽遊客問，揀啱答案）=====
+async function ekiStaffServe({ index }) {
+  const s = S();
+  const lv0 = s.level;
+  const L = jpLevel();
+  const listen = s.settings.subs === 'tap';
+  const showYue = s.settings.yue !== false;
+  const dest = pick(DESTS);
+  const vars = { d: dest.jp, dy: dest.yue, n: PLAT[dest.platform], p: dest.platform };
+  const subst = (t, v = vars) => t.replace(/\{(d|dy|n|p)\}/g, (_, k) => v[k]);
+  const lvA = drawLv();
+  const overshoot = lvA >= 1 && Math.random() < 0.5;
+  let mistakes = 0;
+
+  hidePanel();
+  clearBubble();
+  world.catTo('eki');
+  world.suitcase.visible = false;
+  world.setView('eki', true);
+  world.setMachine('きっぷ うりば', '');
+  world.customerOut(true);
+  sfx('door');
+  await world.ekiStaffIn({ id: 'usagi', color: 0xfaf6f0, ear: 'long' }, 'eki', false);
+
+  const opt = (jp, yue) => h('div', { class: 'dish-opt' },
+    h('span', { class: 'jp-inline', html: toHTML(jp) }),
+    showYue && yue ? h('small', {}, yue) : null);
+  const tourist = overshoot ? OVERSHOOT[lvA].tourist : { jp: subst(ASK[lvA].ok.jp), yue: subst(ASK[lvA].ok.yue) };
+  await next('你係駅員 ▶', h('div', { class: 'panel-title' }, '🧑‍✈️ 今次你做駅員。聽遊客問乜，揀啱嘅答案。'));
+  await bubble(world, 'cust', tourist.jp, tourist.yue, 'usagi', { hidden: listen });
+  clearBubble('cust');
+
+  let items;
+  if (overshoot) {
+    items = [OVERSHOOT[lvA].ok, ...OVERSHOOT[lvA].bad];
+  } else {
+    const wrongPlat = shuffle([1, 2, 3, 4].filter((x) => x !== dest.platform))[0];
+    const wv = { ...vars, n: PLAT[wrongPlat], p: wrongPlat };
+    const r = REPLY[lvA];
+    items = [
+      { jp: subst(r.jp), yue: subst(r.yue) },
+      { jp: subst(r.jp, wv), yue: subst(r.yue, wv), why: `${dest.yue}係 ${dest.platform} 號月台，唔係 ${wrongPlat} 號` },
+      { ...STAFF_RUDE[lvA] },
+    ];
+  }
+  const idx = shuffle(items.map((_, i) => i));
+  const correct = idx.indexOf(0);
+  let first = true;
+  const title = h('div', { class: 'panel-title' },
+    jpLine(tourist.jp, { yue: tourist.yue, voice: 'usagi', hidden: listen }),
+    h('div', { class: 'sub' }, overshoot ? '遊客搭過站，你點答？' : `📋 案內表：${dest.jp.replace(/\{.*?\}/g, '')} → ${PLAT[dest.platform].replace(/\{.*?\}/g, '')}（${dest.platform} 號月台）　遊客想去 ${dest.yue}，你點答？`));
+  for (;;) {
+    const a = await choose(idx.map((i, value) => ({ el: opt(items[i].jp, items[i].yue), value })), { title });
+    if (a.value === correct) { trackLv(lvA, first); sfx('good'); break; }
+    if (first) mistakes++;
+    first = false;
+    trackLv(lvA, false);
+    sfx('bad');
+    hint(items[idx[a.value]].why || '再諗吓！', 3200);
+  }
+  await bubble(world, 'cat', items[0].jp, items[0].yue, 'cat');
+  clearBubble('cat');
+  world.cat.happy();
+  await bubble(world, 'cust', TOURIST_THANKS.jp, TOURIST_THANKS.yue, 'usagi', { hidden: listen });
+  clearBubble('cust');
+  world.customerOut(true);
+
+  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+  const coins = Math.round(70 * (0.6 + 0.4 * (stars / 3)));
+  const xp = 10 + stars * 5;
+  panel(
+    h('div', { class: 'sub' }, `🧑‍✈️ 駅員 · ${overshoot ? '乗り過ごし' : '問月台'}`),
+    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
+  );
+  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
+  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
+  s.coins += coins;
+  s.served++;
+  addXP(xp);
+  renderHUD();
+  await wait(1600);
+  milestones();
+  return { coins, stars, levelUps: S().level - lv0 };
+}
+
+async function ekiServe({ index }) {
+  const s = S();
+  const lv0 = s.level;
+  const L = jpLevel();
+  const listen = s.settings.subs === 'tap';
+  const showYue = s.settings.yue !== false;
+  const dest = pick(DESTS);
+  const n = 1 + Math.floor(Math.random() * 3);
+  const total = dest.fare * n;
+  const plain = (t) => t.replace(/\{.*?\}/g, '');
+  const sub = (t, m) => t.replace(/\{(d|dy|n|p)\}/g, (_, k) => m[k]);
+  const vars = { d: dest.jp, dy: dest.yue, n: PLAT[dest.platform], p: dest.platform };
+  let mistakes = 0;
+
+  // 選項：日文 + （可選）廣東話細字
+  const opt = (jp, yue, small) => h('div', { class: 'dish-opt' },
+    h('span', { class: 'jp-inline', html: toHTML(jp) }),
+    small ? h('small', {}, small) : (showYue && yue ? h('small', {}, yue) : null));
+  const card = (line, voice, caption) => h('div', { class: 'panel-title' },
+    line ? jpLine(line.jp, { yue: line.yue, voice, hidden: listen, autoplay: true }) : null,
+    caption ? h('div', { class: 'sub' }, caption) : null);
+  // 揀到啱為止；第一次錯計一次失誤。options 次序已經打亂，correct 係啱嗰個 index
+  const ask = async ({ line = null, voice = 'usagi', options, correct, caption, word, lv }) => {
+    let first = true;
+    if (word) srsSeen(word);
+    for (;;) {
+      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title: card(line, voice, caption) });
+      if (a.value === correct) {
+        if (word) srsAnswer(word, first);
+        if (lv != null) trackLv(lv, first);
+        sfx('good');
+        return a.value;
+      }
+      if (first) mistakes++;
+      first = false;
+      if (word) srsAnswer(word, false);
+      if (lv != null) trackLv(lv, false);
+      sfx('bad');
+      hint(options[a.value].why || (line ? `再聽一次：「${line.yue}」` : '再諗吓！'), 3200);
+    }
+  };
+  // 將 [啱嗰個, ...其餘] 打亂，返回 { options, correct }
+  const mix = (items) => {
+    const idx = shuffle(items.map((_, i) => i));
+    return { options: idx.map((i) => items[i]), correct: idx.indexOf(0) };
+  };
+  const staffLook = { id: 'kuma', color: 0x8a5a3b, ear: 'round' };
+
+  // ① 去到大堂，睇今次旅程
+  hidePanel();
+  clearBubble();
+  world.catTo('eki');
+  world.setView('eki', true);
+  world.setMachine('行き先を えらぶ', '');
+  world.customerOut(true);
+  sfx('door');
+  await world.ekiStaffIn(staffLook, 'eki');
+  const trip = L >= 2 ? `🎫 今次旅程：去 ${dest.yue}，成人 ${n} 位。你買嘅係普通車票（唔包特急）。` : `🎫 今次旅程：去 ${dest.yue}，成人 ${n} 位。`;
+  await next('出發 ▶', h('div', { class: 'panel-title' }, trip));
+
+  // ② 券売機：目的地 → 張數 → 投錢
+  const others = shuffle(DESTS.filter((d) => d.id !== dest.id)).slice(0, 3);
+  await ask({
+    line: M_DEST, caption: `去 ${dest.yue}`, word: `eki_d_${dest.id}`,
+    ...mix([dest, ...others].map((d) => ({ el: opt(d.jp, '', `${d.fare} 円`), why: d.id === dest.id ? '' : `呢個係 ${d.yue}，你要去 ${dest.yue}` }))),
+  });
+  world.setMachine(plain(dest.jp), `${dest.fare} 円 × ?`);
+  await ask({
+    line: M_COUNT, caption: `成人 ${n} 位`, word: 'eki_mai',
+    options: [1, 2, 3].map((k) => ({ el: opt(`大人{おとな} ${CNT[k]}`, `${k} 張`), why: `你要買 ${n} 張` })),
+    correct: n - 1,
+  });
+  world.setMachine(plain(dest.jp), `${dest.fare} 円 × ${n}`);
+  const wrongs = [...new Set([dest.fare * (n + 1), dest.fare * (n > 1 ? n - 1 : n + 2), dest.fare + 10])].filter((v) => v !== total).slice(0, 2);
+  await ask({
+    line: M_TOTAL(total), caption: `${dest.fare} 円 × ${n} 位 = ?`, word: 'eki_kippu',
+    ...mix([total, ...wrongs].map((v) => ({ el: opt(yenJP(v), '', `${v} 円`), why: `${dest.fare} × ${n} = ${total} 円` }))),
+  });
+  world.setMachine('きっぷ', `${total} 円`);
+  sfx('coin');
+  await bubble(world, 'cust', M_TAKE.jp, M_TAKE.yue, 'kuma', { hidden: listen });
+  clearBubble('cust');
+
+  // ③ 問駅員：搵月台
+  const lvA = drawLv();
+  const A = ASK.find((a) => a.lv === lvA) || ASK[0];
+  const rep = REPLY.find((r) => r.lv === lvA) || REPLY[0];
+  await ask({
+    caption: '問駅員：去呢個目的地要喺邊個月台上車？', word: 'eki_ikisaki', lv: lvA,
+    ...mix([A.ok, ...A.bad].map((o) => ({ el: opt(sub(o.jp, vars), sub(o.yue, vars)), why: o.why }))),
+  });
+  await bubble(world, 'cat', sub(A.ok.jp, vars), sub(A.ok.yue, vars), 'cat');
+  clearBubble('cat');
+  await bubble(world, 'cust', sub(rep.jp, vars), sub(rep.yue, vars), 'kuma', { hidden: listen });
+  clearBubble('cust');
+  const otherPlats = shuffle([1, 2, 3, 4].filter((x) => x !== dest.platform)).slice(0, 2);
+  await ask({
+    caption: PICK_PLAT.yue, word: 'eki_bansen',
+    ...mix([dest.platform, ...otherPlats].map((x) => ({ el: opt(PLAT[x], `${x} 號月台`), why: `駅員講咗 ${dest.platform} 號月台` }))),
+  });
+  world.customerOut(true);
+
+  // ④ 月台：聽廣播，揀上唔上車
+  world.catTo('pf');
+  world.setView('ekiPf', true);
+  world.setPlatform(dest.platform, [plain(dest.jp), '各駅停車', '快速']);
+  await wait(400);
+  const trainCheck = async (train, isRight) => {
+    const ann = ANN(L, dest.platform, train.type, train.dest);
+    const arr = world.trainArrive(plain(train.dest.jp), train.type.short, train.type.color);
+    const cap = L >= 2 ? `你要去 ${dest.yue}（普通車票）` : `你要去 ${dest.yue}`;
+    await ask({
+      line: ann, voice: 'usagi', caption: cap, word: isRight ? 'eki_noru' : 'eki_matsu',
+      options: [
+        { el: opt(BOARD.ride.jp, BOARD.ride.yue), why: train.dest.id !== dest.id ? `呢班車去 ${train.dest.yue}，唔係 ${dest.yue}` : `${train.type.yue}唔包喺你嘅普通車票` },
+        { el: opt(BOARD.wait.jp, BOARD.wait.yue), why: '呢班就係你要搭嘅！' },
+      ],
+      correct: isRight ? 0 : 1,
+    });
+    await arr;
+    if (isRight) { world.cat.happy(); sfx('perfect'); await wait(900); } else await wait(500);
+    await world.trainLeave();
+  };
+  if (L >= 3 && Math.random() < 0.5) {
+    // N1：人身事故，要同駅員交涉
+    const inc = pick(INCIDENTS);
+    await world.ekiStaffIn(staffLook, 'pf');
+    await ask({
+      line: INCIDENT_ANN, voice: 'usagi', caption: `🚨 ${inc.task}`, lv: 3, word: 'eki_jinshin',
+      ...mix([inc.ok, ...inc.bad].map((o) => ({ el: opt(o.jp, o.yue), why: o.why }))),
+    });
+    await bubble(world, 'cat', inc.ok.jp, inc.ok.yue, 'cat');
+    clearBubble('cat');
+    await bubble(world, 'cust', inc.reply.jp, inc.reply.yue, 'kuma', { hidden: listen });
+    clearBubble('cust');
+    world.customerOut(true);
+  } else {
+    // 第一班錯（另一個目的地，或者特急），第二班啱
+    const other = pick(DESTS.filter((d) => d.id !== dest.id));
+    const okTypes = TYPES.filter((t) => t.ok);
+    const wrongTrain = L >= 2 && Math.random() < 0.5 ? { dest, type: TYPES[2] } : { dest: other, type: L >= 2 ? pick(okTypes) : TYPES[0] };
+    await trainCheck(wrongTrain, false);
+    await trainCheck({ dest, type: L >= 2 ? pick(okTypes) : TYPES[0] }, true);
+  }
+  await bubble(world, 'cat', CAT_THANKS.jp, CAT_THANKS.yue, 'cat');
+  clearBubble('cat');
+
+  // ⑤ 結算
+  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+  const coins = Math.round((50 + total / 10) * (0.6 + 0.4 * (stars / 3)));
+  const xp = 10 + stars * 5;
+  panel(
+    h('div', { class: 'sub' }, `🚉 ${dest.yue} · 成人 ${n} 位 · ${total} 円`),
+    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
+  );
+  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
+  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
+  s.coins += coins;
+  s.served++;
+  addXP(xp);
+  renderHUD();
+  await wait(1600);
+  milestones();
+  return { coins, stars, levelUps: S().level - lv0 };
+}
+
+// ===== 酒店：前台視角，客人提出要求，玩家揀啱嘅職員答覆 =====
+async function hotelStaffServe({ index }) {
+  const s = S();
+  const lv0 = s.level;
+  const listen = s.settings.subs === 'tap';
+  const showYue = s.settings.yue !== false;
+  const lvA = drawLv();
+  const req = pick(REQUESTS[lvA]);
+  const pool = REQUESTS.flat().filter((q) => q.reply.jp !== req.reply.jp).map((q) => q.reply);
+  const rude = STAFF_RUDE_H[lvA];
+  const wrongs = shuffle(pool).slice(0, rude ? 1 : 2).map((r) => ({ ...r, why: '呢句答咗另一個要求，客人問嘅唔係呢樣' }));
+  const items = [req.reply, ...wrongs, ...(rude ? [rude] : [])];
+  let mistakes = 0;
+
+  hidePanel();
+  clearBubble();
+  world.catTo('hotel');
+  world.suitcase.visible = false;
+  world.cat.root.position.set(0.55, 0, -0.75);
+  world.cat.root.rotation.y = 0.25;
+  world.setView('hotel', true);
+  world.customerOut(true);
+  sfx('door');
+  await world.hotelStaffIn({ id: 'usagi', color: 0xfaf6f0, ear: 'long' }, true);
+  await next('你係前台 ▶', h('div', { class: 'panel-title' }, '🛎️ 今次你做酒店前台。聽客人講乜，揀啱嘅回答。'));
+  await bubble(world, 'cust', req.ok.jp, req.ok.yue, 'usagi', { hidden: listen });
+  clearBubble('cust');
+
+  const idx = shuffle(items.map((_, i) => i));
+  const correct = idx.indexOf(0);
+  const opt = (it) => h('div', { class: 'dish-opt' },
+    h('span', { class: 'jp-inline', html: toHTML(it.jp) }),
+    showYue && it.yue ? h('small', {}, it.yue) : null);
+  const title = h('div', { class: 'panel-title' },
+    jpLine(req.ok.jp, { yue: req.ok.yue, voice: 'usagi', hidden: listen }),
+    h('div', { class: 'sub' }, `客人情況：${req.task}。你點答？`));
+  let first = true;
+  for (;;) {
+    const a = await choose(idx.map((i, value) => ({ el: opt(items[i]), value })), { title });
+    if (a.value === correct) { trackLv(lvA, first); sfx('good'); break; }
+    if (first) mistakes++;
+    first = false;
+    trackLv(lvA, false);
+    sfx('bad');
+    hint(items[idx[a.value]].why || '再諗吓！', 3400);
+  }
+  await bubble(world, 'cat', req.reply.jp, req.reply.yue, 'cat');
+  clearBubble('cat');
+  world.cat.happy();
+  await bubble(world, 'cust', GUEST_THANKS.jp, GUEST_THANKS.yue, 'usagi', { hidden: listen });
+  clearBubble('cust');
+  world.customerOut(true);
+
+  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+  const coins = Math.round(70 * (0.6 + 0.4 * (stars / 3)));
+  const xp = 10 + stars * 5;
+  panel(
+    h('div', { class: 'sub' }, '🛎️ 前台 · 回應客人'),
+    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
+  );
+  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
+  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
+  s.coins += coins;
+  s.served++;
+  addXP(xp);
+  renderHUD();
+  await wait(1600);
+  milestones();
+  return { coins, stars, levelUps: S().level - lv0 };
+}
+
+// ===== 酒店：遊客入住 → 房間請求 → 退房 =====
+async function hotelServe({ index }) {
+  const s = S();
+  const lv0 = s.level;
+  const listen = s.settings.subs === 'tap';
+  const showYue = s.settings.yue !== false;
+  const lvA = drawLv();
+  const staffLook = { id: 'kuma', color: 0x8a5a3b, ear: 'round' };
+  const guests = [{ jp: '一人{ひとり}', yue: '一位' }, { jp: '二人{ふたり}', yue: '兩位' }];
+  const gi = Math.floor(Math.random() * 2);
+  const nights = 1 + Math.floor(Math.random() * 3);
+  const floor = 2 + Math.floor(Math.random() * 8);
+  const room = floor * 100 + 1 + Math.floor(Math.random() * 9);
+  const vars = { p: guests[gi].jp, py: guests[gi].yue, q: guests[1 - gi].jp, n: NIGHTS[nights], nn: `${nights} 晚`, f: floorJP(floor), fn: String(floor), r: roomJP(room), rn: String(room) };
+  const sub = (t, v = vars) => t.replace(/\{(py|p|q|nn|n|fn|f|rn|r)\}/g, (_, k) => v[k]);
+  let mistakes = 0;
+
+  const opt = (jp, yue, small) => h('div', { class: 'dish-opt' },
+    h('span', { class: 'jp-inline', html: toHTML(jp) }),
+    small ? h('small', {}, small) : (showYue && yue ? h('small', {}, yue) : null));
+  const card = (line, voice, caption) => h('div', { class: 'panel-title' },
+    line ? jpLine(line.jp, { yue: line.yue, voice, hidden: listen, autoplay: true }) : null,
+    caption ? h('div', { class: 'sub' }, caption) : null);
+  const ask = async ({ line = null, voice = 'kuma', options, correct, caption, word, lv }) => {
+    let first = true;
+    if (word) srsSeen(word);
+    for (;;) {
+      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title: card(line, voice, caption) });
+      if (a.value === correct) {
+        if (word) srsAnswer(word, first);
+        if (lv != null) trackLv(lv, first);
+        sfx('good');
+        return a.value;
+      }
+      if (first) mistakes++;
+      first = false;
+      if (word) srsAnswer(word, false);
+      if (lv != null) trackLv(lv, false);
+      sfx('bad');
+      hint(options[a.value].why || '再諗吓！', 3600);
+    }
+  };
+  // items[0] = 啱；其餘 = 干擾。返回打亂後嘅 options
+  const mix = (items) => {
+    const idx = shuffle(items.map((_, i) => i));
+    return { options: idx.map((i) => ({ el: opt(sub(items[i].jp), sub(items[i].yue)), why: items[i].why ? sub(items[i].why) : '' })), correct: idx.indexOf(0) };
+  };
+  const say2 = async (who, line) => {
+    const l = { jp: sub(line.jp), yue: sub(line.yue) };
+    await bubble(world, who, l.jp, l.yue, who === 'cat' ? 'cat' : 'kuma', who === 'cat' ? {} : { hidden: listen });
+    clearBubble(who);
+  };
+
+  // ① 入門
+  hidePanel();
+  clearBubble();
+  world.catTo('hotel');
+  world.setView('hotel', true);
+  world.customerOut(true);
+  sfx('door');
+  await world.hotelStaffIn(staffLook);
+  await next('入去 ▶', h('div', { class: 'panel-title' }, `🏨 今次住宿：${vars.nn}，${vars.py}。`));
+  await say2('cust', WELCOME);
+
+  // ② check-in
+  const ci = CHECKIN[lvA];
+  await ask({ caption: `🧳 ${sub(ci.task)}`, word: 'hotel_checkin', lv: lvA, ...mix([ci.ok, ...ci.bad]) });
+  await say2('cat', ci.ok);
+  const rr = ROOM_REPLY[lvA];
+  await say2('cust', rr);
+  const wrongRooms = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9].filter((k) => k !== room % 100)).slice(0, 2).map((k, i) => (i === 0 ? ((floor % 8) + 2) * 100 + k : floor * 100 + k));
+  await ask({
+    caption: PICK_ROOM.yue, word: 'hotel_goshitsu', lv: lvA,
+    ...(() => {
+      const items = [room, ...wrongRooms];
+      const idx = shuffle(items.map((_, i) => i));
+      return { options: idx.map((i) => ({ el: opt(roomJP(items[i]), '', String(items[i])), why: `前台講嘅係 ${room} 號房` })), correct: idx.indexOf(0) };
+    })(),
+  });
+  world.cat.happy();
+
+  // ③ 住宿中：一個請求
+  const req = pick(REQUESTS[lvA]);
+  await next('入咗房 ▶', h('div', { class: 'panel-title' }, `🛏️ 你住喺 ${room} 號房。`));
+  await ask({ caption: `📞 ${req.task}`, word: lvA >= 2 ? 'hotel_kikanai' : 'hotel_taoru', lv: lvA, ...mix([req.ok, ...req.bad]) });
+  await say2('cat', req.ok);
+  await say2('cust', req.reply);
+
+  // ④ 退房
+  const co = CHECKOUT[lvA];
+  await next('第二日 ▶', h('div', { class: 'panel-title' }, '🌅 住完喇，落去前台退房。'));
+  await ask({ caption: '🧳 你想退房', word: 'hotel_checkout', lv: lvA, ...mix([co.ok, ...co.bad]) });
+  await say2('cat', co.ok);
+  await say2('cust', BYE_STAFF[lvA]);
+  world.customerOut(true);
+
+  // ⑤ 結算
+  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+  const coins = Math.round(90 * (0.6 + 0.4 * (stars / 3)));
+  const xp = 12 + stars * 5;
+  panel(
+    h('div', { class: 'sub' }, `🏨 ${vars.nn} · ${room} 號房`),
+    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
+  );
+  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
+  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
+  s.coins += coins;
+  s.served++;
+  addXP(xp);
+  renderHUD();
+  await wait(1600);
   milestones();
   return { coins, stars, levelUps: S().level - lv0 };
 }

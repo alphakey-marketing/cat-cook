@@ -3,6 +3,11 @@ import { isPaused } from '../gameplay.js';
 // 3D 世界：廚房 + 餐廳，鏡頭，粒子
 import * as THREE from 'three';
 import { Cat } from './cat.js';
+import { buildSushi, buildRamen } from './themes.js';
+import { buildIzakaya, buildCafe, buildDark } from './themes2.js';
+import { buildKonbini, KON_X } from './konbini.js';
+import { buildHotel, HOTEL_X } from './hotel.js';
+import { buildEki, EKI_X, PF_X, machineTexture, platformSignTexture, trainTexture, stationCap } from './eki.js';
 import { makeBoard, makePot, makePan, makeDish, makeIngredient, makeProp, makeCustomer, makeDeco, makeMicrowave, styleDish, circleTexture, mat } from './models.js';
 
 const REST_X = 40;
@@ -47,6 +52,12 @@ export class World {
     this.lights();
     this.buildKitchen();
     this.buildRestaurant();
+    this.buildEkiScene();
+    this.kon = buildKonbini();
+    this.scene.add(this.kon);
+    this.hotel = buildHotel();
+    this.scene.add(this.hotel);
+    this.stage = 'kitchen';
 
     this.cat = new Cat();
     this.cat.root.position.set(-0.35, 0, -0.6);
@@ -92,6 +103,7 @@ export class World {
     const k = new THREE.Group();
     this.kitchen = k;
     this.scene.add(k);
+    const decorStart = k.children.length;
     // 地板
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 10), mat(0xc69c6d, { roughness: 0.9 }));
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; k.add(floor);
@@ -125,12 +137,16 @@ export class World {
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshBasicMaterial({ color: 0xfff1c0 }));
     bulb.position.set(-0.3, 2.88, -0.4); k.add(bulb);
     const lampLight = new THREE.PointLight(0xffd59a, 3, 5, 1.5); lampLight.position.set(-0.3, 2.8, -0.4); k.add(lampLight);
+    this.kitDecor = k.children.slice(decorStart).filter((o) => !o.isLight);
     // 櫃台
     const counter = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.0, 0.9), mat(0x6e4429, { roughness: 0.7 }));
     counter.position.set(0, 0.5, 0); counter.castShadow = counter.receiveShadow = true; k.add(counter);
     const top = new THREE.Mesh(new THREE.BoxGeometry(3.7, 0.08, 1.0), mat(0xe0c39a, { roughness: 0.5 }));
     top.position.set(0, 1.04, 0); top.receiveShadow = true; top.castShadow = true; k.add(top);
     this.counterY = 1.08;
+    this.kCounter = counter; this.kTop = top;
+    this.themes = {};
+    this.theme = 'home';
     // 爐
     const stove = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.5), mat(0x333333)); stove.position.set(-1.1, this.counterY + 0.02, -0.1); k.add(stove);
     const burner = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.02, 6, 24), mat(0x111111)); burner.rotation.x = Math.PI / 2; burner.position.set(-1.1, this.counterY + 0.05, -0.1); k.add(burner);
@@ -192,6 +208,66 @@ export class World {
     this.restCatPos = new THREE.Vector3(-0.95, 0, -0.55);
   }
 
+  // ===== 車站（旅行章節）=====
+  buildEkiScene() {
+    const e = buildEki();
+    this.eki = e.eki; this.pf = e.pf;
+    this.ekiScreen_ = e.machineScreen; this.pfSign = e.pfSign;
+    this.train = e.train; this.trainBoard = e.destBoard;
+    this.suitcase = e.suit;
+    this.scene.add(e.eki, e.pf);
+    this.ekiCatPos = new THREE.Vector3(0.45, 0, -0.7);
+    this.pfCatPos = new THREE.Vector3(-0.6, 0, 0.7);
+    this.ekiStaffPos = new THREE.Vector3(-1.7, 0, -1.7);
+    this.pfStaffPos = new THREE.Vector3(1.3, 0, 0.8);
+  }
+  // 券売機屏幕
+  setMachine(title, sub = '') {
+    const m = this.ekiScreen_.material;
+    m.map?.dispose(); m.map = machineTexture(title, sub); m.needsUpdate = true;
+  }
+  setPlatform(n, dests = []) {
+    const m = this.pfSign.material;
+    m.map?.dispose(); m.map = platformSignTexture(n, dests); m.needsUpdate = true;
+  }
+  // 駅員
+  async ekiStaffIn(c, place = 'eki', cap = true) {
+    this.customerOut(true);
+    const m = makeCustomer(c);
+    if (cap) m.userData.head.add(stationCap());
+    m.position.copy(place === 'pf' ? this.pfStaffPos : this.ekiStaffPos);
+    m.rotation.y = place === 'pf' ? -1.1 : 0.7;
+    m.scale.setScalar(0.01);
+    (place === 'pf' ? this.pf : this.eki).add(m);
+    this.customer = m;
+    this.popIn(m);
+    return m;
+  }
+  // 酒店前台職員
+  async hotelStaffIn(c, front = false) {
+    this.customerOut(true);
+    const m = makeCustomer(c);
+    m.position.set(front ? -0.6 : 0.55, 0, front ? 1.15 : -0.75);
+    m.rotation.y = front ? 2.7 : 0.25;
+    m.scale.setScalar(0.01);
+    this.hotel.add(m);
+    this.customer = m;
+    this.popIn(m);
+    return m;
+  }
+  // 列車入站／離站（x 由右至中）
+  async trainArrive(dest, type, color = '#2f9e44') {
+    const mm = this.trainBoard.material;
+    mm.map?.dispose(); mm.map = trainTexture(dest, type, color); mm.needsUpdate = true;
+    this.train.position.x = 16;
+    await this.tween(this.train.position, { x: 0 }, 2.4);
+    this.shake(0.15);
+  }
+  async trainLeave() {
+    await this.tween(this.train.position, { x: -18 }, 2.2, null, 'in');
+    this.train.position.x = 16;
+  }
+
   skyTexture() {
     const c = document.createElement('canvas'); c.width = 128; c.height = 96;
     const x = c.getContext('2d');
@@ -232,9 +308,15 @@ export class World {
     const prev = this.view;
     this.view = name;
     if (name === 'kitchen') { this.camTargetPos.set(0.2, 2.75, 5.0); this.camTargetLook.set(0.2, 1.55, 0); }
+    if (name === 'kon') { this.camTargetPos.set(KON_X + 0.2, 2.75, 5.0); this.camTargetLook.set(KON_X + 0.2, 1.55, 0); }
+    if (name === 'hotel') { this.camTargetPos.set(HOTEL_X + 0.2, 2.6, 5.0); this.camTargetLook.set(HOTEL_X + 0.1, 1.45, 0); }
     if (name === 'cook') { this.camTargetPos.set(-0.3, 2.9, 3.6); this.camTargetLook.set(-0.4, 1.35, -0.1); }
     if (name === 'serve') { this.camTargetPos.set(0.6, 2.5, 4.2); this.camTargetLook.set(0.5, 1.4, 0.3); }
     if (name === 'rest') { this.camTargetPos.set(REST_X - 0.1, 1.95, 4.0); this.camTargetLook.set(REST_X - 0.55, 1.15, -0.4); }
+    if (name === 'eki') { this.camTargetPos.set(EKI_X + 0.5, 2.1, 4.4); this.camTargetLook.set(EKI_X + 0.3, 1.2, -0.8); }
+    if (name === 'ekiPf') { this.camTargetPos.set(PF_X - 0.2, 1.9, 4.6); this.camTargetLook.set(PF_X - 0.2, 1.2, -0.8); }
+    const bg = name === 'eki' ? 0xd6e6f2 : name === 'ekiPf' ? 0xbfe0f5 : name === 'kon' ? 0xe4f1f3 : name === 'hotel' ? 0xefe4d0 : (this.themeBg ?? 0xf6e3c8);
+    this.scene.background.setHex(bg); this.scene.fog.color.setHex(bg);
     if (name === 'restTable') { this.camTargetPos.set(REST_X, 2.75, 3.1); this.camTargetLook.set(REST_X, 0.75, 0.3); }
     this.fitAspect();
     if (instant) { this.camPos.copy(this.camTargetPos); this.camLook.copy(this.camTargetLook); }
@@ -264,8 +346,47 @@ export class World {
   }
 
   // ===== 小黑搬位 =====
+  // 廚房換皮：home / sushi / ramen（爐同砧板位置唔變）
+  setTheme(name) {
+    if (!['sushi', 'ramen', 'izakaya', 'cafe', 'dark'].includes(name)) name = 'home';
+    this.theme = name;
+    const build = { sushi: buildSushi, ramen: buildRamen, izakaya: buildIzakaya, cafe: buildCafe, dark: buildDark };
+    for (const id in build) {
+      if (name === id && !this.themes[id]) { this.themes[id] = build[id](); this.kitchen.add(this.themes[id]); }
+      if (this.themes[id]) this.themes[id].visible = name === id;
+    }
+    this.kitDecor.forEach((o) => { o.visible = name === 'home'; });
+    const col = { home: [0x6e4429, 0xe0c39a], sushi: [0xb88a52, 0xf0dcb0], ramen: [0x8b1a1a, 0x2b2b2b], izakaya: [0x4a2e1c, 0xb88a52], cafe: [0x2f5a46, 0xe8d5b0], dark: [0x2b2b2b, 0x4a4a4a] }[name];
+    this.kCounter.material.color.setHex(col[0]);
+    this.kTop.material.color.setHex(col[1]);
+    this.themeBg = { home: 0xf6e3c8, sushi: 0xf3ecdc, ramen: 0x2a2522, izakaya: 0x2a1d14, cafe: 0xf3e6c8, dark: 0x14121a }[name];
+    if (this.stage !== 'kon' && this.stage !== 'hotel' && !['eki', 'ekiPf'].includes(this.view)) { this.scene.background.setHex(this.themeBg); this.scene.fog.color.setHex(this.themeBg); }
+  }
   catTo(place) {
-    if (place === 'rest') {
+    this.stage = place === 'kon' ? 'kon' : place === 'hotel' ? 'hotel' : 'kitchen';
+    this.suitcase.visible = place === 'eki' || place === 'pf';
+    if (place === 'eki' || place === 'pf') {
+      const g = place === 'eki' ? this.eki : this.pf;
+      g.add(this.cat.root);
+      this.cat.root.position.copy(place === 'eki' ? this.ekiCatPos : this.pfCatPos);
+      this.cat.root.rotation.y = place === 'eki' ? 1.25 : 0.9;
+      this.cat.holding(null);
+      if (!this.suitcase.parent) this.cat.root.add(this.suitcase);
+      this.suitcase.position.set(-0.55, 0, 0.1);
+    } else if (place === 'hotel') {
+      this.hotel.add(this.cat.root);
+      this.cat.root.position.set(-0.6, 0, 1.15);
+      this.cat.root.rotation.y = 2.7;
+      this.cat.holding(null);
+      this.suitcase.visible = true;
+      if (!this.suitcase.parent) this.cat.root.add(this.suitcase);
+      this.suitcase.position.set(-0.55, 0, 0.1);
+    } else if (place === 'kon') {
+      this.kon.add(this.cat.root);
+      this.cat.root.position.set(-0.35, 0, -0.6);
+      this.cat.root.rotation.y = 0;
+      this.cat.holding(null);
+    } else if (place === 'rest') {
       this.rest.add(this.cat.root);
       this.cat.root.position.copy(this.restCatPos);
       this.cat.root.rotation.y = 0.6;
@@ -354,7 +475,7 @@ export class World {
     const m = makeCustomer(c);
     m.position.copy(this.customerSpawn);
     m.rotation.y = -1.2;
-    this.kitchen.add(m);
+    (this.stage === 'kon' ? this.kon : this.kitchen).add(m);
     this.customer = m;
     await this.walk(m, this.customerPos, 1.1);
     this.punch(m, -0.22);   // 企定個下壓扁一下

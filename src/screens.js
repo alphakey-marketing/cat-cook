@@ -1,5 +1,7 @@
 import { art, vocabArt } from './art.js';
 import { KONBINI_WORD_IDS } from './data/konbini.js';
+import { EKI_WORD_IDS } from './data/eki.js';
+import { HOTEL_WORD_IDS } from './data/hotel.js';
 // 各種彈出畫面：食譜卡、圖鑑、商店、設定、收工總結
 import { h, modal, jpLine, applySettings, renderHUD, toast, closeModal } from './ui.js';
 import { RECIPES, COMING_SOON } from './data/recipes.js';
@@ -57,6 +59,8 @@ export function wordProgress() {
       r.steps.forEach((st) => { if (st.verb) set.add(st.verb); if (st.request) set.add(st.request); });
     }
     if (c.id === 'konbini') KONBINI_WORD_IDS.forEach((id) => set.add(id));
+    if (c.id === 'eki') EKI_WORD_IDS.forEach((id) => set.add(id));
+    if (c.id === 'hotel') HOTEL_WORD_IDS.forEach((id) => set.add(id));
     const list = [...set].filter((id) => VOCAB[id]);
     return { id: c.id, name: c.name.split('・')[0], icon: c.icon, total: list.length, learned: list.filter((id) => srs[id] && srs[id].box >= 2).length };
   });
@@ -145,7 +149,7 @@ export function openBook(tab = 'recipes') {
       const total = all.filter((x) => (x.lv ?? 0) <= L).length;
       content.append(h('div', { class: 'progress-line' }, `見過 ${seen.length} 句 · 你而家嘅程度可以遇到 ${total} 句　（🌱→🌸 越溫越熟）`));
       if (!seen.length) content.append(h('p', { class: 'muted' }, '未有句子，開店同客人傾偈先啦！'));
-      for (const lv of [0, 1, 2]) {
+      for (const lv of [0, 1, 2, 3]) {
         const rows = seen.filter((x) => (x.lv ?? 0) === lv).sort((a, b) => S().srs[b.key].box - S().srs[a.key].box);
         if (!rows.length) continue;
         content.append(h('div', { class: 'sub' }, `${LEVELS[lv].icon} ${LEVELS[lv].name}`));

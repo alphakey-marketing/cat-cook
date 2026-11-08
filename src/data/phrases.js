@@ -6,13 +6,14 @@ import { hash } from '../jp.js';
 
 export const LEVELS = [
   { id: 0, icon: '🌱', name: '零基礎', desc: '假名都未識' },
-  { id: 1, icon: '🌿', name: '初學', desc: '識假名、簡單字（N5–N4）' },
-  { id: 2, icon: '🌳', name: 'N3 或以上', desc: '想練聽力同實用句子' },
+  { id: 1, icon: '🌿', name: 'N5', desc: '識假名、簡單字、基本句型' },
+  { id: 2, icon: '🌳', name: 'N4–N3', desc: '想練聽力同實用句子' },
+  { id: 3, icon: '🏔️', name: 'N1', desc: '敬語、長句、事故廣播' },
 ];
 
 // 共用聲線：高等級／新句只做呢兩把聲，客人按 id 固定配一把
 export const HI_VOICES = ['usagi', 'kuma'];
-export const jpLevel = () => Math.max(0, Math.min(2, S().jpLevel ?? 0));
+export const jpLevel = () => Math.max(0, Math.min(3, S().jpLevel ?? 0));
 export const hiVoice = (custId) => HI_VOICES[parseInt(hash(custId), 36) % HI_VOICES.length];
 export const lineVoice = (custId, line) => (line.lv > 0 || line.hi ? hiVoice(custId) : custId);
 
@@ -54,7 +55,7 @@ export function trackLv(lv, right) {
 }
 export function levelNudge() {
   const L = jpLevel();
-  if (L >= 2) return null;
+  if (L >= 3) return null;
   const r = S().lvStats?.[L];
   if (!r || r.total < 15 || r.right / r.total < 0.8 || (r.days?.length ?? 0) < 2) return null;
   if ((S().lvNudgeDismissed ?? -1) >= L) return null;
@@ -467,7 +468,7 @@ export function drawBeats(c, n) {
   for (const b of chosen) b.init?.(c);
   return chosen;
 }
-export const BEAT_COUNT = [1, 2, 3];
+export const BEAT_COUNT = [1, 2, 3, 3];
 
 // 全部餐廳句（俾 gen-voice 用）：窮舉人數／菜／飲品／旗標
 export function allRestaurantLines() {

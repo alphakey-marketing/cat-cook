@@ -301,9 +301,9 @@ export async function sneak(step, world) {
   const L = jpLevel();
   const P = DARK.persona || PERSONAS.tourist;
   if (!S().sneakTap) await sneakDemo(step);
-  const work = step.work || [4.5, 5.5, 6.5][L];   // 要做幾多秒先做完（只計動手嘅時間）
+  const work = step.work || [4.5, 5.5, 6.5, 6.5][L];   // 要做幾多秒先做完（只計動手嘅時間）
   // 反應時間由客人講完句嘢先開始計（真人要聽完先識反應；聲檔下載慢都唔會蝕）
-  const reactMs = [1500, 1150, 900][L] * P.tell;
+  const reactMs = [1500, 1150, 900, 900][L] * P.tell;
   const lookMs = 1300 * P.look;
   const GRACE = 250;                               // 轉頭頭 0.25 秒內停手都唔算
   // 保證有預兆：Lv0 一次、Lv1 兩次、Lv2 三次（多疑客人 +1，最多 3）；第一次一定喺頭一半
