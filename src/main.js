@@ -14,9 +14,9 @@ import { DARK, resetDark } from './darkstate.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, levelNudge, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS, drawLv } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
-import { GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
+import { K_BYE, GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
 import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
-import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
+import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, KIND_OPT, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, PICK_ROOM, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from './data/hotel.js';
 import { isUnlocked, recipeCard, openBook, openShop, openSettings, shiftSummary, apply } from './screens.js';
 import { hash, toHTML } from './jp.js';
@@ -412,7 +412,7 @@ async function cashierServe({ index }) {
   addXP(xp);
   renderHUD();
   await wait(1600);
-  const bye = pickByLevel(REACT.bye);
+  const bye = pickByLevel(K_BYE);
   await bubble(world, 'cust', bye.jp, bye.yue, lineVoice(cust.id, bye));
   clearBubble('cust');
   world.customerOut();
@@ -515,7 +515,9 @@ async function ekiServe({ index }) {
   const showYue = s.settings.yue !== false;
   const dest = pick(DESTS);
   const n = 1 + Math.floor(Math.random() * 3);
-  const total = dest.fare * n;
+  const ltd = L >= 2 && Math.random() < 0.4; // 今次買特急券
+  const each = dest.fare + (ltd ? LTD_EXTRA : 0);
+  const total = each * n;
   const plain = (t) => t.replace(/\{.*?\}/g, '');
   const sub = (t, m) => t.replace(/\{(d|dy|n|p)\}/g, (_, k) => m[k]);
   const vars = { d: dest.jp, dy: dest.yue, n: PLAT[dest.platform], p: dest.platform };
@@ -564,7 +566,7 @@ async function ekiServe({ index }) {
   world.customerOut(true);
   sfx('door');
   await world.ekiStaffIn(staffLook, 'eki');
-  const trip = L >= 2 ? `🎫 今次旅程：去 ${dest.yue}，成人 ${n} 位。你買嘅係普通車票（唔包特急）。` : `🎫 今次旅程：去 ${dest.yue}，成人 ${n} 位。`;
+  const trip = L >= 2 ? `🎫 今次旅程：去 ${dest.yue}，成人 ${n} 位。${ltd ? `你要搭特急，要買特急券（每位加 ${LTD_EXTRA} 円）。` : '你買嘅係普通車票（唔包特急）。'}` : `🎫 今次旅程：去 ${dest.yue}，成人 ${n} 位。`;
   await next('出發 ▶', h('div', { class: 'panel-title' }, trip));
 
   // ② 券売機：目的地 → 張數 → 投錢
@@ -579,11 +581,17 @@ async function ekiServe({ index }) {
     options: [1, 2, 3].map((k) => ({ el: opt(`大人{おとな} ${CNT[k]}`, `${k} 張`), why: `你要買 ${n} 張` })),
     correct: n - 1,
   });
-  world.setMachine(plain(dest.jp), `${dest.fare} 円 × ${n}`);
-  const wrongs = [...new Set([dest.fare * (n + 1), dest.fare * (n > 1 ? n - 1 : n + 2), dest.fare + 10])].filter((v) => v !== total).slice(0, 2);
+  if (L >= 2) {
+    await ask({
+      line: M_KIND, caption: ltd ? '你要搭特急' : '你只買普通車票', word: 'eki_tokkyu',
+      ...mix((ltd ? [KIND_OPT.ltd, KIND_OPT.plain] : [KIND_OPT.plain, KIND_OPT.ltd]).map((o, i) => ({ el: opt(o.jp, o.yue), why: i === 0 ? '' : ltd ? '你要搭特急，要買特急券' : '你只買普通車票，唔使特急券' }))),
+    });
+  }
+  world.setMachine(plain(dest.jp), `${each} 円 × ${n}`);
+  const wrongs = [...new Set([each * (n + 1), each * (n > 1 ? n - 1 : n + 2), each + 10])].filter((v) => v !== total).slice(0, 2);
   await ask({
-    line: M_TOTAL(total), caption: `${dest.fare} 円 × ${n} 位 = ?`, word: 'eki_kippu',
-    ...mix([total, ...wrongs].map((v) => ({ el: opt(yenJP(v), '', `${v} 円`), why: `${dest.fare} × ${n} = ${total} 円` }))),
+    line: M_TOTAL(total), caption: `${each} 円 × ${n} 位 = ?`, word: 'eki_kippu',
+    ...mix([total, ...wrongs].map((v) => ({ el: opt(yenJP(v), '', `${v} 円`), why: `${each} × ${n} = ${total} 円` }))),
   });
   world.setMachine('きっぷ', `${total} 円`);
   sfx('coin');
@@ -617,11 +625,11 @@ async function ekiServe({ index }) {
   const trainCheck = async (train, isRight) => {
     const ann = ANN(L, dest.platform, train.type, train.dest);
     const arr = world.trainArrive(plain(train.dest.jp), train.type.short, train.type.color);
-    const cap = L >= 2 ? `你要去 ${dest.yue}（普通車票）` : `你要去 ${dest.yue}`;
+    const cap = L >= 2 ? `你要去 ${dest.yue}（${ltd ? '特急券' : '普通車票'}）` : `你要去 ${dest.yue}`;
     await ask({
       line: ann, voice: 'usagi', caption: cap, word: isRight ? 'eki_noru' : 'eki_matsu',
       options: [
-        { el: opt(BOARD.ride.jp, BOARD.ride.yue), why: train.dest.id !== dest.id ? `呢班車去 ${train.dest.yue}，唔係 ${dest.yue}` : `${train.type.yue}唔包喺你嘅普通車票` },
+        { el: opt(BOARD.ride.jp, BOARD.ride.yue), why: train.dest.id !== dest.id ? `呢班車去 ${train.dest.yue}，唔係 ${dest.yue}` : ltd ? `你買咗特急券，要搭特急，${train.type.yue}唔啱` : `${train.type.yue}唔包喺你嘅普通車票` },
         { el: opt(BOARD.wait.jp, BOARD.wait.yue), why: '呢班就係你要搭嘅！' },
       ],
       correct: isRight ? 0 : 1,
@@ -646,8 +654,10 @@ async function ekiServe({ index }) {
   } else {
     // 第一班錯（另一個目的地，或者特急），第二班啱
     const other = pick(DESTS.filter((d) => d.id !== dest.id));
-    const okTypes = TYPES.filter((t) => t.ok);
-    const wrongTrain = L >= 2 && Math.random() < 0.5 ? { dest, type: TYPES[2] } : { dest: other, type: L >= 2 ? pick(okTypes) : TYPES[0] };
+    const okTypes = ltd ? [TYPES[2]] : TYPES.filter((t) => t.ok);
+    const wrongTrain = L >= 2 && Math.random() < 0.5
+      ? { dest, type: ltd ? pick(TYPES.filter((t) => t.ok)) : TYPES[2] }
+      : { dest: other, type: L >= 2 ? pick(okTypes) : TYPES[0] };
     await trainCheck(wrongTrain, false);
     await trainCheck({ dest, type: L >= 2 ? pick(okTypes) : TYPES[0] }, true);
   }
@@ -681,11 +691,39 @@ async function hotelStaffServe({ index }) {
   const listen = s.settings.subs === 'tap';
   const showYue = s.settings.yue !== false;
   const lvA = drawLv();
-  const req = pick(REQUESTS[lvA]);
-  const pool = REQUESTS.flat().filter((q) => q.reply.jp !== req.reply.jp).map((q) => q.reply);
+  // 三種情境：房間請求 / 客人入住（揀啱房號回覆）/ 客人退房
+  const mode = pick(['req', 'checkin', 'checkout']);
   const rude = STAFF_RUDE_H[lvA];
-  const wrongs = shuffle(pool).slice(0, rude ? 1 : 2).map((r) => ({ ...r, why: '呢句答咗另一個要求，客人問嘅唔係呢樣' }));
-  const items = [req.reply, ...wrongs, ...(rude ? [rude] : [])];
+  const guests = [{ jp: '一人{ひとり}', yue: '一位' }, { jp: '二人{ふたり}', yue: '兩位' }];
+  const gi = Math.floor(Math.random() * 2);
+  const nights = 1 + Math.floor(Math.random() * 3);
+  const floor = 2 + Math.floor(Math.random() * 8);
+  const room = floor * 100 + 1 + Math.floor(Math.random() * 9);
+  const mkVars = (fl, rm) => ({ p: guests[gi].jp, py: guests[gi].yue, q: guests[1 - gi].jp, n: NIGHTS[nights], nn: `${nights} 晚`, f: floorJP(fl), fn: String(fl), r: roomJP(rm), rn: String(rm) });
+  const fill = (t, v) => t.replace(/\{(py|p|q|nn|n|fn|f|rn|r)\}/g, (_, k) => v[k]);
+  const V = mkVars(floor, room);
+  let req; // { task, ok(客人講), reply(職員答啱), items }
+  if (mode === 'req') {
+    const r0 = pick(REQUESTS[lvA]);
+    const pool = REQUESTS.flat().filter((q) => q.reply.jp !== r0.reply.jp).map((q) => q.reply);
+    const wr = shuffle(pool).slice(0, rude ? 1 : 2).map((r) => ({ ...r, why: '呢句答咗另一個要求，客人問嘅唔係呢樣' }));
+    req = { task: r0.task, ok: r0.ok, reply: r0.reply, items: [r0.reply, ...wr, ...(rude ? [rude] : [])] };
+  } else if (mode === 'checkin') {
+    const ci = CHECKIN[lvA];
+    const tpl = ROOM_REPLY[lvA];
+    const mk = (fl, rm) => { const v = mkVars(fl, rm); return { jp: fill(tpl.jp, v), yue: fill(tpl.yue, v) }; };
+    const others = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9].filter((k) => k !== room % 100)).slice(0, rude ? 1 : 2);
+    const wr = others.map((k, i) => { const fl = i === 0 ? ((floor % 8) + 2) : floor; return { ...mk(fl, fl * 100 + k), why: `分配嘅係 ${room} 號房，呢句講錯房號` }; });
+    const okR = mk(floor, room);
+    req = { task: `客人入住，你分配 ${room} 號房（${nights} 晚）`, ok: { jp: fill(ci.ok.jp, V), yue: fill(ci.ok.yue, V) }, reply: okR, items: [okR, ...wr, ...(rude ? [rude] : [])] };
+  } else {
+    const co = CHECKOUT[lvA];
+    const bye = BYE_STAFF[lvA];
+    const tpl = ROOM_REPLY[lvA];
+    const wr = [{ ...WELCOME, why: '客人係離開，唔係剛到' }, { jp: fill(tpl.jp, V), yue: fill(tpl.yue, V), why: '呢句係入住時先講' }];
+    req = { task: '客人退房', ok: co.ok, reply: bye, items: [bye, ...wr.slice(0, rude ? 1 : 2), ...(rude ? [rude] : [])] };
+  }
+  const items = req.items;
   let mistakes = 0;
 
   hidePanel();

@@ -52,6 +52,17 @@ export const K_PAY = [
 export const K_PAY_ASK = { jp: 'お支払{しはら}いは いかがなさいますか？', yue: '點樣付款？' };
 export const K_GREET = { jp: 'いらっしゃいませ。', yue: '歡迎光臨。' };
 export const K_THANKS = { jp: 'ありがとうございました。', yue: '多謝光臨。' };
+// 客人買完嘢離開（唔係食飯，所以唔講好味）。lv 同餐廳一樣：0 零基礎 / 1 N5 / 2 N4–N3 / 3 N1
+export const K_BYE = [
+  { key: 'kb_arigatou', lv: 0, jp: 'ありがとう！', yue: '多謝！' },
+  { key: 'kb_mata', lv: 0, jp: 'また 来{き}ます！', yue: '我會再嚟！' },
+  { key: 'kb_arigatou2', lv: 1, jp: 'ありがとうございました。 また 来{き}ますね', yue: '多謝，我會再嚟' },
+  { key: 'kb_benri', lv: 1, jp: '近{ちか}くに あって、 便利{べんり}です！', yue: '喺附近好方便！' },
+  { key: 'kb_osewa', lv: 2, jp: '夜遅{よるおそ}くまで 開{あ}いていて 助{たす}かります', yue: '開到好夜，幫到手' },
+  { key: 'kb_mata2', lv: 2, jp: 'また 近{ちか}くを 通{とお}ったら 寄{よ}らせて もらいます', yue: '下次經過再嚟' },
+  { key: 'kb_osewa3', lv: 3, jp: 'いつも 遅{おそ}くまで ご苦労様{くろうさま}です。 助{たす}かります', yue: '成日做到咁夜，辛苦晒，幫到好多' },
+  { key: 'kb_mata3', lv: 3, jp: 'お釣{つ}りも ぴったりで 助{たす}かりました。 また お願{ねが}いします', yue: '找贖啱啱好，幫到手，下次再嚟' },
+];
 export const K_TOTAL = (yenText) => ({ jp: `合計{ごうけい}は ${yenText}です。`, yue: '總共係呢個價錢。' });
 export const K_OTSURI_ASK = { jp: 'おつりを お返{かえ}しします。', yue: '搵返錢畀你。' };
 

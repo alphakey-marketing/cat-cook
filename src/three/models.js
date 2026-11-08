@@ -344,8 +344,8 @@ export function makePan() {
 export function makeCustomer(c) {
   const g = new THREE.Group();
   const col = c.color;
-  const body = sph(0.32, col, 1, 1.15, 0.9); body.position.y = 0.55; g.add(body);
-  const belly = sph(0.22, c.id === 'maneki' ? 0xffffff : 0xfff3e0, 1, 1.1, 0.6); belly.position.set(0, 0.5, 0.2); g.add(belly);
+  const body = sph(0.32, col, 1, 1.15, 0.9); body.position.y = 0.5; g.add(body);
+  const belly = sph(0.22, c.id === 'maneki' ? 0xffffff : 0xfff3e0, 1, 1.1, 0.6); belly.position.set(0, 0.46, 0.2); g.add(belly);
   const head = new THREE.Group(); head.position.y = 1.08; g.add(head);
   head.add(sph(0.3, col, 1.1, 1, 1));
   const muzzleC = c.id === 'kuma' ? 0xd9b38c : c.id === 'kitsune' || c.id === 'shiba' ? 0xfff3e0 : 0xffffff;
@@ -361,9 +361,9 @@ export function makeCustomer(c) {
     else if (c.ear === 'round') { ear = sph(0.09, col, 1, 1, 0.6); ear.position.set(s * 0.22, 0.24, 0); }
     else { ear = shadow(new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 12), mat(col))); ear.scale.z = 0.6; ear.position.set(s * 0.18, 0.3, 0); ear.rotation.z = -s * 0.3; }
     head.add(ear);
-    const arm = sph(0.08, col, 1, 1.6, 1); arm.position.set(s * 0.3, 0.6, 0.1); arm.rotation.z = s * 0.4; g.add(arm);
+    const arm = sph(0.08, col, 1, 1.6, 1); arm.position.set(s * 0.3, 0.56, 0.1); arm.rotation.z = s * 0.4; g.add(arm);
     if (c.id === 'maneki' && s === 1) { arm.position.set(0.3, 0.95, 0.1); arm.rotation.z = -0.3; g.userData.wave = arm; }
-    const foot = sph(0.09, col, 1.2, 0.6, 1.4); foot.position.set(s * 0.14, 0.05, 0.08); g.add(foot);
+    const foot = sph(0.09, col, 1.2, 1.1, 1.4); foot.position.set(s * 0.14, 0.1, 0.08); g.add(foot);
   }
   if (c.id === 'maneki') {
     const col2 = shadow(new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.03, 8, 24), mat(0xd7263d))); col2.rotation.x = Math.PI / 2; col2.position.y = 0.86; g.add(col2);

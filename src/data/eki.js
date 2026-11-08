@@ -28,6 +28,13 @@ export const TYPES = [
 export const M_DEST = { jp: '行{い}き先{さき}を えらんで ください。', yue: '請揀目的地。' };
 export const M_COUNT = { jp: '大人{おとな}は 何枚{なんまい}ですか？', yue: '成人買幾張？' };
 export const M_TOTAL = (yen) => ({ jp: `合計{ごうけい}は ${yenJP(yen)}です。 お金{かね}を 入{い}れて ください。`, yue: `總共 ${yen} 円。請投錢。` });
+// N4–N3 / N1：特急券（每位加 LTD_EXTRA 円）
+export const LTD_EXTRA = 500;
+export const M_KIND = { jp: '特急券{とっきゅうけん}は 必要{ひつよう}ですか？', yue: '要唔要特急券？' };
+export const KIND_OPT = {
+  plain: { jp: '乗車券{じょうしゃけん}だけ', yue: '淨係普通車票' },
+  ltd: { jp: '特急券{とっきゅうけん}も お願{ねが}いします', yue: '連特急券，唔該' },
+};
 export const M_TAKE = { jp: 'きっぷを お取{と}りください。', yue: '請取車票。' };
 
 // ===== 問駅員（按等級；{d}=目的地 jp，{dy}=廣東話）=====

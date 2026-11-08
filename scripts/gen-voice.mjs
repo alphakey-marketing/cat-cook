@@ -6,8 +6,8 @@ import { execFileSync } from 'node:child_process';
 import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
-import { K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK } from '../src/data/konbini.js';
-import { DESTS, PLAT, TYPES, M_DEST, M_COUNT, M_TOTAL, M_TAKE, ASK, REPLY, ANN, INCIDENT_ANN, INCIDENTS, CAT_THANKS, STAFF_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from '../src/data/eki.js';
+import { K_BYE, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK } from '../src/data/konbini.js';
+import { DESTS, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, ANN, INCIDENT_ANN, INCIDENTS, CAT_THANKS, STAFF_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from '../src/data/eki.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from '../src/data/hotel.js';
 import { REGULARS, WASABI_REQUESTS, SOY_ASK, RAMEN_REQUESTS } from '../src/data/chapters.js';
 import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES, WISHES, STYLES, PLATE_REACT } from '../src/data/dark.js';
@@ -52,6 +52,7 @@ K_PAY.forEach((p) => custAdd({ lv: 0 }, p.jp));
 [K_PAY_ASK, K_THANKS, K_OTSURI_ASK].forEach((l) => add(l.jp, 'cat'));
 Object.values(RAMEN_REQUESTS).flat().forEach((r) => custAdd({ lv: 0 }, r.jp));
 Object.values(REACT).flat().forEach((l) => custAdd(l));
+K_BYE.forEach((l) => custAdd(l));
 SMALLTALK_LIST.forEach((l) => custAdd(l));
 DETAILS.forEach((l) => custAdd(l));
 TSUIKA.forEach((l) => custAdd(l));
@@ -77,11 +78,11 @@ totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill
 // 車站：駅員 kuma、廣播 usagi、貓 cat（玩家句）
 {
   const sub = (t, d) => t.replace(/\{d\}/g, d.jp).replace(/\{dy\}/g, d.yue).replace(/\{n\}/g, PLAT[d.platform]).replace(/\{p\}/g, d.platform);
-  [M_DEST, M_COUNT, INCIDENT_ANN].forEach((l) => add(l.jp, 'usagi'));
+  [M_DEST, M_COUNT, M_KIND, INCIDENT_ANN].forEach((l) => add(l.jp, 'usagi'));
   add(M_TAKE.jp, 'kuma'); add(STAFF_THANKS.jp, 'kuma'); add(CAT_THANKS.jp, 'cat');
   const fares = new Set();
   for (const d of DESTS) {
-    for (let n = 1; n <= 3; n++) { fares.add(d.fare * n); fares.add(d.fare * (n + 1)); fares.add(d.fare * (n > 1 ? n - 1 : n + 2)); fares.add(d.fare + 10); }
+    for (let n = 1; n <= 3; n++) { fares.add(d.fare * n); fares.add(d.fare * (n + 1)); fares.add(d.fare * (n > 1 ? n - 1 : n + 2)); fares.add(d.fare + 10); const e = d.fare + LTD_EXTRA; fares.add(e * n); fares.add(e * (n + 1)); fares.add(e * (n > 1 ? n - 1 : n + 2)); fares.add(e + 10); }
     ASK.forEach((a) => { add(sub(a.ok.jp, d), 'cat'); a.bad.forEach((b) => add(sub(b.jp, d), 'cat')); });
     REPLY.forEach((r) => add(sub(r.jp, d), 'kuma'));
     for (let lv = 0; lv < 4; lv++) for (const t of TYPES) add(ANN(lv, d.platform, t, d).jp, 'usagi');
@@ -105,11 +106,15 @@ totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill
   for (let fl = 2; fl <= 9; fl++) for (let k = 1; k <= 9; k++) for (let n = 1; n <= 3; n++) {
     const room = fl * 100 + k;
     ROOM_REPLY.forEach((r) => add(r.jp.replace(/\{n\}/g, NIGHTS[n]).replace(/\{f\}/g, floorJP(fl)).replace(/\{r\}/g, roomJP(room)), 'kuma'));
+    ROOM_REPLY.forEach((r) => add(r.jp.replace(/\{n\}/g, NIGHTS[n]).replace(/\{f\}/g, floorJP(fl)).replace(/\{r\}/g, roomJP(room)), 'cat')); // 前台視角：玩家(cat)講
     if (n === 1) add(roomJP(room), 'word');
   }
   REQUESTS.forEach((lvl) => lvl.forEach((q) => { add(q.ok.jp, 'cat'); q.bad.forEach((b) => add(b.jp, 'cat')); add(q.reply.jp, 'kuma'); }));
   add(GUEST_THANKS.jp, 'usagi'); STAFF_RUDE_H.forEach((r) => r && add(r.jp, 'cat'));
   REQUESTS.forEach((lvl) => lvl.forEach((q) => { add(q.ok.jp, 'usagi'); add(q.reply.jp, 'cat'); }));
+  BYE_STAFF.forEach((b) => add(b.jp, 'cat'));
+  CHECKOUT.forEach((c) => add(c.ok.jp, 'usagi'));
+  CHECKIN.forEach((c) => { for (let i = 0; i < 2; i++) add(subp(c.ok.jp, G[i].jp, G[1 - i].jp), 'usagi'); });
   CHECKOUT.forEach((c) => { add(c.ok.jp, 'cat'); c.bad.forEach((b) => add(b.jp, 'cat')); });
 }
 R.people.forEach((p) => add(p.jp, 'word'));
