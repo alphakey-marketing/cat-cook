@@ -804,14 +804,14 @@ async function hotelServe({ index }) {
   const opt = (jp, yue, small) => h('div', { class: 'dish-opt' },
     h('span', { class: 'jp-inline', html: toHTML(jp) }),
     small ? h('small', {}, small) : (showYue && yue ? h('small', {}, yue) : null));
-  const card = (line, voice, caption) => h('div', { class: 'panel-title' },
-    line ? jpLine(line.jp, { yue: line.yue, voice, hidden: listen, autoplay: true }) : null,
+  const card = (line, voice, caption, auto = true) => h('div', { class: 'panel-title' },
+    line ? jpLine(line.jp, { yue: line.yue, voice, hidden: listen, autoplay: auto }) : null,
     caption ? h('div', { class: 'sub' }, caption) : null);
-  const ask = async ({ line = null, voice = 'kuma', options, correct, caption, word, lv }) => {
+  const ask = async ({ line = null, voice = 'kuma', options, correct, caption, word, lv, auto = true }) => {
     let first = true;
     if (word) srsSeen(word);
     for (;;) {
-      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title: card(line, voice, caption) });
+      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title: card(line, voice, caption, auto) });
       if (a.value === correct) {
         if (word) srsAnswer(word, first);
         if (lv != null) trackLv(lv, first);
@@ -856,6 +856,7 @@ async function hotelServe({ index }) {
   await say2('cust', rr);
   const wrongRooms = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9].filter((k) => k !== room % 100)).slice(0, 2).map((k, i) => (i === 0 ? ((floor % 8) + 2) * 100 + k : floor * 100 + k));
   await ask({
+    line: { jp: sub(rr.jp), yue: sub(rr.yue) }, voice: 'kuma', auto: false, // 方便重聽房號
     caption: PICK_ROOM.yue, word: 'hotel_goshitsu', lv: lvA,
     ...(() => {
       const items = [room, ...wrongRooms];
