@@ -1,4 +1,5 @@
 import { art, vocabArt } from './art.js';
+import { PHARMACY_WORD_IDS } from './data/pharmacy.js';
 import { KONBINI_WORD_IDS } from './data/konbini.js';
 import { EKI_WORD_IDS } from './data/eki.js';
 import { HOTEL_WORD_IDS } from './data/hotel.js';
@@ -62,6 +63,7 @@ export function wordProgress() {
     if (c.id === 'konbini') KONBINI_WORD_IDS.forEach((id) => set.add(id));
     if (c.id === 'eki') EKI_WORD_IDS.forEach((id) => set.add(id));
     if (c.id === 'hotel') HOTEL_WORD_IDS.forEach((id) => set.add(id));
+    if (c.id === 'pharmacy') PHARMACY_WORD_IDS.forEach((id) => set.add(id));
     const list = [...set].filter((id) => VOCAB[id]);
     return { id: c.id, name: c.name.split('・')[0], icon: c.icon, total: list.length, learned: list.filter((id) => srs[id] && srs[id].box >= 2).length };
   });

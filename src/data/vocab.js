@@ -2,6 +2,7 @@
 // cat: ing 材料 / verb 動作 / phrase 句子 / num 數字 / dish 菜
 import { NEW_INGREDIENTS, CHAPTER_RECIPES, CHAPTER_WORDS, TEXT_ICON_IDS } from './chapters.js';
 import { KONBINI_WORDS } from './konbini.js';
+import { PHARMACY_WORDS } from './pharmacy.js';
 import { EKI_WORDS } from './eki.js';
 import { HOTEL_WORDS } from './hotel.js';
 import { DARK_INGREDIENTS, DARK_RECIPES, DARK_WORDS } from './dark.js';
@@ -79,7 +80,7 @@ export const VOCAB = {
 
 for (const [id, jp, yue, emoji, s, c] of [...NEW_INGREDIENTS, ...DARK_INGREDIENTS]) VOCAB[id] = { jp, yue, emoji, cat: 'ing', m: { s, c, sc: [0.12, 0.1, 0.12] }, ...(TEXT_ICON_IDS.includes(id) ? { textIcon: true } : {}) };
 for (const r of [...CHAPTER_RECIPES, ...DARK_RECIPES]) VOCAB[r.id] = { jp: r.jp, yue: r.yue, emoji: r.emoji, cat: 'dish', ...(TEXT_ICON_IDS.includes(r.id) ? { textIcon: true } : {}) };
-for (const [id, jp, yue, cat] of [...CHAPTER_WORDS, ...KONBINI_WORDS, ...EKI_WORDS, ...HOTEL_WORDS, ...DARK_WORDS]) VOCAB[id] = { jp, yue, cat, emoji: cat === 'verb' ? '🥄' : cat === 'travel' ? (id.startsWith('hotel_') ? '🏨' : '🚉') : '💬', textIcon: true };
+for (const [id, jp, yue, cat] of [...CHAPTER_WORDS, ...KONBINI_WORDS, ...EKI_WORDS, ...HOTEL_WORDS, ...PHARMACY_WORDS, ...DARK_WORDS]) VOCAB[id] = { jp, yue, cat, emoji: cat === 'verb' ? '🥄' : cat === 'travel' ? (id.startsWith('hotel_') ? '🏨' : '🚉') : '💬', textIcon: true };
 
 export function vocab(id) {
   const v = VOCAB[id];

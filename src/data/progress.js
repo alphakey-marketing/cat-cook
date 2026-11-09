@@ -8,7 +8,7 @@ import { K_BYE, K_STEPS, K_PAY } from './konbini.js';
 
 export const UNIT_DONE_AT = 2;
 export const CHAPTER_DONE_RATIO = 0.9;
-export const TRAVEL_CHAPTERS = ['eki', 'hotel'];
+export const TRAVEL_CHAPTERS = ['eki', 'hotel', 'pharmacy'];
 // 句庫型：隨機抽句，用 SRS 熟練度（box>=2）計學晒
 export const POOLS = {
   // 便利店：道別 + 客人答覆（袋／叮熱／筷子／積分）+ 付款，後兩者當 N5 完整句
@@ -17,7 +17,7 @@ export const POOLS = {
   resto: () => [...SMALLTALK_LIST, ...DETAILS, ...REACT.bye, ...ORDER_TEMPLATES, ...ORDER_NUM_TEMPLATES],
 };
 export const PROGRESS_ROWS = [
-  { id: 'eki', label: '🚉 車站' }, { id: 'hotel', label: '🏨 酒店' },
+  { id: 'eki', label: '🚉 車站' }, { id: 'hotel', label: '🏨 酒店' }, { id: 'pharmacy', label: '💊 藥房' },
   { id: 'konbini', label: '🏪 便利店' }, { id: 'resto', label: '🍱 餐廳' },
 ];
 
@@ -26,6 +26,12 @@ export function unitList(ch, lv) {
   if (ch === 'hotel') {
     const rq = (REQUESTS[lv] || []).map((_, i) => i);
     return ['t:ci', 't:rm', 't:co', ...rq.map((i) => `t:rq${i}`), 's:ci', 's:co', ...rq.map((i) => `s:rq${i}`)];
+  }
+  if (ch === 'pharmacy') {
+    const u = ['sym:atama', 'sym:netsu', 'sym:nodo', 'sym:onaka', 'when', 'bye'];
+    if (lv >= 1) u.push('dose');
+    if (lv >= 2) u.push('allergy');
+    return u;
   }
   if (POOLS[ch]) return POOLS[ch]().filter((x) => (x.lv ?? 0) === lv).map((x) => x.key);
   if (ch === 'eki') {
@@ -42,6 +48,12 @@ export function unitList(ch, lv) {
 export const LEVEL_LEARN = {
   konbini: ['簡單道別：「ありがとう」', '禮貌道別、讚便利', '委婉感謝、深夜營業', '敬語慰勞、長句'],
   resto: ['簡單閒聊同道別', '基本閒聊、口味評語', '實用細節、推介', '敬語、較長嘅閒聊'],
+  pharmacy: [
+    '單句講症狀：頭痛、發燒、喉嚨痛、肚痛，簡單道謝',
+    '「〜ので、薬をください」、聽服藥指示（一日三回）',
+    '詳細描述症狀、答「由幾時開始」、藥物敏感',
+    '委婉求助、長句描述、敬語道謝',
+  ],
   hotel: [
     '單字加「お願いします」：入住、退房、要毛巾、寄行李',
     '完整禮貌句：報名同人數、問早餐時間、Wi-Fi',

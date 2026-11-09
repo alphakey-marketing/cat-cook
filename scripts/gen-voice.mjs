@@ -8,6 +8,7 @@ import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, RESTO_CHAPTERS, restoMenu, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
 import { K_BYE, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, K_BYE_WRONG, K_GREET } from '../src/data/konbini.js';
 import { DESTS, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, ANN, INCIDENT_ANN, INCIDENTS, CAT_THANKS, STAFF_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from '../src/data/eki.js';
+import { PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, SYMPTOMS, TIMES, WHEN_LINES, ALLERGY, DOSES, PH_BYE, PH_BYE_WRONG, PHARMACY_WORDS } from '../src/data/pharmacy.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from '../src/data/hotel.js';
 import { REGULARS, WASABI_REQUESTS, SOY_ASK, RAMEN_REQUESTS } from '../src/data/chapters.js';
 import { DARK_RECIPES, DARK_ORDER_TEMPLATES, DARK_CUST, DARK_REPLY, TELLS, PROBES, EXCUSES, WISHES, STYLES, PLATE_REACT } from '../src/data/dark.js';
@@ -105,6 +106,9 @@ totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill
 // 酒店：職員 kuma、玩家句 cat
 {
   const G = [{ jp: '一人{ひとり}' }, { jp: '二人{ふたり}' }];
+  [PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, ...DOSES].forEach((l) => add(l.jp, 'usagi'));
+  [...SYMPTOMS.flatMap((x) => x.lines), ...PH_BYE, ...PH_BYE_WRONG, ...WHEN_LINES.flatMap((f) => TIMES.map((t) => f(t))), ALLERGY.none.ok, ALLERGY.none.bad, ALLERGY.some.ok, ALLERGY.some.bad].forEach((l) => add(l.jp, 'cat'));
+  PHARMACY_WORDS.forEach((w) => add(w[1], 'word'));
   add(WELCOME.jp, 'kuma'); BYE_STAFF.forEach((b) => add(b.jp, 'kuma'));
   const subp = (t, p, q) => t.replace(/\{p\}/g, p).replace(/\{q\}/g, q);
   CHECKIN.forEach((c) => { for (let i = 0; i < 2; i++) { add(subp(c.ok.jp, G[i].jp, G[1 - i].jp), 'cat'); c.bad.forEach((b) => add(subp(b.jp, G[i].jp, G[1 - i].jp), 'cat')); } });
