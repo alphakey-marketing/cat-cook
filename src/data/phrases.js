@@ -75,12 +75,14 @@ export const ORDER_TEMPLATES = [
   { lv: 2, jp: '{dish}って、 すぐ できますか？', yue: '{dishYue}係咪好快有得食？' },
   { lv: 2, jp: 'メニューを 見{み}て… {dish}に します', yue: '睇完餐牌…我要{dishYue}' },
 ];
+ORDER_TEMPLATES.forEach((t, i) => { t.key = `ord_${i}`; });
 export const ORDER_NUM_TEMPLATES = [
   { lv: 0, jp: '{dish}を {num} ください', yue: '唔該{numYue}{dishYue}' },
   { lv: 0, jp: '{dish}、{num} お願{ねが}いします', yue: '{dishYue}，{numYue}，唔該' },
   { lv: 1, jp: '{dish}を {num} お願{ねが}いできますか？', yue: '可唔可以幫我整{numYue}{dishYue}？' },
   { lv: 2, jp: '{dish}は {num}で お願{ねが}いします', yue: '{dishYue}要{numYue}，唔該' },
 ];
+ORDER_NUM_TEMPLATES.forEach((t, i) => { t.key = `ordn_${i}`; });
 
 // ===== 客人反應 =====
 // 分工：great/ok/meh = 上菜時嘅味道評價（跟星級 3/2/1）；bye = 道別（有 key 嘅會記 SRS，偶爾小測）

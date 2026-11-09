@@ -3,16 +3,18 @@
 import { S, save } from '../save.js';
 import { REQUESTS } from './hotel.js';
 import { INCIDENTS } from './eki.js';
-import { SMALLTALK_LIST, DETAILS, REACT, jpLevel } from './phrases.js';
-import { K_BYE } from './konbini.js';
+import { SMALLTALK_LIST, DETAILS, REACT, ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, jpLevel } from './phrases.js';
+import { K_BYE, K_STEPS, K_PAY } from './konbini.js';
 
 export const UNIT_DONE_AT = 2;
 export const CHAPTER_DONE_RATIO = 0.9;
 export const TRAVEL_CHAPTERS = ['eki', 'hotel'];
 // 句庫型：隨機抽句，用 SRS 熟練度（box>=2）計學晒
 export const POOLS = {
-  konbini: () => K_BYE,
-  resto: () => [...SMALLTALK_LIST, ...DETAILS, ...REACT.bye],
+  // 便利店：道別 + 客人答覆（袋／叮熱／筷子／積分）+ 付款，後兩者當 N5 完整句
+  konbini: () => [...K_BYE, ...Object.values(K_STEPS).flatMap((s) => [s.yes, s.no]).map((x) => ({ key: x.id, lv: 1 })), ...K_PAY.map((x) => ({ key: x.id, lv: 1 }))],
+  // 餐廳：閒聊、細節、道別 + 落單句型
+  resto: () => [...SMALLTALK_LIST, ...DETAILS, ...REACT.bye, ...ORDER_TEMPLATES, ...ORDER_NUM_TEMPLATES],
 };
 export const PROGRESS_ROWS = [
   { id: 'eki', label: '🚉 車站' }, { id: 'hotel', label: '🏨 酒店' },

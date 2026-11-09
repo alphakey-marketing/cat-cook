@@ -217,7 +217,7 @@ export class World {
       izakaya: [0x3b2a1e, 0x6a4128, 0x2a1a10, 0x4a2e1c, 0x2a1d14],
       cafe: [0xd8c9a6, 0xcfe3d2, 0x2f5a46, 0x8a5a36, 0xf3e6c8],
       sushi: [0xd9bf8a, 0xf6efe0, 0x9a7a4a, 0xc99a5a, 0xf3ecdc],
-      ramen: [0x2e2a28, 0xa82a22, 0x2b1a14, 0x5a3a24, 0x2a2522],
+      ramen: [0x6a6560, 0xa82a22, 0x2b1a14, 0x5a3a24, 0x8a7466],
     }[name] || null;
     if (!T) return this.restTheme('home', menu);
     P.floor.material.color.setHex(T[0]); P.wall.material.color.setHex(T[1]);
@@ -393,7 +393,7 @@ export class World {
     const col = { home: [0x6e4429, 0xe0c39a], sushi: [0xb88a52, 0xf0dcb0], ramen: [0x8b1a1a, 0x2b2b2b], izakaya: [0x4a2e1c, 0xb88a52], cafe: [0x2f5a46, 0xe8d5b0], dark: [0x2b2b2b, 0x4a4a4a] }[name];
     this.kCounter.material.color.setHex(col[0]);
     this.kTop.material.color.setHex(col[1]);
-    this.themeBg = { home: 0xf6e3c8, sushi: 0xf3ecdc, ramen: 0x2a2522, izakaya: 0x2a1d14, cafe: 0xf3e6c8, dark: 0x14121a }[name];
+    this.themeBg = { home: 0xf6e3c8, sushi: 0xf3ecdc, ramen: 0x8a7466, izakaya: 0x2a1d14, cafe: 0xf3e6c8, dark: 0x14121a }[name];
     if (this.stage !== 'kon' && this.stage !== 'hotel' && !['eki', 'ekiPf'].includes(this.view)) { this.scene.background.setHex(this.themeBg); this.scene.fog.color.setHex(this.themeBg); }
   }
   catTo(place) {

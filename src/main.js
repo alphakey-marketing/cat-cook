@@ -354,7 +354,7 @@ async function konbiniShopper() {
       if (a.value === correctIdx) {
         sfx('good'); a.button.classList.add('right');
         if (first) right++;
-        if (word) srsAnswer(word, first);
+        if (word) { srsAnswer(word, first); poolCheck('konbini', 1); }
         await say(options[correctIdx].jp, 'word');
         return first;
       }
@@ -506,7 +506,7 @@ async function cashierServe({ index }) {
     for (;;) {
       bubble(world, 'cust', line.jp, line.yue, voice, { hidden: listen });
       const a = await choose(shuffle(labels.map((label, value) => ({ label, value }))), { title: h('div', { class: 'panel-title' }, title) });
-      if (a.value === correct) { srsAnswer(word, first); sfx('good'); clearBubble('cust'); return; }
+      if (a.value === correct) { srsAnswer(word, first); poolCheck('konbini', 1); sfx('good'); clearBubble('cust'); return; }
       if (first) mistakes++;
       first = false; srsAnswer(word, false); sfx('bad'); hint(`佢講：「${line.yue}」— 再聽一次！`, 3000);
     }
@@ -1180,6 +1180,7 @@ async function serveCustomer({ index, tutorial, forceDish, plan }) {
       sfx('good');
       srsAnswer(rec.dish, tries === 0);
       if (withNum) srsAnswer(NM[qty - 1], tries === 0);
+      if (tpl.key && !isDark) { srsSeen(tpl.key); srsAnswer(tpl.key, tries === 0); poolCheck('resto', tpl.lv ?? 0); }
     } else {
       tries++;
       sfx('bad');

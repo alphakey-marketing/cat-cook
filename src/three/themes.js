@@ -65,7 +65,7 @@ export function buildSushi() {
   const noren = flat(3.2, 1.25, norenTex('#1f3a68', '寿司')); noren.position.set(-0.1, 2.65, -1.98); g.add(noren);
   // 價目木牌（牆上一排）
   const names = [['鮪', '二貫'], ['鮭', '二貫'], ['海老', '二貫'], ['玉子', '二貫']];
-  names.forEach((n, i) => { const p = flat(0.5, 0.5 * (64 + 48) / 256 * 1.6, plaqueTex(n)); p.position.set(-1.9 + i * 0.62, 1.9, -2.14); g.add(p); });
+  names.forEach((n, i) => { const p = flat(0.5, 0.5 * (64 + 48) / 256 * 1.6, plaqueTex(n)); p.position.set(-3.05 + i * 0.55, 1.9, -2.14); g.add(p); });
   // 層架：茶壺、酒樽
   const shelf = box(1.6, 0.05, 0.3, 0x6b4226); shelf.position.set(1.7, 1.75, -2.0); g.add(shelf);
   const tea = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 12), mat(0x4a6a52, { roughness: 0.4 })); tea.position.set(1.2, 1.92, -2.0); tea.scale.y = 0.8; g.add(tea);
@@ -96,7 +96,7 @@ export function buildRamen() {
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 10), mat(0x5b5a58, { roughness: 0.9 }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; g.add(floor);
   // 牆：上面黑，下面白磚
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(14, 6), mat(0x2a2522, { roughness: 1 }));
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(14, 6), mat(0x7a6254, { roughness: 1 }));
   wall.position.set(0, 3, -2.2); wall.receiveShadow = true; g.add(wall);
   const tile = canvasTex(256, 256, (x, w, h) => {
     x.fillStyle = '#f2efe8'; x.fillRect(0, 0, w, h);
@@ -112,7 +112,7 @@ export function buildRamen() {
   const noren = flat(3.2, 1.25, norenTex('#b91c1c', '拉麺')); noren.position.set(-0.1, 2.65, -1.98); g.add(noren);
   // 餐牌（牆上木牌）
   const menus = [['醤油', '800'], ['味噌', '850'], ['塩', '800'], ['豚骨', '900']];
-  menus.forEach((n, i) => { const p = flat(0.5, 0.5 * (64 + 48) / 256 * 1.6, plaqueTex(n, '#1a1a1a', '#f5e6a8', 40)); p.position.set(-1.9 + i * 0.62, 2.05, -2.14); g.add(p); });
+  menus.forEach((n, i) => { const p = flat(0.5, 0.5 * (64 + 48) / 256 * 1.6, plaqueTex(n, '#1a1a1a', '#f5e6a8', 40)); p.position.set(-3.05 + i * 0.55, 2.05, -2.14); g.add(p); });
   // 層架：叠起嘅碗
   const shelf = box(1.5, 0.05, 0.3, 0x3a3a3a); shelf.position.set(1.7, 1.85, -2.0); g.add(shelf);
   for (let s = 0; s < 3; s++) for (let i = 0; i < 3; i++) {
