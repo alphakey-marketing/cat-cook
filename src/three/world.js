@@ -183,17 +183,18 @@ export class World {
     this.rest = r;
     this.scene.add(r);
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), mat(0xb9a27a, { roughness: 1 }));
+    this.restParts = { floor, posts: [], tags: [], r };
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; r.add(floor);
     // 疊蓆紋
     for (let i = -4; i < 5; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 10), mat(0x6b5a3a)); l.rotation.x = -Math.PI / 2; l.position.set(i * 0.9, 0.002, 0); r.add(l); }
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), mat(0xefe2c4, { roughness: 1 })); wall.position.set(0, 3, -2.5); r.add(wall);
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), mat(0xefe2c4, { roughness: 1 })); wall.position.set(0, 3, -2.5); r.add(wall); this.restParts.wall = wall;
     // 木格
-    for (let i = -5; i <= 5; i++) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 6, 0.06), mat(0x5b3a1e)); p.position.set(i * 0.9, 3, -2.45); r.add(p); }
+    for (let i = -5; i <= 5; i++) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 6, 0.06), mat(0x5b3a1e)); p.position.set(i * 0.9, 3, -2.45); r.add(p); this.restParts.posts.push(p); }
     // 餐牌（木牌）
     const labels = ['おにぎり', '味噌汁', '親子丼', 'ラーメン', 'ビール'];
     labels.forEach((t, i) => {
       const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.9), new THREE.MeshBasicMaterial({ map: this.tagTexture(t) }));
-      tag.position.set(-1.2 + i * 0.4, 2.6, -2.4); r.add(tag);
+      tag.position.set(-1.2 + i * 0.4, 2.6, -2.4); r.add(tag); this.restParts.tags.push(tag);
     });
     // 燈籠
     for (const x of [-1.8, 1.8]) { const l = makeDeco('deco_lantern'); l.position.set(x, 2.6, -1.8); r.add(l); }
@@ -203,9 +204,30 @@ export class World {
     for (const [x, z] of [[-0.8, -0.15], [0.8, -0.15], [-0.8, 0.75], [0.8, 0.75]]) {
       const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.75, 0.08), mat(0x5b3a1e)); leg.position.set(x, 0.375, z); r.add(leg);
     }
+    this.restParts.table = table;
     this.tableY = 0.79;
     this.tableItems = new THREE.Group(); r.add(this.tableItems);
     this.restCatPos = new THREE.Vector3(-0.95, 0, -0.55);
+  }
+
+  // 餐廳換皮：按章節改顏色同餐牌（menu = 最多 5 個日文菜名）
+  restTheme(name, menu) {
+    const P = this.restParts, T = {
+      home: [0xb9a27a, 0xefe2c4, 0x5b3a1e, 0x7a4a2a, 0xf6e3c8],
+      izakaya: [0x3b2a1e, 0x6a4128, 0x2a1a10, 0x4a2e1c, 0x2a1d14],
+      cafe: [0xd8c9a6, 0xcfe3d2, 0x2f5a46, 0x8a5a36, 0xf3e6c8],
+      sushi: [0xd9bf8a, 0xf6efe0, 0x9a7a4a, 0xc99a5a, 0xf3ecdc],
+      ramen: [0x2e2a28, 0xa82a22, 0x2b1a14, 0x5a3a24, 0x2a2522],
+    }[name] || null;
+    if (!T) return this.restTheme('home', menu);
+    P.floor.material.color.setHex(T[0]); P.wall.material.color.setHex(T[1]);
+    P.posts.forEach((m) => m.material.color.setHex(T[2])); P.table.material.color.setHex(T[3]);
+    this.themeBg = T[4];
+    this.scene.background.setHex(T[4]); this.scene.fog.color.setHex(T[4]);
+    P.tags.forEach((m, i) => {
+      m.visible = i < menu.length;
+      if (m.visible) { m.material.map?.dispose(); m.material.map = this.tagTexture(menu[i]); m.material.needsUpdate = true; }
+    });
   }
 
   // ===== 車站（旅行章節）=====
@@ -239,6 +261,18 @@ export class World {
     m.rotation.y = place === 'pf' ? -1.1 : 0.7;
     m.scale.setScalar(0.01);
     (place === 'pf' ? this.pf : this.eki).add(m);
+    this.customer = m;
+    this.popIn(m);
+    return m;
+  }
+  // 便利店收銀員（玩家做客人時）
+  async konStaffIn(c) {
+    this.customerOut(true);
+    const m = makeCustomer(c);
+    m.position.set(-0.35, 0, -0.6);
+    m.rotation.y = 0.35;
+    m.scale.setScalar(0.01);
+    this.kon.add(m);
     this.customer = m;
     this.popIn(m);
     return m;
@@ -363,7 +397,8 @@ export class World {
     if (this.stage !== 'kon' && this.stage !== 'hotel' && !['eki', 'ekiPf'].includes(this.view)) { this.scene.background.setHex(this.themeBg); this.scene.fog.color.setHex(this.themeBg); }
   }
   catTo(place) {
-    this.stage = place === 'kon' ? 'kon' : place === 'hotel' ? 'hotel' : 'kitchen';
+    this.cat.root.visible = place !== 'konShop'; // 做客人：第一身視角，唔見小黑
+    this.stage = place === 'kon' || place === 'konShop' ? 'kon' : place === 'hotel' ? 'hotel' : 'kitchen';
     this.suitcase.visible = place === 'eki' || place === 'pf';
     if (place === 'eki' || place === 'pf') {
       const g = place === 'eki' ? this.eki : this.pf;
@@ -381,6 +416,12 @@ export class World {
       this.suitcase.visible = true;
       if (!this.suitcase.parent) this.cat.root.add(this.suitcase);
       this.suitcase.position.set(-0.55, 0, 0.1);
+    } else if (place === 'konShop') {
+      // 玩家做客人：企喺收銀枱前面
+      this.kon.add(this.cat.root);
+      this.cat.root.position.set(1.4, 0, 0.5);
+      this.cat.root.rotation.y = -1.1; // 側面向收銀員，見到半邊面
+      this.cat.holding(null);
     } else if (place === 'kon') {
       this.kon.add(this.cat.root);
       this.cat.root.position.set(-0.35, 0, -0.6);

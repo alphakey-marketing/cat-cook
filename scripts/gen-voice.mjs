@@ -5,8 +5,8 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { VOCAB } from '../src/data/vocab.js';
 import { RECIPES, COMING_SOON } from '../src/data/recipes.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
-import { K_BYE, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK } from '../src/data/konbini.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAILS, RESTAURANT, RESTO_CHAPTERS, restoMenu, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, HI_VOICES, allRestaurantLines } from '../src/data/dialogue.js';
+import { K_BYE, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, K_BYE_WRONG, K_GREET } from '../src/data/konbini.js';
 import { DESTS, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, ANN, INCIDENT_ANN, INCIDENTS, CAT_THANKS, STAFF_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from '../src/data/eki.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from '../src/data/hotel.js';
 import { REGULARS, WASABI_REQUESTS, SOY_ASK, RAMEN_REQUESTS } from '../src/data/chapters.js';
@@ -53,6 +53,11 @@ K_PAY.forEach((p) => custAdd({ lv: 0 }, p.jp));
 Object.values(RAMEN_REQUESTS).flat().forEach((r) => custAdd({ lv: 0 }, r.jp));
 Object.values(REACT).flat().forEach((l) => custAdd(l));
 K_BYE.forEach((l) => custAdd(l));
+// 便利店做客人：玩家句（word 聲）、收銀員招呼
+add(K_GREET.jp, 'cat');
+[...K_BYE, ...K_BYE_WRONG].forEach((l) => add(l.jp, 'word'));
+Object.values(K_STEPS).forEach((st) => { add(st.yes.jp, 'word'); add(st.no.jp, 'word'); });
+K_PAY.forEach((p) => add(p.jp, 'word'));
 SMALLTALK_LIST.forEach((l) => custAdd(l));
 DETAILS.forEach((l) => custAdd(l));
 TSUIKA.forEach((l) => custAdd(l));
@@ -131,6 +136,20 @@ for (const n of NUMS) {
   R.drinks.forEach((d) => add(fill(R.you.drink, { drink: d, num: n }).jp, 'word'));
 }
 Object.entries(R.you).forEach(([k, l]) => { if (k !== 'order' && k !== 'drink') add(l.jp, 'word'); });
+// 各章節做客人：菜單句、價錢、推介
+for (const ch of Object.keys(RESTO_CHAPTERS)) {
+  if (ch === 'home') continue;
+  const M = restoMenu(ch);
+  for (const n of NUMS) {
+    M.foods.forEach((f) => add(fill(M.you.order, { food: f, num: n }).jp, 'word'));
+    M.drinks.forEach((d) => add(fill(M.you.drink, { drink: d, num: n }).jp, 'word'));
+  }
+  M.foods.forEach((f) => add(`本日{ほんじつ}の おすすめは ${VOCAB[f].jp}です`, 'cat'));
+  for (const f of M.foods) for (const d of M.drinks) for (const p of M.people) {
+    const t = (M.prices[f] + M.prices[d]) * p.n;
+    add(fill(M.staff.pay, { price: t }).jp, 'cat'); add(fill(M.staff.pay2, { price: t }).jp, 'cat');
+  }
+}
 add(R.name.jp, 'cat');
 // 餐廳額外環節：店員 cat、你講嘅 word
 const rl = allRestaurantLines();

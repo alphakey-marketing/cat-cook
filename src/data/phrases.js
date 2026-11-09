@@ -3,6 +3,7 @@
 // hi: true = 用共用客人聲線（HI_VOICES），慳音檔；lv >= 1 自動當 hi
 import { S, save, today } from '../save.js';
 import { hash } from '../jp.js';
+import { RECIPES } from './recipes.js';
 
 export const LEVELS = [
   { id: 0, icon: '🌱', name: '零基礎', desc: '假名都未識', learn: '單字加「ください」，由最簡單開始' },
@@ -365,7 +366,7 @@ export const BEATS = [
     task: () => '唔知食咩，想問推介', build: (c) => ({
       staff: null, prompt: '（唔知食咩，想問店員推介）', title: '🤔 想問推介，點講？',
       options: [{ jp: 'おすすめは 何{なん}ですか？', yue: '有咩推介？' }, { jp: 'お会計{かいけい}は いくらですか？', yue: '幾多錢？' }, { jp: 'ごちそうさまでした', yue: '多謝款待' }],
-      reply: { jp: `本日{ほんじつ}の おすすめは ${recJp(c.food)}です`, yue: `今日推介${recYue(c.food)}` } }) },
+      reply: { jp: `本日{ほんじつ}の おすすめは ${recJp(c)}です`, yue: `今日推介${recYue(c)}` } }) },
   { id: 'chopsticks1', lv: 1, phase: 'mid',
     task: () => '冇筷子，想叫店員攞', build: () => ({
       staff: null, prompt: '（發現冇筷子）', title: '🥢 冇筷子，點講？',
@@ -446,8 +447,8 @@ export const BEATS = [
         { jp: 'お箸{はし}を ください', yue: '唔該畀對筷子（唔對題）' }] }) },
 ];
 const REC_NAME = { onigiri: ['おにぎり', '飯糰'], misoshiru: ['味噌汁{みそしる}', '麵豉湯'], oyakodon: ['親子丼{おやこどん}', '親子丼'], ramen: ['ラーメン', '拉麵'] };
-function recJp(f) { return REC_NAME[f][0]; }
-function recYue(f) { return REC_NAME[f][1]; }
+function recJp(c) { return c.foodJp ?? REC_NAME[c.food][0]; }
+function recYue(c) { return c.foodYue ?? REC_NAME[c.food][1]; }
 
 // 抽 n 個環節：本級 weight 3，其他較低級 weight 1；每個 phase 最多一個
 export function drawBeats(c, n) {
@@ -485,4 +486,22 @@ export function allRestaurantLines() {
     }
   }
   return { staff: [...staff], you: [...you] };
+}
+
+// 做客人嘅餐廳：按章節換背景、餐牌同菜單
+export const RESTO_CHAPTERS = {
+  home: { name: '定食屋', icon: '🍱' },
+  izakaya: { name: '居酒屋', icon: '🏮', drinks: ['biiru', 'ocha', 'omizu'] },
+  cafe: { name: '喫茶店', icon: '☕', foods: ['pudding', 'thick_toast', 'pancakes'], drinks: ['instant_coffee', 'black_tea', 'matcha_latte'] },
+  sushi: { name: '壽司店', icon: '🍣', drinks: ['ocha', 'omizu'] },
+  ramen: { name: '拉麵店', icon: '🍜', drinks: ['ocha', 'omizu', 'biiru'], negi: true },
+};
+export function restoMenu(chId) {
+  const t = RESTO_CHAPTERS[chId];
+  if (!t || chId === 'home') return { ...RESTAURANT, theme: 'home' };
+  const price = { ...RESTAURANT.prices };
+  const dishes = RECIPES.filter((r) => r.chapter === chId);
+  dishes.forEach((r) => { price[r.dish] = r.price; });
+  const foods = t.foods || dishes.map((r) => r.dish);
+  return { ...RESTAURANT, theme: chId, foods, drinks: t.drinks, prices: price, hasNegi: t.negi ? foods : [] };
 }

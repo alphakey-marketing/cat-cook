@@ -63,6 +63,14 @@ export const K_BYE = [
   { key: 'kb_osewa3', lv: 3, jp: 'いつも 遅{おそ}くまで お疲{つか}れ様{さま}です。 助{たす}かります', yue: '成日做到咁夜，辛苦晒，幫到手' },
   { key: 'kb_mata3', lv: 3, jp: 'いつも 便利{べんり}に 使{つか}わせて もらってます。 また 来{き}ますね', yue: '成日用得好方便，下次再嚟' },
 ];
+// 玩家做客人時，收銀員嘅句
+export const K_CHANGE = (yenText) => ({ jp: `${yenText}の お返{かえ}しです。`, yue: '找返錢畀你' });
+// 離開前揀句：錯嘅選項（店員先會講／食飯先講）
+export const K_BYE_WRONG = [
+  { key: 'kbw_irasshai', jp: 'いらっしゃいませ！', yue: '歡迎光臨（店員先講）' },
+  { key: 'kbw_itadaki', jp: 'いただきます！', yue: '開動（食飯前講）' },
+  { key: 'kbw_gochi', jp: 'ごちそうさまでした', yue: '多謝款待（食完飯講）' },
+];
 export const K_TOTAL = (yenText) => ({ jp: `合計{ごうけい}は ${yenText}です。`, yue: '總共係呢個價錢。' });
 export const K_OTSURI_ASK = { jp: 'おつりを お返{かえ}しします。', yue: '搵返錢畀你。' };
 

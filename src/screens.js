@@ -269,6 +269,7 @@ export function openSettings(world) {
     row('背景音樂', 'bgm', ''),
     row('音效', 'sfx', ''),
     row('畫面震動', 'shake', '切菜、答錯、升級時鏡頭輕震'),
+    h('button', { class: 'btn', onclick: () => { save(); location.reload(); } }, '🏠 回到大堂（今次未完嘅單唔計）'),
     h('p', { class: 'credits' }, `🎙️ 語音：${credits}`),
     h('button', { class: 'btn danger', onclick: () => { if (confirm('真係要清除全部進度？')) { reset(); location.reload(); } } }, '清除進度'),
   );

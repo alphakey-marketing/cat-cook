@@ -11,11 +11,11 @@ import { CHAPTERS, REGULARS, WASABI_REQUESTS, SOY_ASK, SOY_OPTIONS, RAMEN_REQUES
 import { dressDarkDish, darkReport, revealDarkDish, interrogate, settleDark, pickPersona, introPersona, darkShiftIntro, bankOrGamble, bankAtEnd, raid, darkStars, renderDarkbar, hideDarkbar } from './dark.js';
 import { DARK_ORDER_TEMPLATES } from './data/dark.js';
 import { DARK, resetDark } from './darkstate.js';
-import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS, drawLv } from './data/dialogue.js';
+import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, RESTO_CHAPTERS, restoMenu, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS, drawLv } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
 import { levelNudge, checkPoolDone, markUnit, chapterNudge, dismissChapterNudge, LEVEL_LEARN, unitProgress, TRAVEL_CHAPTERS } from './data/progress.js';
-import { K_BYE, GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
+import { K_CHANGE, K_BYE_WRONG, K_GREET, K_BYE, GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
 import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
 import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, KIND_OPT, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, PICK_ROOM, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from './data/hotel.js';
@@ -201,8 +201,10 @@ function hub() {
   refreshMenu();
   const chapter = CHAPTERS.find(c => c.id === S().chapter) || CHAPTERS[0];
   const actions = h('div', { class: 'hub-btns' },
-    h('button', { class: 'btn primary big', 'data-action': 'open-shift', onclick: () => { sfx('tap'); shift({}); } }, chapter.id === 'hotel' ? '🛎️ 入住酒店' : chapter.id === 'eki' ? '🎫 出發旅行' : '🏮 開舖'),
-    h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🍱 去日本餐廳' : '🔒 日本餐廳'),
+    h('button', { class: 'btn primary big', 'data-action': 'open-shift', onclick: () => { sfx('tap'); shift(chapter.id === 'hotel' || chapter.id === 'eki' ? { role: 'guest' } : {}); } }, chapter.id === 'konbini' ? '🏪 開舖（做收銀）' : chapter.id === 'hotel' ? '🛎️ 入住酒店（做旅客）' : chapter.id === 'eki' ? '🎫 出發旅行（做旅客）' : RESTO_CHAPTERS[chapter.id] ? '🏮 開舖（做老闆）' : '🏮 開舖'),
+    chapter.id === 'hotel' || chapter.id === 'eki' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) shift({ role: 'staff' }); else toast('完成第一位客人就解鎖！'); } }, canRest ? (chapter.id === 'hotel' ? '🛎️ 上班（做前台）' : '🚉 上班（做站務員）') : '🔒 上班') : null,
+    chapter.id === 'konbini' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) konbiniShopper(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🛒 去買嘢（做客人）' : '🔒 去買嘢') : null,
+    RESTO_CHAPTERS[chapter.id] ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(chapter.id); else toast('完成第一位客人就解鎖！'); } }, canRest ? `${RESTO_CHAPTERS[chapter.id].icon} 去${RESTO_CHAPTERS[chapter.id].name}（做客人）` : `🔒 ${RESTO_CHAPTERS[chapter.id].name}`) : null,
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店'));
   panel(h('div', { class: 'hub-info' },
@@ -220,7 +222,7 @@ function hub() {
 }
 
 // ===== 一更（幾位客人）=====
-async function shift({ tutorial = false } = {}) {
+async function shift({ tutorial = false, role = null } = {}) {
   busy = true;
   resetUsed();
   world.setTheme(S().chapter);
@@ -234,7 +236,7 @@ async function shift({ tutorial = false } = {}) {
   for (let i = 0; i < n; i++) {
     $('#shiftinfo').textContent = ['eki', 'hotel'].includes(S().chapter) ? `旅程 ${i + 1} / ${n}` : `客人 ${i + 1} / ${n}`;
     $('#shiftinfo').classList.add('show');
-    const res = S().chapter === 'eki' && !tutorial ? await (i === 1 ? ekiStaffServe({ index: i }) : ekiServe({ index: i })) : S().chapter === 'hotel' && !tutorial ? await (i === 1 ? hotelStaffServe({ index: i }) : hotelServe({ index: i })) : S().chapter === 'konbini' && !tutorial ? await cashierServe({ index: i }) : await serveCustomer({ index: i, tutorial, forceDish, plan });
+    const res = S().chapter === 'eki' && !tutorial ? await ((role ? role === 'staff' : i === 1) ? ekiStaffServe({ index: i }) : ekiServe({ index: i })) : S().chapter === 'hotel' && !tutorial ? await ((role ? role === 'staff' : i === 1) ? hotelStaffServe({ index: i }) : hotelServe({ index: i })) : S().chapter === 'konbini' && !tutorial ? await cashierServe({ index: i }) : await serveCustomer({ index: i, tutorial, forceDish, plan });
     if (res.cancelled) { await wait(700); continue; }   // 取消：唔計服務、保留 forceDish
     forceDish = null;
     stat.served++;
@@ -314,6 +316,146 @@ function izakayaPlan(n) {
   const ch = shuffle([...shuffle(['add', 'less', 'swap']).slice(0, 2), 'cancel']);
   const so = shuffle(['replace', 'decline']);
   return Array.from({ length: n }, (_, i) => (i % 2 === 0 ? ch[i / 2] : so[(i - 1) / 2]));
+}
+
+// ===== 便利店：玩家做客人 =====
+async function konbiniShopper() {
+  busy = true;
+  resetUsed();
+  hidePanel();
+  clearBubble();
+  const staff = pickCustomer(0, false);
+  const items = shuffle(GOODS).slice(0, 2 + Math.floor(Math.random() * 2));
+  const total = items.reduce((a, g) => a + g.price, 0);
+  const kinds = ['bag'];
+  if (items.some((g) => g.heat)) kinds.push('heat');
+  if (items.some((g) => g.cutlery)) kinds.push('cutlery'); else if (Math.random() < 0.5) kinds.push('point');
+  const want = {};
+  kinds.forEach((k) => { want[k] = Math.random() < 0.5; });
+  const pay = pick(K_PAY);
+  let right = 0, qs = 0;
+  const hideTxt = S().settings.subs === 'tap';
+
+  const taskLines = [`買：${items.map((g) => g.yue).join('、')}`, ...kinds.map((k) => (want[k] ? K_STEPS[k].yes : K_STEPS[k].no).label), `付款：${pay.label}`];
+  await fade(() => { world.catTo('konShop'); world.setView('kon', true); });
+  mission(taskLines.slice(0, 2).join('　'), taskLines.join('\n'));
+  await world.konStaffIn(staff);
+  sfx('door');
+  hint('今次你做客人！買齊嘢，聽清楚收銀員問咩 🛒', 3500);
+  await bubble(world, 'cust', K_GREET.jp, K_GREET.yue, 'cat');
+  clearBubble('cust');
+
+  // 一條多項選擇：錯咗再揀
+  const ask = async (title, options, correctIdx, word = null) => {
+    qs++;
+    let first = true;
+    for (;;) {
+      const a = await choose(shuffle(options.map((o, i) => ({ value: i, el: jpLine(o.jp, { yue: o.yue, voice: 'word' }) }))), { title: h('div', { class: 'panel-title' }, title) });
+      if (a.value === correctIdx) {
+        sfx('good'); a.button.classList.add('right');
+        if (first) right++;
+        if (word) srsAnswer(word, first);
+        await say(options[correctIdx].jp, 'word');
+        return first;
+      }
+      sfx('bad'); a.button.classList.add('wrong'); first = false;
+      if (word) srsAnswer(word, false);
+      hint(`「${options[a.value].yue}」唔啱，再試吓！`, 2800);
+      await wait(700);
+    }
+  };
+  const moneyOpts = (vals) => shuffle(vals).map((v) => ({ value: v, el: h('div', { class: 'dish-opt' }, h('span', { class: 'jp-inline', html: toHTML(yenJP(v)) }), h('small', {}, `${v} 円`)) }));
+
+  // 1. 睇日文揀貨
+  qs++;
+  await new Promise((resolve) => {
+    const picked = new Set();
+    let firstTry = true;
+    const pool = shuffle([...items, ...shuffle(GOODS.filter((g) => !items.includes(g))).slice(0, 3)]);
+    const btns = pool.map((g) => h('button', {
+      class: 'choice scan-item', type: 'button',
+      onclick: (e) => {
+        say(g.jp, 'word');
+        if (picked.has(g.id)) return;
+        if (!items.includes(g)) { sfx('bad'); firstTry = false; e.currentTarget.classList.add('wrong'); hint(`「${g.yue}」唔係要買嘅`, 2000); return; }
+        picked.add(g.id); sfx('coin'); e.currentTarget.classList.add('right');
+        if (picked.size === items.length) { if (firstTry) right++; setTimeout(resolve, 500); }
+      },
+    }, h('span', { class: 'emo' }, art(g.art, g.yue)), h('span', { class: 'jp-inline', html: toHTML(g.jp) }), h('small', {}, '點一下聽發音')));
+    panel(h('div', { class: 'panel-title' }, `🛒 睇日文揀貨：${items.map((g) => g.yue).join('、')}`), h('div', { class: 'choices cols2' }, btns));
+  });
+  hidePanel();
+
+  // 2. 聽總數
+  const totLine = `合計{ごうけい}は ${yenJP(total)}です。`;
+  await bubble(world, 'cust', totLine, '（聽吓幾錢？）', 'cat', { hidden: true });
+  qs++;
+  const fakes = shuffle([total + 100, Math.max(10, total - 50), total + 30, total - 100].filter((x) => x > 0 && x !== total)).slice(0, 2);
+  let firstP = true;
+  for (;;) {
+    const a = await choose(moneyOpts([total, ...fakes]), { title: h('div', { class: 'panel-title' }, '💴 總共幾錢？（撳泡泡可以重聽）') });
+    if (a.value === total) { sfx('coin'); a.button.classList.add('right'); if (firstP) right++; break; }
+    sfx('bad'); a.button.classList.add('wrong'); firstP = false; say(totLine, 'cat'); await wait(700);
+  }
+  clearBubble('cust');
+
+  // 3. 收銀員問，你按任務答
+  for (const k of kinds) {
+    const st = K_STEPS[k];
+    srsSeen((want[k] ? st.yes : st.no).id);
+    await bubble(world, 'cust', st.ask.jp, st.ask.yue, 'cat', { hidden: hideTxt });
+    clearBubble('cust');
+    await ask(`🗣️ ${st.title.replace('客人要唔要', '你要唔要')}`, [st.yes, st.no], want[k] ? 0 : 1, (want[k] ? st.yes : st.no).id);
+  }
+
+  // 4. 付款
+  srsSeen(pay.id);
+  await bubble(world, 'cust', K_PAY_ASK.jp, K_PAY_ASK.yue, 'cat', { hidden: hideTxt });
+  clearBubble('cust');
+  await ask('💳 點樣付款？', K_PAY, K_PAY.indexOf(pay), pay.id);
+  if (pay.id === 'k_genkin') {
+    const tender = total < 1000 ? 1000 : total < 2000 ? 2000 : 5000;
+    const change = tender - total;
+    const cl = K_CHANGE(yenJP(change));
+    await bubble(world, 'cust', cl.jp, '（聽吓找返幾錢？）', 'cat', { hidden: true });
+    qs++;
+    const wrongs = shuffle([change + 100, change + 10, change > 100 ? change - 100 : change + 200, change + 50].filter((v) => v > 0 && v !== change)).slice(0, 2);
+    let firstC = true;
+    for (;;) {
+      const a = await choose(moneyOpts([change, ...wrongs]), { title: h('div', { class: 'panel-title' }, `💴 你畀咗 ${tender} 円，總共 ${total} 円，找返幾多？`) });
+      if (a.value === change) { sfx('perfect'); a.button.classList.add('right'); if (firstC) right++; break; }
+      sfx('bad'); a.button.classList.add('wrong'); firstC = false; say(cl.jp, 'cat'); await wait(700);
+    }
+    clearBubble('cust');
+  }
+  await bubble(world, 'cust', K_THANKS.jp, K_THANKS.yue, 'cat');
+  clearBubble('cust');
+
+  // 5. 離開前講咩
+  const bye = pickByLevel(K_BYE);
+  srsSeen(bye.key);
+  const okFirst = await ask('👋 離開前講咩？', [bye, ...shuffle(K_BYE_WRONG).slice(0, 2)], 0, bye.key);
+  poolCheck('konbini', bye.lv ?? 0);
+  trackLv(bye.lv ?? 0, okFirst);
+
+  const score = qs ? right / qs : 1;
+  const coins = 30 + Math.round(score * 60);
+  const xp = 15 + Math.round(score * 15);
+  S().coins += coins;
+  const ups = addXP(xp);
+  save(); renderHUD(); sfx('level');
+  await next('返廚房 🏠',
+    h('div', { class: 'unlock' },
+      h('div', { class: 'big-emo spin' }, score === 1 ? '💮' : score > 0.7 ? '⭕' : '🔺'),
+      h('div', { class: 'panel-title' }, `買嘢成功！一次答啱 ${right} / ${qs}`),
+      h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`)));
+  coinFly(coins);
+  clearBubble();
+  $('#taskbar').classList.remove('show');
+  world.customerOut(true);
+  await fade(() => { world.catTo('kitchen'); world.setView('kitchen', true); });
+  if (ups) await levelUp();
+  hub();
 }
 
 // ===== 便利店：玩家做收銀員 =====
@@ -1352,12 +1494,12 @@ function milestones() {
 }
 
 // ===== 日本餐廳（你做客人）=====
-async function restaurant() {
+async function restaurant(chId = 'home') {
   busy = true;
   resetUsed();
   hidePanel();
   clearBubble();
-  const R = RESTAURANT;
+  const R = restoMenu(chId);
   const ppl = pick(R.people);
   const food = pick(R.foods);
   const drink = pick(R.drinks);
@@ -1365,10 +1507,11 @@ async function restaurant() {
   const total = (R.prices[food] + R.prices[drink]) * ppl.n;
   let right = 0, qs = 0;
   // 額外對答環節：程度越高越多（1/2/3 個）
-  const ctx = { ppl, food, drink, num, f: {} };
+  const ctx = { ppl, food, drink, num, f: {}, foodJp: R.theme === 'home' ? undefined : vocab(food).jp, foodYue: R.theme === 'home' ? undefined : vocab(food).yue.replace(/（.*?）/g, '') };
   const beats = drawBeats(ctx, BEAT_COUNT[jpLevel()]);
 
-  await fade(() => { world.catTo('rest'); world.setView('rest', true); });
+  const menuTags = [...R.foods, ...R.drinks.filter((d) => R.prices[d] > 0)].slice(0, 5).map((id) => vocab(id).jp.replace(/\{.*?\}/g, '').slice(0, 7));
+  await fade(() => { world.catTo('rest'); world.setView('rest', true); world.restTheme(R.theme, menuTags); });
   const taskDetails = `你哋 ${ppl.n} 個人，每人想食 ${vocab(food).yue.replace(/（.*?）/g, '')}，飲 ${vocab(drink).yue.replace(/（.*?）/g, '')}${beats.map((b) => b.task(ctx)).filter(Boolean).map((t) => `；${t}`).join('')}`;
   mission(`${ppl.n} 位 · ${vocab(food).yue.replace(/（.*?）/g, '')} · ${vocab(drink).yue.replace(/（.*?）/g, '')}`, taskDetails);
   hint('今次你做客人！小黑做店員 🐈‍⬛', 3000);
