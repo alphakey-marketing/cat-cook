@@ -18,7 +18,7 @@ import { levelNudge, checkPoolDone, markUnit, chapterNudge, dismissChapterNudge,
 import { K_CHANGE, K_BYE_WRONG, K_GREET, K_BYE, GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
 import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
 import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, KIND_OPT, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
-import { PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, SYMPTOMS, TIMES, WHEN_LINES, ALLERGY, DOSES, PH_BYE, PH_BYE_WRONG } from './data/pharmacy.js';
+import { PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, SYMPTOMS, TIMES, WHEN_LINES, ALLERGY, DOSES, PH_BYE, PH_BYE_WRONG, PH_EXTRA } from './data/pharmacy.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, PICK_ROOM, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from './data/hotel.js';
 import { isUnlocked, recipeCard, openBook, openShop, openSettings, shiftSummary, apply } from './screens.js';
 import { hash, toHTML } from './jp.js';
@@ -1211,6 +1211,24 @@ async function pharmacyServe({ index }) {
       options: idx.map((i) => ({ el: opt(null, items[i].yue), why: i === 0 ? '' : '唔啱，再聽一次（撳句子可重聽）' })),
       correct: idx.indexOf(0),
     });
+  }
+
+  // 5b. 每級獨有一題
+  const ex = PH_EXTRA[lvA];
+  if (ex) {
+    await say2('cust', ex.ask);
+    if (ex.ok) {
+      await ask({ line: ex.ask, caption: `🗣️ ${ex.task}`, word: ex.word, unit: ex.unit, ...mix([ex.ok, ...ex.bad]) });
+      await say2('cat', ex.ok);
+    } else {
+      const items = [ex.answer, ...ex.wrong];
+      const idx = shuffle(items.map((_, i) => i));
+      await ask({
+        line: ex.ask, caption: ex.task, word: ex.word, unit: ex.unit,
+        options: idx.map((i) => ({ el: opt(null, items[i]), why: i === 0 ? '' : '唔啱，再聽一次（撳句子可重聽）' })),
+        correct: idx.indexOf(0),
+      });
+    }
   }
 
   // 6. 道別

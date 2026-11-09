@@ -31,7 +31,8 @@ export function unitList(ch, lv) {
     const u = ['sym:atama', 'sym:netsu', 'sym:nodo', 'sym:onaka', 'when', 'bye'];
     if (lv >= 1) u.push('dose');
     if (lv >= 2) u.push('allergy');
-    return u;
+    u.push({ 1: 'buy', 2: 'drive', 3: 'receipt' }[lv] || null);
+    return u.filter(Boolean);
   }
   if (POOLS[ch]) return POOLS[ch]().filter((x) => (x.lv ?? 0) === lv).map((x) => x.key);
   if (ch === 'eki') {
@@ -50,9 +51,9 @@ export const LEVEL_LEARN = {
   resto: ['簡單閒聊同道別', '基本閒聊、口味評語', '實用細節、推介', '敬語、較長嘅閒聊'],
   pharmacy: [
     '單句講症狀：頭痛、發燒、喉嚨痛、肚痛，簡單道謝',
-    '「〜ので、薬をください」、聽服藥指示（一日三回）',
-    '詳細描述症狀、答「由幾時開始」、藥物敏感',
-    '委婉求助、長句描述、敬語道謝',
+    '「〜ので、薬をください」、聽服藥指示（一日三回）、確認要呢隻藥',
+    '詳細描述症狀、答「由幾時開始」、藥物敏感、聽「食咗會眼瞓」嘅注意事項',
+    '委婉求助、長句描述、敬語道謝、有禮貌咁要收據',
   ],
   hotel: [
     '單字加「お願いします」：入住、退房、要毛巾、寄行李',
