@@ -14,10 +14,11 @@ import { DARK, resetDark } from './darkstate.js';
 import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, RESTAURANT, pickByLevel, lineVoice, pickSmalltalk, pickDetail, resetUsed, trackLv, RESTO_CHAPTERS, restoMenu, SOLDOUT, REPLACE, TSUIKA, HERASU, KAERU, KYANSERU, YAMERU, FINISH_STEPS, drawBeats, BEAT_COUNT, jpLevel, LEVELS, drawLv } from './data/dialogue.js';
 import { CUSTOMERS } from './data/shop.js';
 import { MINIGAMES } from './minigames.js';
-import { levelNudge, checkPoolDone, markUnit, chapterNudge, dismissChapterNudge, LEVEL_LEARN, unitProgress, TRAVEL_CHAPTERS } from './data/progress.js';
+import { levelNudge, checkPoolDone, markUnit, chapterNudge, dismissChapterNudge, LEVEL_LEARN, unitProgress, TRAVEL_CHAPTERS, UNIT_DONE_AT } from './data/progress.js';
 import { K_CHANGE, K_BYE_WRONG, K_GREET, K_BYE, GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
 import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
 import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, KIND_OPT, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
+import { DRAMA, REL, TOPIC } from './data/drama.js';
 import { ST_SORRY, ST_GREET, ST_BYE_STAFF, ST_BYE, ST_BYE_WRONG, DESTS as ST_DESTS, askLine, reply0, reply1, reply2, reply3, GUIDE } from './data/street.js';
 import { PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, SYMPTOMS, TIMES, WHEN_LINES, ALLERGY, DOSES, PH_BYE, PH_BYE_WRONG, PH_EXTRA } from './data/pharmacy.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, PICK_ROOM, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from './data/hotel.js';
@@ -211,6 +212,7 @@ function hub() {
     chapter.id === 'hotel' || chapter.id === 'eki' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) shift({ role: 'staff' }); else toast('完成第一位客人就解鎖！'); } }, canRest ? (chapter.id === 'hotel' ? '🛎️ 上班（做前台）' : '🚉 上班（做站務員）') : '🔒 上班') : null,
     chapter.id === 'konbini' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) konbiniShopper(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🛒 去買嘢（做客人）' : '🔒 去買嘢') : null,
     RESTO_CHAPTERS[chapter.id] ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(chapter.id); else toast('完成第一位客人就解鎖！'); } }, canRest ? `${RESTO_CHAPTERS[chapter.id].icon} 去${RESTO_CHAPTERS[chapter.id].name}（做客人）` : `🔒 ${RESTO_CHAPTERS[chapter.id].name}`) : null,
+    h('button', { class: 'btn big', onclick: () => { sfx('tap'); dramaMenu(); } }, '🎭 對話劇場（學口語）'),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店'));
   panel(h('div', { class: 'hub-info' },
@@ -592,7 +594,7 @@ function markU(ch, lv, unit, first) {
 function poolCheck(ch, lv) { if (checkPoolDone(ch, lv)) levelDoneReward(ch, lv); }
 function levelDoneReward(ch, lv) {
   S().coins += 100; save(); renderHUD(); sfx('level');
-  const cn = { konbini: '便利店', resto: '餐廳' }[ch] || (CHAPTERS.find((c) => c.id === ch) || {}).name || ch;
+  const cn = { konbini: '便利店', resto: '餐廳', drama: '對話劇場' }[ch] || (CHAPTERS.find((c) => c.id === ch) || {}).name || ch;
   toast(`✅ ${cn.split('・')[0]} ${LEVELS[lv].name} 學晒！獎勵 🪙100`);
 }
 
@@ -1122,6 +1124,113 @@ async function hotelServe({ index }) {
 
 // ===== 藥房：病人問診 → 症狀 → 幾時開始 → 敏感 → 服藥指示 → 道別 =====
 // ===== 街上問路：問路 → 聽指示 →（N1：接受帶路）→ 道別 =====
+// ===== 對話劇場：選場景 → 逐句對話 → 語言點小卡 =====
+function dramaMenu() {
+  busy = true;
+  clearBubble();
+  world.catTo('street');
+  world.setView('street');
+  world.catFace('front');
+  const lvCls = (lv) => ['0 零基礎', 'N5', 'N4–N3', 'N1'][lv];
+  const rows = DRAMA.map((sc) => {
+    const done = (S().unitStat || {})[`drama:${sc.lv}:${sc.id}`] || 0;
+    return h('button', { class: 'btn big', onclick: () => { sfx('tap'); dramaPlay(sc); } },
+      `${sc.icon} ${sc.name}`,
+      h('small', { style: 'display:block;opacity:.75' }, `${lvCls(sc.lv)} · ${REL[sc.rel]} · ${TOPIC[sc.topic]}${done >= UNIT_DONE_AT ? ' · ✅' : ''}`));
+  });
+  panel(
+    h('div', { class: 'panel-title' }, '🎭 對話劇場'),
+    h('div', { class: 'sub' }, '同朋友傾偈，學真實日本人會講嘅口語。揀一個場景。'),
+    h('div', { class: 'hub-btns' }, ...rows),
+    h('button', { class: 'btn', onclick: () => { sfx('tap'); hub(); } }, '⬅️ 返大堂'),
+  ).classList.add('hub-panel');
+}
+
+async function dramaPlay(sc) {
+  busy = true;
+  const s = S();
+  const listen = s.settings.subs === 'tap';
+  const showYue = s.settings.yue !== false;
+  const friendLook = { id: 'usagi', color: 0xfaf6f0, ear: 'long' };
+  let mistakes = 0;
+  const opt = (jp, yue) => h('div', { class: 'dish-opt' },
+    jp ? h('span', { class: 'jp-inline', html: toHTML(jp) }) : null,
+    showYue && yue ? h('small', {}, yue) : (!jp && yue ? h('small', {}, yue) : null),
+    jp ? spkOpt(jp, 'cat') : null);
+  const card = (line, caption) => h('div', { class: 'panel-title' },
+    line ? jpLine(line.jp, { yue: line.yue, voice: 'usagi', hidden: listen, autoplay: true }) : null,
+    caption ? h('div', { class: 'sub' }, caption) : null);
+  const ask = async ({ line = null, options, correct, caption }) => {
+    let first = true;
+    for (;;) {
+      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title: card(line, caption) });
+      if (a.value === correct) { trackLv(sc.lv, first); sfx('good'); return; }
+      if (first) mistakes++;
+      first = false;
+      trackLv(sc.lv, false);
+      sfx('bad');
+      hint(options[a.value].why || '再諗吓！', 3600);
+    }
+  };
+  const say2 = async (who, line) => {
+    await bubble(world, who, line.jp, line.yue, who === 'cat' ? 'cat' : 'usagi', who === 'cat' ? {} : { hidden: listen });
+    clearBubble(who);
+  };
+
+  hidePanel();
+  clearBubble();
+  world.catTo('street');
+  world.setView('street', true);
+  world.customerOut(true);
+  await world.streetPersonIn(friendLook);
+  await next('開始 ▶', h('div', { class: 'panel-title' }, `${sc.icon} ${sc.name}`, h('div', { class: 'sub' }, sc.intro)));
+
+  for (const t of sc.turns) {
+    if (t.t === 'f') {
+      await say2('cust', t.line);
+    } else if (t.t === 'me') {
+      const items = [t.ok, ...t.bad];
+      const idx = shuffle(items.map((_, i) => i));
+      await ask({
+        caption: `🗣️ ${t.task}`,
+        options: idx.map((i) => ({ el: opt(items[i].jp, items[i].yue), why: items[i].why || '' })),
+        correct: idx.indexOf(0),
+      });
+      await say2('cat', t.ok);
+    } else {
+      await say2('cust', t.line);
+      const items = [t.answer, ...t.wrong];
+      const idx = shuffle(items.map((_, i) => i));
+      await ask({
+        line: t.line, caption: t.task,
+        options: idx.map((i) => ({ el: opt(null, items[i]), why: i === 0 ? '' : '唔啱，再聽一次（撳句子可重聽）' })),
+        correct: idx.indexOf(0),
+      });
+    }
+  }
+  world.cat.happy();
+  world.customerOut(true);
+
+  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+  const coins = Math.round(80 * (0.6 + 0.4 * (stars / 3)));
+  const xp = 12 + stars * 5;
+  markU('drama', sc.lv, sc.id, mistakes === 0);
+  s.coins += coins;
+  s.served++;
+  addXP(xp);
+  renderHUD();
+  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
+  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
+  await next('返去 ▶', h('div', {},
+    h('div', { class: 'panel-title' }, `${sc.icon} ${sc.name} 完成`),
+    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
+    h('div', { class: 'sub' }, '📝 今日語言點'),
+    ...sc.points.map((p) => h('div', {}, h('span', { class: 'jp-inline', html: toHTML(p.jp) }), '　', p.yue))));
+  milestones();
+  dramaMenu();
+}
+
 async function streetServe({ index }) {
   const s = S();
   const lv0 = s.level;

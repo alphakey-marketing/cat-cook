@@ -4,11 +4,12 @@ import { S, save } from '../save.js';
 import { REQUESTS } from './hotel.js';
 import { INCIDENTS } from './eki.js';
 import { SMALLTALK_LIST, DETAILS, REACT, ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, jpLevel } from './phrases.js';
+import { DRAMA } from './drama.js';
 import { K_BYE, K_STEPS, K_PAY } from './konbini.js';
 
 export const UNIT_DONE_AT = 2;
 export const CHAPTER_DONE_RATIO = 0.9;
-export const TRAVEL_CHAPTERS = ['eki', 'hotel', 'pharmacy', 'street'];
+export const TRAVEL_CHAPTERS = ['eki', 'hotel', 'pharmacy', 'street', 'drama'];
 // 句庫型：隨機抽句，用 SRS 熟練度（box>=2）計學晒
 export const POOLS = {
   // 便利店：道別 + 客人答覆（袋／叮熱／筷子／積分）+ 付款，後兩者當 N5 完整句
@@ -17,7 +18,7 @@ export const POOLS = {
   resto: () => [...SMALLTALK_LIST, ...DETAILS, ...REACT.bye, ...ORDER_TEMPLATES, ...ORDER_NUM_TEMPLATES],
 };
 export const PROGRESS_ROWS = [
-  { id: 'eki', label: '🚉 車站' }, { id: 'hotel', label: '🏨 酒店' }, { id: 'pharmacy', label: '💊 藥房' }, { id: 'street', label: '🗺️ 街上' },
+  { id: 'eki', label: '🚉 車站' }, { id: 'hotel', label: '🏨 酒店' }, { id: 'pharmacy', label: '💊 藥房' }, { id: 'street', label: '🗺️ 街上' }, { id: 'drama', label: '🎭 對話劇場' },
   { id: 'konbini', label: '🏪 便利店' }, { id: 'resto', label: '🍱 餐廳' },
 ];
 
@@ -34,6 +35,7 @@ export function unitList(ch, lv) {
     if (lv === 3) u.push('long', 'stock', 'receipt'); else u.push({ 1: 'buy', 2: 'drive' }[lv] || null);
     return u.filter(Boolean);
   }
+  if (ch === 'drama') return DRAMA.filter((x) => x.lv === lv).map((x) => x.id);
   if (ch === 'street') return lv === 3 ? ['ask', 'route', 'guide', 'bye'] : ['ask', { 0: 'dir', 1: 'route', 2: 'where' }[lv], 'bye'];
   if (POOLS[ch]) return POOLS[ch]().filter((x) => (x.lv ?? 0) === lv).map((x) => x.key);
   if (ch === 'eki') {
@@ -55,6 +57,12 @@ export const LEVEL_LEARN = {
     '「〜ので、薬をください」、聽服藥指示（一日三回）、確認要呢隻藥',
     '詳細描述症狀、答「由幾時開始」、藥物敏感、聽「食咗會眼瞓」嘅注意事項',
     '聽長指示記住多個資訊、聽出婉轉講冇貨並得體跟進、書面詞（服用、在庫）、有禮貌咁要收據',
+  ],
+  drama: [
+    '朋友之間打招呼、道謝、道別（常體）',
+    '常體邀約同回應、朋友遲到時嘅自然說法、避免過度禮貌',
+    '〜でしょ？、〜ちゃって、相づち、溫柔安慰朋友',
+    '聽出「ちょっと…」嘅婉拒、得體轉問第二個時間',
   ],
   street: [
     '單字問路：「〜はどこですか」，聽懂「右・左・まっすぐ」',
