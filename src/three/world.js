@@ -8,6 +8,7 @@ import { buildIzakaya, buildCafe, buildDark } from './themes2.js';
 import { buildKonbini, KON_X } from './konbini.js';
 import { buildHotel, HOTEL_X } from './hotel.js';
 import { buildPharmacy, PHARM_X } from './pharmacy.js';
+import { buildStreet, STREET_X } from './street.js';
 import { buildEki, EKI_X, PF_X, machineTexture, platformSignTexture, trainTexture, stationCap } from './eki.js';
 import { makeBoard, makePot, makePan, makeDish, makeIngredient, makeProp, makeCustomer, makeDeco, makeMicrowave, styleDish, circleTexture, mat } from './models.js';
 
@@ -60,6 +61,8 @@ export class World {
     this.scene.add(this.hotel);
     this.pharm = buildPharmacy();
     this.scene.add(this.pharm);
+    this.street = buildStreet();
+    this.scene.add(this.street);
     this.stage = 'kitchen';
 
     this.cat = new Cat();
@@ -292,6 +295,18 @@ export class World {
     this.popIn(m);
     return m;
   }
+  // 街上路人
+  async streetPersonIn(c) {
+    this.customerOut(true);
+    const m = makeCustomer(c);
+    m.position.set(0.5, 0, 0.4);
+    m.rotation.y = -0.5;
+    m.scale.setScalar(0.01);
+    this.street.add(m);
+    this.customer = m;
+    this.popIn(m);
+    return m;
+  }
   // 酒店前台職員
   async hotelStaffIn(c, front = false) {
     this.customerOut(true);
@@ -359,13 +374,14 @@ export class World {
     if (name === 'kitchen') { this.camTargetPos.set(0.2, 2.75, 5.0); this.camTargetLook.set(0.2, 1.55, 0); }
     if (name === 'kon') { this.camTargetPos.set(KON_X + 0.2, 2.75, 5.0); this.camTargetLook.set(KON_X + 0.2, 1.55, 0); }
     if (name === 'hotel') { this.camTargetPos.set(HOTEL_X + 0.2, 2.6, 5.0); this.camTargetLook.set(HOTEL_X + 0.1, 1.45, 0); }
+    if (name === 'street') { this.camTargetPos.set(STREET_X + 0.2, 2.2, 5.2); this.camTargetLook.set(STREET_X + 0.1, 1.2, 0); }
     if (name === 'pharm') { this.camTargetPos.set(PHARM_X + 0.2, 2.6, 5.0); this.camTargetLook.set(PHARM_X + 0.1, 1.45, 0); }
     if (name === 'cook') { this.camTargetPos.set(-0.3, 2.9, 3.6); this.camTargetLook.set(-0.4, 1.35, -0.1); }
     if (name === 'serve') { this.camTargetPos.set(0.6, 2.5, 4.2); this.camTargetLook.set(0.5, 1.4, 0.3); }
     if (name === 'rest') { this.camTargetPos.set(REST_X - 0.1, 1.95, 4.0); this.camTargetLook.set(REST_X - 0.55, 1.15, -0.4); }
     if (name === 'eki') { this.camTargetPos.set(EKI_X + 0.5, 2.1, 4.4); this.camTargetLook.set(EKI_X + 0.3, 1.2, -0.8); }
     if (name === 'ekiPf') { this.camTargetPos.set(PF_X - 0.2, 1.9, 4.6); this.camTargetLook.set(PF_X - 0.2, 1.2, -0.8); }
-    const bg = name === 'eki' ? 0xd6e6f2 : name === 'ekiPf' ? 0xbfe0f5 : name === 'kon' ? 0xe4f1f3 : name === 'hotel' ? 0xefe4d0 : name === 'pharm' ? 0xe6f3ea : (this.themeBg ?? 0xf6e3c8);
+    const bg = name === 'eki' ? 0xd6e6f2 : name === 'ekiPf' ? 0xbfe0f5 : name === 'kon' ? 0xe4f1f3 : name === 'hotel' ? 0xefe4d0 : name === 'pharm' ? 0xe6f3ea : name === 'street' ? 0xcfe8f7 : (this.themeBg ?? 0xf6e3c8);
     this.scene.background.setHex(bg); this.scene.fog.color.setHex(bg);
     if (name === 'restTable') { this.camTargetPos.set(REST_X, 2.75, 3.1); this.camTargetLook.set(REST_X, 0.75, 0.3); }
     this.fitAspect();
@@ -410,11 +426,11 @@ export class World {
     this.kCounter.material.color.setHex(col[0]);
     this.kTop.material.color.setHex(col[1]);
     this.themeBg = { home: 0xf6e3c8, sushi: 0xf3ecdc, ramen: 0x8a7466, izakaya: 0x2a1d14, cafe: 0xf3e6c8, dark: 0x14121a }[name];
-    if (this.stage !== 'kon' && this.stage !== 'hotel' && this.stage !== 'pharm' && !['eki', 'ekiPf'].includes(this.view)) { this.scene.background.setHex(this.themeBg); this.scene.fog.color.setHex(this.themeBg); }
+    if (this.stage !== 'kon' && this.stage !== 'hotel' && this.stage !== 'pharm' && this.stage !== 'street' && !['eki', 'ekiPf'].includes(this.view)) { this.scene.background.setHex(this.themeBg); this.scene.fog.color.setHex(this.themeBg); }
   }
   catTo(place) {
     this.cat.root.visible = place !== 'konShop'; // 做客人：第一身視角，唔見小黑
-    this.stage = place === 'kon' || place === 'konShop' ? 'kon' : place === 'hotel' ? 'hotel' : place === 'pharm' ? 'pharm' : 'kitchen';
+    this.stage = place === 'kon' || place === 'konShop' ? 'kon' : place === 'hotel' ? 'hotel' : place === 'pharm' ? 'pharm' : place === 'street' ? 'street' : 'kitchen';
     this.suitcase.visible = place === 'eki' || place === 'pf';
     if (place === 'eki' || place === 'pf') {
       const g = place === 'eki' ? this.eki : this.pf;
@@ -432,6 +448,11 @@ export class World {
       this.suitcase.visible = true;
       if (!this.suitcase.parent) this.cat.root.add(this.suitcase);
       this.suitcase.position.set(-0.55, 0, 0.1);
+    } else if (place === 'street') {
+      this.street.add(this.cat.root);
+      this.cat.root.position.set(-0.7, 0, 1.0);
+      this.cat.root.rotation.y = 0.9;
+      this.cat.holding(null);
     } else if (place === 'pharm') {
       this.pharm.add(this.cat.root);
       this.cat.root.position.set(-1.5, 0, 1.3);

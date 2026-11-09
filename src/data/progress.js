@@ -8,7 +8,7 @@ import { K_BYE, K_STEPS, K_PAY } from './konbini.js';
 
 export const UNIT_DONE_AT = 2;
 export const CHAPTER_DONE_RATIO = 0.9;
-export const TRAVEL_CHAPTERS = ['eki', 'hotel', 'pharmacy'];
+export const TRAVEL_CHAPTERS = ['eki', 'hotel', 'pharmacy', 'street'];
 // 句庫型：隨機抽句，用 SRS 熟練度（box>=2）計學晒
 export const POOLS = {
   // 便利店：道別 + 客人答覆（袋／叮熱／筷子／積分）+ 付款，後兩者當 N5 完整句
@@ -17,7 +17,7 @@ export const POOLS = {
   resto: () => [...SMALLTALK_LIST, ...DETAILS, ...REACT.bye, ...ORDER_TEMPLATES, ...ORDER_NUM_TEMPLATES],
 };
 export const PROGRESS_ROWS = [
-  { id: 'eki', label: '🚉 車站' }, { id: 'hotel', label: '🏨 酒店' }, { id: 'pharmacy', label: '💊 藥房' },
+  { id: 'eki', label: '🚉 車站' }, { id: 'hotel', label: '🏨 酒店' }, { id: 'pharmacy', label: '💊 藥房' }, { id: 'street', label: '🗺️ 街上' },
   { id: 'konbini', label: '🏪 便利店' }, { id: 'resto', label: '🍱 餐廳' },
 ];
 
@@ -31,9 +31,10 @@ export function unitList(ch, lv) {
     const u = ['sym:atama', 'sym:netsu', 'sym:nodo', 'sym:onaka', 'when', 'bye'];
     if (lv >= 1) u.push('dose');
     if (lv >= 2) u.push('allergy');
-    u.push({ 1: 'buy', 2: 'drive', 3: 'receipt' }[lv] || null);
+    if (lv === 3) u.push('long', 'stock', 'receipt'); else u.push({ 1: 'buy', 2: 'drive' }[lv] || null);
     return u.filter(Boolean);
   }
+  if (ch === 'street') return lv === 3 ? ['ask', 'route', 'guide', 'bye'] : ['ask', { 0: 'dir', 1: 'route', 2: 'where' }[lv], 'bye'];
   if (POOLS[ch]) return POOLS[ch]().filter((x) => (x.lv ?? 0) === lv).map((x) => x.key);
   if (ch === 'eki') {
     const u = ['t:ask', 't:ann', 's:ask'];
@@ -53,7 +54,13 @@ export const LEVEL_LEARN = {
     '單句講症狀：頭痛、發燒、喉嚨痛、肚痛，簡單道謝',
     '「〜ので、薬をください」、聽服藥指示（一日三回）、確認要呢隻藥',
     '詳細描述症狀、答「由幾時開始」、藥物敏感、聽「食咗會眼瞓」嘅注意事項',
-    '委婉求助、長句描述、敬語道謝、有禮貌咁要收據',
+    '聽長指示記住多個資訊、聽出婉轉講冇貨並得體跟進、書面詞（服用、在庫）、有禮貌咁要收據',
+  ],
+  street: [
+    '單字問路：「〜はどこですか」，聽懂「右・左・まっすぐ」',
+    '「〜までどう行きますか」，聽「第N個街角轉右／左」',
+    '問行路要幾耐，聽「喺〜隔離／對面」同時間',
+    '婉轉請求問路、聽長指示（信號燈、突き当たり）、聽出對方提議帶路並得體接受（「結構です」陷阱）',
   ],
   hotel: [
     '單字加「お願いします」：入住、退房、要毛巾、寄行李',

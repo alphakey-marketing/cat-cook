@@ -18,6 +18,7 @@ import { levelNudge, checkPoolDone, markUnit, chapterNudge, dismissChapterNudge,
 import { K_CHANGE, K_BYE_WRONG, K_GREET, K_BYE, GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
 import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
 import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, KIND_OPT, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
+import { ST_SORRY, ST_GREET, ST_BYE_STAFF, ST_BYE, ST_BYE_WRONG, DESTS as ST_DESTS, askLine, reply0, reply1, reply2, reply3, GUIDE } from './data/street.js';
 import { PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, SYMPTOMS, TIMES, WHEN_LINES, ALLERGY, DOSES, PH_BYE, PH_BYE_WRONG, PH_EXTRA } from './data/pharmacy.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, PICK_ROOM, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from './data/hotel.js';
 import { isUnlocked, recipeCard, openBook, openShop, openSettings, shiftSummary, apply } from './screens.js';
@@ -168,10 +169,10 @@ function refreshMenu() {
 
 // 呢章呢級學晒：提示試下一級（只係提示，唔鎖）
 function chapterNudgeCard(chId) {
-  const ch = ['eki', 'hotel', 'pharmacy', 'konbini'].includes(chId) ? chId : 'resto';
+  const ch = ['eki', 'hotel', 'pharmacy', 'street', 'konbini'].includes(chId) ? chId : 'resto';
   const n = chapterNudge(ch, jpLevel());
   if (!n) return null;
-  const to = LEVELS[n.to], cn = { eki: '車站', hotel: '酒店', pharmacy: '藥房', konbini: '便利店', resto: '餐廳' }[ch];
+  const to = LEVELS[n.to], cn = { eki: '車站', hotel: '酒店', pharmacy: '藥房', street: '街上', konbini: '便利店', resto: '餐廳' }[ch];
   return h('div', { class: 'special lv-nudge' },
     `✅ ${LEVELS[n.from].name} ${cn}學晒喇！試下 ${to.icon} ${to.name}：${LEVEL_LEARN[ch][n.to]}`,
     h('button', { class: 'btn primary', onclick: () => { S().jpLevel = n.to; save(); sfx('level'); toast(`轉咗做 ${to.name}`); hub(); } }, `轉去 ${to.name}`),
@@ -194,7 +195,11 @@ function hub() {
   busy = false;
   clearBubble();
   world.setTheme(S().chapter);
-  world.setView('kitchen');
+  // 大堂預覽：旅行／便利店章節顯示自己嘅背景，唔再係食堂
+  const pv = { konbini: 'kon', eki: 'eki', hotel: 'hotel', pharmacy: 'pharm', street: 'street' }[S().chapter];
+  world.customerOut(true);
+  world.catTo(pv || 'kitchen');
+  world.setView(pv || 'kitchen');
   world.catFace('front');
   const sp = special();
   const spv = sp ? vocab(recipe(sp).dish) : null;
@@ -202,7 +207,7 @@ function hub() {
   refreshMenu();
   const chapter = CHAPTERS.find(c => c.id === S().chapter) || CHAPTERS[0];
   const actions = h('div', { class: 'hub-btns' },
-    h('button', { class: 'btn primary big', 'data-action': 'open-shift', onclick: () => { sfx('tap'); shift(chapter.id === 'hotel' || chapter.id === 'eki' ? { role: 'guest' } : {}); } }, chapter.id === 'konbini' ? '🏪 開舖（做收銀）' : chapter.id === 'pharmacy' ? '💊 去藥房（做病人）' : chapter.id === 'hotel' ? '🛎️ 入住酒店（做旅客）' : chapter.id === 'eki' ? '🎫 出發旅行（做旅客）' : RESTO_CHAPTERS[chapter.id] ? '🏮 開舖（做老闆）' : '🏮 開舖'),
+    h('button', { class: 'btn primary big', 'data-action': 'open-shift', onclick: () => { sfx('tap'); shift(chapter.id === 'hotel' || chapter.id === 'eki' ? { role: 'guest' } : {}); } }, chapter.id === 'konbini' ? '🏪 開舖（做收銀）' : chapter.id === 'pharmacy' ? '💊 去藥房（做病人）' : chapter.id === 'street' ? '🗺️ 出街問路（做遊客）' : chapter.id === 'hotel' ? '🛎️ 入住酒店（做旅客）' : chapter.id === 'eki' ? '🎫 出發旅行（做旅客）' : RESTO_CHAPTERS[chapter.id] ? '🏮 開舖（做老闆）' : '🏮 開舖'),
     chapter.id === 'hotel' || chapter.id === 'eki' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) shift({ role: 'staff' }); else toast('完成第一位客人就解鎖！'); } }, canRest ? (chapter.id === 'hotel' ? '🛎️ 上班（做前台）' : '🚉 上班（做站務員）') : '🔒 上班') : null,
     chapter.id === 'konbini' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) konbiniShopper(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🛒 去買嘢（做客人）' : '🔒 去買嘢') : null,
     RESTO_CHAPTERS[chapter.id] ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(chapter.id); else toast('完成第一位客人就解鎖！'); } }, canRest ? `${RESTO_CHAPTERS[chapter.id].icon} 去${RESTO_CHAPTERS[chapter.id].name}（做客人）` : `🔒 ${RESTO_CHAPTERS[chapter.id].name}`) : null,
@@ -212,7 +217,7 @@ function hub() {
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
-    }, c.id === 'eki' ? '🚉' : c.id === 'hotel' ? '🏨' : c.id === 'pharmacy' ? '💊' : art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', ramen: 'dish_shoyu_ramen', konbini: 'goods_bento', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', ramen: '拉麵店', konbini: '便利店', eki: '車站', hotel: '酒店', pharmacy: '藥房', dark: '暗黑' }[c.id]}`))),
+    }, c.id === 'eki' ? '🚉' : c.id === 'hotel' ? '🏨' : c.id === 'pharmacy' ? '💊' : c.id === 'street' ? '🗺️' : art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', ramen: 'dish_shoyu_ramen', konbini: 'goods_bento', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', ramen: '拉麵店', konbini: '便利店', eki: '車站', hotel: '酒店', pharmacy: '藥房', street: '街上', dark: '暗黑' }[c.id]}`))),
     h('div', { class: 'panel-title' }, chapter.name),
     h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
     chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,
@@ -227,7 +232,7 @@ async function shift({ tutorial = false, role = null } = {}) {
   busy = true;
   resetUsed();
   world.setTheme(S().chapter);
-  const n = tutorial ? 1 : ['eki', 'hotel', 'pharmacy'].includes(S().chapter) ? 3 : 5;
+  const n = tutorial ? 1 : ['eki', 'hotel', 'pharmacy', 'street'].includes(S().chapter) ? 3 : 5;
   const stat = { served: 0, coins: 0, perfect: 0 };
   let forceDish = null;
   const plan = S().chapter === 'izakaya' && !tutorial ? izakayaPlan(n) : S().chapter === 'sushi' && !tutorial ? sushiPlan(n) : S().chapter === 'ramen' && !tutorial ? ramenPlan(n) : null;
@@ -235,9 +240,9 @@ async function shift({ tutorial = false, role = null } = {}) {
   const dark = S().chapter === 'dark' && !tutorial;
   if (dark) { resetDark(); await darkShiftIntro(); }
   for (let i = 0; i < n; i++) {
-    $('#shiftinfo').textContent = ['eki', 'hotel', 'pharmacy'].includes(S().chapter) ? `旅程 ${i + 1} / ${n}` : `客人 ${i + 1} / ${n}`;
+    $('#shiftinfo').textContent = ['eki', 'hotel', 'pharmacy', 'street'].includes(S().chapter) ? `旅程 ${i + 1} / ${n}` : `客人 ${i + 1} / ${n}`;
     $('#shiftinfo').classList.add('show');
-    const res = S().chapter === 'eki' && !tutorial ? await ((role ? role === 'staff' : i === 1) ? ekiStaffServe({ index: i }) : ekiServe({ index: i })) : S().chapter === 'hotel' && !tutorial ? await ((role ? role === 'staff' : i === 1) ? hotelStaffServe({ index: i }) : hotelServe({ index: i })) : S().chapter === 'pharmacy' && !tutorial ? await pharmacyServe({ index: i }) : S().chapter === 'konbini' && !tutorial ? await cashierServe({ index: i }) : await serveCustomer({ index: i, tutorial, forceDish, plan });
+    const res = S().chapter === 'eki' && !tutorial ? await ((role ? role === 'staff' : i === 1) ? ekiStaffServe({ index: i }) : ekiServe({ index: i })) : S().chapter === 'hotel' && !tutorial ? await ((role ? role === 'staff' : i === 1) ? hotelStaffServe({ index: i }) : hotelServe({ index: i })) : S().chapter === 'street' && !tutorial ? await streetServe({ index: i }) : S().chapter === 'pharmacy' && !tutorial ? await pharmacyServe({ index: i }) : S().chapter === 'konbini' && !tutorial ? await cashierServe({ index: i }) : await serveCustomer({ index: i, tutorial, forceDish, plan });
     if (res.cancelled) { await wait(700); continue; }   // 取消：唔計服務、保留 forceDish
     forceDish = null;
     stat.served++;
@@ -1116,6 +1121,136 @@ async function hotelServe({ index }) {
 }
 
 // ===== 藥房：病人問診 → 症狀 → 幾時開始 → 敏感 → 服藥指示 → 道別 =====
+// ===== 街上問路：問路 → 聽指示 →（N1：接受帶路）→ 道別 =====
+async function streetServe({ index }) {
+  const s = S();
+  const lv0 = s.level;
+  const listen = s.settings.subs === 'tap';
+  const showYue = s.settings.yue !== false;
+  const lvA = drawLv();
+  const staffLook = { id: 'kuma', color: 0x8a5a3b, ear: 'round' };
+  const d = pick(ST_DESTS);
+  const otherD = shuffle(ST_DESTS.filter((x) => x !== d)).slice(0, 2);
+  let mistakes = 0;
+
+  const opt = (jp, yue, voice = 'cat') => h('div', { class: 'dish-opt' },
+    jp ? h('span', { class: 'jp-inline', html: toHTML(jp) }) : null,
+    showYue && yue ? h('small', {}, yue) : (!jp && yue ? h('small', {}, yue) : null),
+    jp ? spkOpt(jp, voice) : null);
+  const card = (line, caption) => h('div', { class: 'panel-title' },
+    line ? jpLine(line.jp, { yue: line.yue, voice: 'kuma', hidden: listen, autoplay: true }) : null,
+    caption ? h('div', { class: 'sub' }, caption) : null);
+  const ask = async ({ line = null, options, correct, caption, word, unit }) => {
+    let first = true;
+    if (word) srsSeen(word);
+    for (;;) {
+      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title: card(line, caption) });
+      if (a.value === correct) {
+        if (word) srsAnswer(word, first);
+        trackLv(lvA, first);
+        if (unit) markU('street', lvA, unit, first);
+        sfx('good');
+        return;
+      }
+      if (first) mistakes++;
+      first = false;
+      if (word) srsAnswer(word, false);
+      trackLv(lvA, false);
+      sfx('bad');
+      hint(options[a.value].why || '再諗吓！', 3600);
+    }
+  };
+  const mix = (items) => {
+    const idx = shuffle(items.map((_, i) => i));
+    return { options: idx.map((i) => ({ el: opt(items[i].jp, items[i].yue), why: items[i].why || '' })), correct: idx.indexOf(0) };
+  };
+  // 聽日文，揀中文意思：items[0] = 啱
+  const listenPick = (line, caption, texts, word, unit) => {
+    const idx = shuffle(texts.map((_, i) => i));
+    return ask({
+      line, caption, word, unit,
+      options: idx.map((i) => ({ el: opt(null, texts[i]), why: i === 0 ? '' : '唔啱，再聽一次（撳句子可重聽）' })),
+      correct: idx.indexOf(0),
+    });
+  };
+  const say2 = async (who, line) => {
+    await bubble(world, who, line.jp, line.yue, who === 'cat' ? 'cat' : 'kuma', who === 'cat' ? {} : { hidden: listen });
+    clearBubble(who);
+  };
+
+  // 1. 入場
+  hidePanel();
+  clearBubble();
+  world.catTo('street');
+  world.setView('street', true);
+  world.customerOut(true);
+  sfx('door');
+  await world.streetPersonIn(staffLook);
+  await next('出發 ▶', h('div', { class: 'panel-title' }, `🗺️ 你想去${d.yue}，向路人問路。`));
+  await say2('cat', ST_SORRY);
+  await say2('cust', ST_GREET);
+
+  // 2. 問路
+  const wrongAsk = otherD.map((o) => ({ ...askLine(lvA, o), why: `地方錯：你想去${d.yue}` }));
+  await ask({ caption: `🗣️ 你想去${d.yue}`, word: 'st_doko', unit: 'ask', ...mix([askLine(lvA, d), ...wrongAsk]) });
+  await say2('cat', askLine(lvA, d));
+
+  // 3. 聽指示，揀意思
+  if (lvA === 0) {
+    const dir = pick(['go', 0, 1]);
+    const all = ['go', 0, 1];
+    const texts = [reply0(dir).yue, ...all.filter((x) => x !== dir).map((x) => reply0(x).yue)];
+    await say2('cust', reply0(dir));
+    await listenPick(reply0(dir), '👂 路人點樣指路？', texts, dir === 'go' ? 'st_massugu' : dir === 0 ? 'st_migi' : 'st_hidari', 'dir');
+  } else if (lvA === 1) {
+    const n = 1 + Math.floor(Math.random() * 3), dir = Math.floor(Math.random() * 2);
+    const n2 = n === 3 ? 1 : n + 1;
+    const r = reply1(n, dir);
+    await say2('cust', r);
+    await listenPick(r, '👂 路人點樣指路？', [r.yue, reply1(n, 1 - dir).yue, reply1(n2, dir).yue], 'st_kado', 'route');
+  } else if (lvA === 2) {
+    const lm = Math.floor(Math.random() * 3), rel = Math.floor(Math.random() * 3), mn = Math.floor(Math.random() * 2);
+    const r = reply2(lm, rel, mn);
+    await say2('cust', r);
+    await listenPick(r, '👂 喺邊度？行幾耐？', [r.yue, reply2(lm, (rel + 1) % 3, mn).yue, reply2(lm, rel, 1 - mn).yue], 'st_tonari', 'where');
+  } else {
+    const n = 1 + Math.floor(Math.random() * 3), dir = Math.floor(Math.random() * 2);
+    const r = reply3(n, dir);
+    await say2('cust', r);
+    await listenPick(r, '👂 路人點樣指路？', [r.yue, reply3(n, 1 - dir).yue, reply3(n === 3 ? 1 : n + 1, dir).yue], 'st_shingo', 'route');
+    await say2('cust', GUIDE.ask);
+    await listenPick(GUIDE.ask, '👂 路人真正想講咩？', [GUIDE.answer, ...GUIDE.wrong], 'st_annai', 'guide');
+    await ask({ caption: GUIDE.then.task, ...mix([GUIDE.then.ok, ...GUIDE.then.bad]) });
+    await say2('cat', GUIDE.then.ok);
+  }
+
+  // 4. 道別
+  await say2('cat', ST_BYE[lvA]);
+  await ask({ caption: '👋 多謝路人，講咩？', unit: 'bye', ...mix([ST_BYE[lvA], ...shuffle(ST_BYE_WRONG).slice(0, 2)]) });
+  await say2('cust', ST_BYE_STAFF[lvA]);
+  world.cat.happy();
+  world.customerOut(true);
+
+  // 5. 結算
+  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+  const coins = Math.round(90 * (0.6 + 0.4 * (stars / 3)));
+  const xp = 12 + stars * 5;
+  panel(
+    h('div', { class: 'sub' }, `🗺️ 去${d.yue}`),
+    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
+  );
+  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
+  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
+  s.coins += coins;
+  s.served++;
+  addXP(xp);
+  renderHUD();
+  await wait(1600);
+  milestones();
+  return { coins, stars, levelUps: S().level - lv0 };
+}
+
 async function pharmacyServe({ index }) {
   const s = S();
   const lv0 = s.level;
@@ -1145,7 +1280,7 @@ async function pharmacyServe({ index }) {
       if (a.value === correct) {
         if (word) srsAnswer(word, first);
         trackLv(lvA, first);
-        markU('pharmacy', lvA, unit, first);
+        if (unit) markU('pharmacy', lvA, unit, first);
         sfx('good');
         return;
       }
@@ -1213,9 +1348,8 @@ async function pharmacyServe({ index }) {
     });
   }
 
-  // 5b. 每級獨有一題
-  const ex = PH_EXTRA[lvA];
-  if (ex) {
+  // 5b. 每級獨有嘅題（N1 有多題）
+  for (const ex of [].concat(PH_EXTRA[lvA] || [])) {
     await say2('cust', ex.ask);
     if (ex.ok) {
       await ask({ line: ex.ask, caption: `🗣️ ${ex.task}`, word: ex.word, unit: ex.unit, ...mix([ex.ok, ...ex.bad]) });
@@ -1228,6 +1362,10 @@ async function pharmacyServe({ index }) {
         options: idx.map((i) => ({ el: opt(null, items[i]), why: i === 0 ? '' : '唔啱，再聽一次（撳句子可重聽）' })),
         correct: idx.indexOf(0),
       });
+      if (ex.then) {
+        await ask({ caption: ex.then.task, ...mix([ex.then.ok, ...ex.then.bad]) });
+        await say2('cat', ex.then.ok);
+      }
     }
   }
 
