@@ -9,6 +9,7 @@ import { ORDER_TEMPLATES, ORDER_NUM_TEMPLATES, REACT, CAT, SMALLTALK_LIST, DETAI
 import { K_BYE, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, K_BYE_WRONG, K_GREET } from '../src/data/konbini.js';
 import { DESTS, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, ANN, INCIDENT_ANN, INCIDENTS, CAT_THANKS, STAFF_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from '../src/data/eki.js';
 import { dramaLines } from '../src/data/drama.js';
+import { dailyLines } from '../src/data/daily.js';
 import { streetLines, STREET_WORDS } from '../src/data/street.js';
 import { PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, SYMPTOMS, TIMES, WHEN_LINES, ALLERGY, DOSES, PH_BYE, PH_BYE_WRONG, PH_EXTRA, PHARMACY_WORDS } from '../src/data/pharmacy.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from '../src/data/hotel.js';
@@ -111,6 +112,7 @@ totals.forEach((t) => { add(fill(R.staff.pay, { price: t }).jp, 'cat'); add(fill
   [PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, ...DOSES].forEach((l) => add(l.jp, 'usagi'));
   [...SYMPTOMS.flatMap((x) => x.lines), ...PH_BYE, ...PH_BYE_WRONG, ...WHEN_LINES.flatMap((f) => TIMES.map((t) => f(t))), ALLERGY.none.ok, ALLERGY.none.bad, ALLERGY.some.ok, ALLERGY.some.bad].forEach((l) => add(l.jp, 'cat'));
   dramaLines().forEach((l) => add(l.jp, l.voice));
+  dailyLines().forEach((l) => add(l.jp, l.voice));
   streetLines().forEach((l) => add(l.jp, l.voice));
   STREET_WORDS.forEach((w) => add(w[1], 'word'));
   Object.values(PH_EXTRA).flat().forEach((e) => { add(e.ask.jp, 'usagi'); const q = e.ok ? e : e.then; if (q) { add(q.ok.jp, 'cat'); q.bad.forEach((b) => add(b.jp, 'cat')); } });

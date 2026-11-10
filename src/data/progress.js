@@ -35,7 +35,7 @@ export function unitList(ch, lv) {
     if (lv === 3) u.push('long', 'stock', 'receipt'); else u.push({ 1: 'buy', 2: 'drive' }[lv] || null);
     return u.filter(Boolean);
   }
-  if (ch === 'drama') return DRAMA.filter((x) => x.lv === lv).map((x) => x.id);
+  if (ch === 'drama') return DRAMA.filter((x) => x.lv === lv).map((x) => x.id).concat(lv === 2 ? ['register'] : []);
   if (ch === 'street') return lv === 3 ? ['ask', 'route', 'guide', 'bye'] : ['ask', { 0: 'dir', 1: 'route', 2: 'where' }[lv], 'bye'];
   if (POOLS[ch]) return POOLS[ch]().filter((x) => (x.lv ?? 0) === lv).map((x) => x.key);
   if (ch === 'eki') {
@@ -60,9 +60,9 @@ export const LEVEL_LEARN = {
   ],
   drama: [
     '朋友之間打招呼、道謝、道別（常體）',
-    '常體邀約同回應、朋友遲到時嘅自然說法、避免過度禮貌',
-    '〜でしょ？、〜ちゃって、相づち、溫柔安慰朋友',
-    '聽出「ちょっと…」嘅婉拒、得體轉問第二個時間',
+    '常體邀約、同事用です・ます、ただいま／おかえり、情侶約會',
+    '縮約（〜なきゃ／〜ちゃう）、相づち、安慰、向上司請假、講乜人語體切換',
+    '聽出「ちょっと…」婉拒、上司婉轉批評嘅言外之意',
   ],
   street: [
     '單字問路：「〜はどこですか」，聽懂「右・左・まっすぐ」',

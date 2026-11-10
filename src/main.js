@@ -18,7 +18,9 @@ import { levelNudge, checkPoolDone, markUnit, chapterNudge, dismissChapterNudge,
 import { K_CHANGE, K_BYE_WRONG, K_GREET, K_BYE, GOODS, K_STEPS, K_PAY, K_PAY_ASK, K_THANKS, K_OTSURI_ASK, yenJP } from './data/konbini.js';
 import { fill, NUMS, NIGIRI, numsFor } from './lines.js';
 import { DESTS, CNT, PLAT, TYPES, M_DEST, M_COUNT, M_KIND, KIND_OPT, LTD_EXTRA, M_TOTAL, M_TAKE, ASK, REPLY, PICK_PLAT, ANN, BOARD, INCIDENT_ANN, INCIDENTS, STAFF_THANKS, CAT_THANKS, OVERSHOOT, STAFF_RUDE, TOURIST_THANKS } from './data/eki.js';
-import { DRAMA, REL, TOPIC } from './data/drama.js';
+import { DRAMA, REL, TOPIC, NPC, REGISTER, REG_REL, REG_LABEL, SERIES } from './data/drama.js';
+import { DAILY, DAILY_CAT } from './data/daily.js';
+import { canListen, listenOnce } from './speak.js';
 import { ST_SORRY, ST_GREET, ST_BYE_STAFF, ST_BYE, ST_BYE_WRONG, DESTS as ST_DESTS, askLine, reply0, reply1, reply2, reply3, GUIDE } from './data/street.js';
 import { PH_GREET, PH_WHEN, PH_ALLERGY, PH_BYE_STAFF, PH_HAND, SYMPTOMS, TIMES, WHEN_LINES, ALLERGY, DOSES, PH_BYE, PH_BYE_WRONG, PH_EXTRA } from './data/pharmacy.js';
 import { WELCOME, BYE_STAFF, CHECKIN, ROOM_REPLY, PICK_ROOM, REQUESTS, CHECKOUT, NIGHTS, floorJP, roomJP, STAFF_RUDE_H, GUEST_THANKS } from './data/hotel.js';
@@ -212,6 +214,7 @@ function hub() {
     chapter.id === 'hotel' || chapter.id === 'eki' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) shift({ role: 'staff' }); else toast('完成第一位客人就解鎖！'); } }, canRest ? (chapter.id === 'hotel' ? '🛎️ 上班（做前台）' : '🚉 上班（做站務員）') : '🔒 上班') : null,
     chapter.id === 'konbini' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) konbiniShopper(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🛒 去買嘢（做客人）' : '🔒 去買嘢') : null,
     RESTO_CHAPTERS[chapter.id] ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(chapter.id); else toast('完成第一位客人就解鎖！'); } }, canRest ? `${RESTO_CHAPTERS[chapter.id].icon} 去${RESTO_CHAPTERS[chapter.id].name}（做客人）` : `🔒 ${RESTO_CHAPTERS[chapter.id].name}`) : null,
+    h('button', { class: 'btn big', onclick: () => { sfx('tap'); dailyMenu(); } }, '📅 每日一句（聽＋講）'),
     h('button', { class: 'btn big', onclick: () => { sfx('tap'); dramaMenu(); } }, '🎭 對話劇場（學口語）'),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店'));
@@ -1125,55 +1128,214 @@ async function hotelServe({ index }) {
 // ===== 藥房：病人問診 → 症狀 → 幾時開始 → 敏感 → 服藥指示 → 道別 =====
 // ===== 街上問路：問路 → 聽指示 →（N1：接受帶路）→ 道別 =====
 // ===== 對話劇場：選場景 → 逐句對話 → 語言點小卡 =====
+let dramaRel = 'all';
+const lvName = (lv) => ['0 零基礎', 'N5', 'N4–N3', 'N1'][lv];
+const npcLook = (rel) => CUSTOMERS.find((c) => c.id === NPC[rel]) || CUSTOMERS[0];
 function dramaMenu() {
   busy = true;
   clearBubble();
+  world.customerOut(true);
   world.catTo('street');
   world.setView('street');
   world.catFace('front');
-  const lvCls = (lv) => ['0 零基礎', 'N5', 'N4–N3', 'N1'][lv];
-  const rows = DRAMA.map((sc) => {
-    const done = (S().unitStat || {})[`drama:${sc.lv}:${sc.id}`] || 0;
-    return h('button', { class: 'btn big', onclick: () => { sfx('tap'); dramaPlay(sc); } },
-      `${sc.icon} ${sc.name}`,
-      h('small', { style: 'display:block;opacity:.75' }, `${lvCls(sc.lv)} · ${REL[sc.rel]} · ${TOPIC[sc.topic]}${done >= UNIT_DONE_AT ? ' · ✅' : ''}`));
+  const s = S();
+  const st = s.unitStat || {};
+  const seen = s.dramaSeen || {};
+  const ends = s.dramaEnds || {};
+  const chips = h('div', { class: 'chapter-tabs', 'aria-label': '揀關係' },
+    ['all', 'series', ...Object.keys(REL)].map((k) => h('button', {
+      class: `btn ${dramaRel === k ? 'primary' : ''}`, 'aria-pressed': String(dramaRel === k),
+      onclick: () => { sfx('tap'); dramaRel = k; dramaMenu(); },
+    }, k === 'all' ? '全部' : k === 'series' ? '📺 連續劇' : REL[k])));
+  const row = (sc, locked) => {
+    const done = st[`drama:${sc.lv}:${sc.id}`] || 0;
+    const end = sc.turns.some((t) => t.t === 'end') ? ` · 🔀 結局 ${Object.keys(ends[sc.id] || {}).length}/2` : '';
+    const tag = [sc.review ? '♻️' : '', sc.turns.some((t) => t.rel) ? '🔄' : ''].join('');
+    return h('button', { class: 'btn big', ...(locked ? { disabled: '' } : {}), onclick: () => { if (locked) return; sfx('tap'); dramaPlay(sc); } },
+      `${locked ? '🔒' : sc.icon} ${sc.ep ? `第${sc.ep}集 ` : ''}${sc.name}${tag ? ' ' + tag : ''}`,
+      h('small', { style: 'display:block;opacity:.75' }, locked ? '玩完上一集先開' :
+        `${lvName(sc.lv)} · ${REL[sc.rel]} · ${TOPIC[sc.topic]}${end}${done >= UNIT_DONE_AT ? ' · ✅' : done ? ' · ▶' : ''}`));
+  };
+  // 連續劇：按集數排，上一集玩過先解鎖
+  const series = Object.entries(SERIES).flatMap(([k, name]) => {
+    const eps = DRAMA.filter((sc) => sc.series === k).sort((a, b) => a.ep - b.ep);
+    return [h('div', { class: 'sub' }, name), h('div', { class: 'hub-btns' }, ...eps.map((sc, i) => row(sc, i > 0 && !seen[eps[i - 1].id])))];
   });
+  const singles = DRAMA.filter((sc) => !sc.series && (dramaRel === 'all' || sc.rel === dramaRel))
+    .slice().sort((a, b) => a.lv - b.lv).map((sc) => row(sc, false));
   panel(
     h('div', { class: 'panel-title' }, '🎭 對話劇場'),
-    h('div', { class: 'sub' }, '同朋友傾偈，學真實日本人會講嘅口語。揀一個場景。'),
-    h('div', { class: 'hub-btns' }, ...rows),
+    h('div', { class: 'sub' }, '學真實日本人會講嘅口語。🔀 多結局　🔄 中途換人（換語體）　♻️ 溫習每日一句'),
+    chips,
+    ...(dramaRel === 'all' || dramaRel === 'series' ? series : []),
+    dramaRel === 'series' ? null : h('div', { class: 'sub' }, '🎬 單集'),
+    dramaRel === 'series' ? null : h('div', { class: 'hub-btns' }, ...singles),
+    h('div', { class: 'hub-btns' },
+      h('button', { class: 'btn', onclick: () => { sfx('tap'); registerGame(); } }, '🎯 講乜人（語體切換）'),
+      h('button', { class: 'btn', onclick: () => { sfx('tap'); phraseBook(); } }, '📒 句卡冊'),
+      h('button', { class: 'btn', onclick: () => { sfx('tap'); hub(); } }, '⬅️ 返大堂')),
+  ).classList.add('hub-panel');
+}
+
+// 開口講一句。返 true（辨識過關）／'self'（冇辨識，自評）／false（跳過）
+const SPEAK_PASS = 0.7;
+const SR_ERR = {
+  'not-allowed': '冇咪權限：喺瀏覽器網址列允許用咪。',
+  'service-not-allowed': '冇咪權限：喺瀏覽器網址列允許用咪。',
+  network: '要上網先用到語音辨識。',
+  'audio-capture': '搵唔到咪。',
+};
+function speakStep(line, task) {
+  return new Promise((res) => {
+    const sr = canListen();
+    let passed = false;
+    const out = h('div', { class: 'sub', 'aria-live': 'polite' },
+      sr ? '撳 🎤 之後直接講。撳 🔊 可以先聽原聲。' : '呢個瀏覽器冇語音辨識（用 Chrome／Safari 先有）。跟住讀出聲，讀完撳「我讀咗」。');
+    const go = h('button', { class: 'btn primary big', onclick: () => { sfx('tap'); res(sr ? passed : 'self'); } }, sr ? '跳過 ▶' : '✅ 我讀咗');
+    let mic = null;
+    if (sr) {
+      mic = h('button', { class: 'btn big', onclick: async () => {
+        if (mic.disabled) return;
+        mic.disabled = true;
+        mic.textContent = '👂 聽緊…講啦';
+        const r = await listenOnce(line.jp);
+        mic.disabled = false;
+        mic.textContent = '🎤 再講一次';
+        if (r.error) { sfx('bad'); out.textContent = SR_ERR[r.error] || '聽唔到聲，再試吓。'; return; }
+        const pct = Math.round(r.score * 100);
+        if (r.score >= SPEAK_PASS) {
+          passed = true;
+          sfx('good');
+          out.textContent = `✅ 聽到：「${r.text}」（${pct}%）好自然！`;
+          go.textContent = '下一步 ▶';
+        } else {
+          sfx('bad');
+          out.textContent = `聽到：「${r.text}」（${pct}%）。撳 🔊 再聽，慢慢講多次。`;
+        }
+      } }, '🎤 撳一下開始講');
+    }
+    panel(
+      h('div', { class: 'panel-title' }, h('div', { class: 'sub' }, task), jpLine(line.jp, { yue: line.yue, voice: 'cat', autoplay: true })),
+      out,
+      h('div', { class: 'hub-btns' }, mic, go),
+    );
+  });
+}
+
+// 每日一句：今日一句 + 全部清單；連續日數有獎
+const dayNo = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+let dailyCat = 'n';
+let dailyLv = -1;
+function dailyMenu() {
+  busy = true;
+  clearBubble();
+  world.customerOut(true);
+  world.catTo('street');
+  world.setView('street');
+  world.catFace('front');
+  const s = S();
+  const best = s.dailyStat || {};
+  const pool = DAILY.filter((sc) => sc.cat === dailyCat);
+  const td = pool[dayNo() % pool.length];
+  const doneToday = s.dailyDay === dayNo();
+  const row = (sc, big) => {
+    const b = best[sc.id] || 0;
+    return h('button', { class: `btn ${big ? 'primary big' : ''}`, onclick: () => { sfx('tap'); dramaPlay(sc, { back: dailyMenu, today: sc === td, ch: 'daily' }); } },
+      `${sc.icon} `, h('span', { class: 'jp-inline', html: toHTML(sc.key) }),
+      h('small', { style: 'display:block;opacity:.75' }, `${sc.n} ${sc.name} · ${lvName(sc.lv)}${sc.warn ? ' · ⚠️ 只聽' : ''}${b ? ' · ' + '★'.repeat(b) : ''}`));
+  };
+  const chip = (on, label, fn) => h('button', { class: `btn ${on ? 'primary' : ''}`, 'aria-pressed': String(on), onclick: () => { sfx('tap'); fn(); dailyMenu(); } }, label);
+  const list = pool.filter((sc) => dailyLv < 0 || sc.lv === dailyLv);
+  const cleared = pool.filter((sc) => best[sc.id]).length;
+  panel(
+    h('div', { class: 'panel-title' }, '📅 每日一句'),
+    h('div', { class: 'sub' }, `每段：👂 聽 → 🗣️ 揀 → 💬 用 → 🎤 講。${s.dailyStreak ? `連續 ${s.dailyStreak} 日 🔥 ` : ''}${doneToday ? '（今日完成咗）' : '（玩今日一句有額外金幣）'}`),
+    h('div', { class: 'chapter-tabs', 'aria-label': '話題' }, ...Object.entries(DAILY_CAT).map(([k, v]) => chip(dailyCat === k, v, () => { dailyCat = k; }))),
+    h('div', { class: 'sub' }, `今日一句 · 完成 ${cleared} / ${pool.length}`),
+    h('div', { class: 'hub-btns' }, row(td, true)),
+    h('div', { class: 'chapter-tabs', 'aria-label': '程度' }, chip(dailyLv < 0, '全部', () => { dailyLv = -1; }),
+      ...[1, 2, 3].map((lv) => chip(dailyLv === lv, lvName(lv), () => { dailyLv = lv; }))),
+    h('div', { class: 'hub-btns' }, ...list.map((sc) => row(sc, false))),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); hub(); } }, '⬅️ 返大堂'),
   ).classList.add('hub-panel');
 }
 
-async function dramaPlay(sc) {
-  busy = true;
-  const s = S();
-  const listen = s.settings.subs === 'tap';
-  const showYue = s.settings.yue !== false;
-  const friendLook = { id: 'usagi', color: 0xfaf6f0, ear: 'long' };
-  let mistakes = 0;
-  const opt = (jp, yue) => h('div', { class: 'dish-opt' },
-    jp ? h('span', { class: 'jp-inline', html: toHTML(jp) }) : null,
-    showYue && yue ? h('small', {}, yue) : (!jp && yue ? h('small', {}, yue) : null),
-    jp ? spkOpt(jp, 'cat') : null);
-  const card = (line, caption) => h('div', { class: 'panel-title' },
-    line ? jpLine(line.jp, { yue: line.yue, voice: 'usagi', hidden: listen, autoplay: true }) : null,
-    caption ? h('div', { class: 'sub' }, caption) : null);
-  const ask = async ({ line = null, options, correct, caption }) => {
+// 句卡冊：玩過嘅場景嘅語言點，可重聽
+function phraseBook() {
+  const seen = S().dramaSeen || {};
+  const all = [...DRAMA, ...DAILY];
+  const scs = all.filter((sc) => seen[sc.id]);
+  panel(
+    h('div', { class: 'panel-title' }, `📒 句卡冊 · ${scs.length} / ${all.length} 場景`),
+    scs.length ? null : h('div', { class: 'sub' }, '玩完一個場景，佢嘅語言點就會收入呢度。'),
+    ...scs.map((sc) => h('div', { style: 'margin:8px 0' },
+      h('div', { class: 'sub' }, `${sc.icon} ${sc.name}（${REL[sc.rel]} · ${lvName(sc.lv)}）`),
+      ...sc.points.map((p) => (/[ぁ-んァ-ン]/.test(p.jp) ? jpLine(p.jp, { yue: p.yue, voice: 'word' }) : h('div', {}, `💡 ${p.jp}：${p.yue}`))))),
+    h('button', { class: 'btn', onclick: () => { sfx('tap'); dramaMenu(); } }, '⬅️ 返去'),
+  ).classList.add('hub-panel');
+}
+
+// 共用：揀答案直至啱。options[i] = { el, why }
+function dramaAsk(lv, onWrong) {
+  return async ({ title, options, correct }) => {
     let first = true;
     for (;;) {
-      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title: card(line, caption) });
-      if (a.value === correct) { trackLv(sc.lv, first); sfx('good'); return; }
-      if (first) mistakes++;
+      const a = await choose(options.map((o, value) => ({ el: o.el, value })), { title });
+      if (a.value === correct) { trackLv(lv, first); sfx('good'); return first; }
+      if (first) onWrong();
       first = false;
-      trackLv(sc.lv, false);
+      trackLv(lv, false);
       sfx('bad');
       hint(options[a.value].why || '再諗吓！', 3600);
     }
   };
+}
+const dramaOpt = (jp, yue, showYue) => h('div', { class: 'dish-opt' },
+  jp ? h('span', { class: 'jp-inline', html: toHTML(jp) }) : null,
+  showYue && yue ? h('small', {}, yue) : (!jp && yue ? h('small', {}, yue) : null),
+  jp ? spkOpt(jp, 'cat') : null);
+
+async function dramaEnd({ title, mistakes, lv, unit, extra = [], bonus = 0, back = dramaMenu, ch = 'drama' }) {
+  const s = S();
+  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+  const coins = Math.round(80 * (0.6 + 0.4 * (stars / 3))) + bonus;
+  const xp = 12 + stars * 5;
+  // 每日一句唔計入章節進度，自己記最高星數
+  if (ch === 'daily') { const b = (s.dailyStat ||= {}); b[unit] = Math.max(b[unit] || 0, stars); } else markU(ch, lv, unit, mistakes === 0);
+  s.coins += coins;
+  s.served++;
+  addXP(xp);
+  renderHUD();
+  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
+  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
+  await next('返去 ▶', h('div', {},
+    h('div', { class: 'panel-title' }, title),
+    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
+    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
+    ...extra));
+  milestones();
+  back();
+}
+
+async function dramaPlay(sc, { back = dramaMenu, today = false, ch = 'drama' } = {}) {
+  busy = true;
+  const s = S();
+  const listen = s.settings.subs === 'tap';
+  const showYue = s.settings.yue !== false;
+  let voice = NPC[sc.rel];
+  let curRel = sc.rel;
+  let mistakes = 0;
+  let spoken = 0;
+  let aff = 0; // CH 好感分
+  let ending = null;
+  const ask = dramaAsk(sc.lv, () => mistakes++);
+  const card = (line, caption) => h('div', { class: 'panel-title' },
+    // 唔自動播：泡泡啱啱講完，想再聽撳 🔊
+    line ? jpLine(line.jp, { yue: line.yue, voice, hidden: listen }) : null,
+    caption ? h('div', { class: 'sub' }, caption) : null);
   const say2 = async (who, line) => {
-    await bubble(world, who, line.jp, line.yue, who === 'cat' ? 'cat' : 'usagi', who === 'cat' ? {} : { hidden: listen });
+    hidePanel(); // 收起上一個面板，唔好遮住對白泡泡
+    await bubble(world, who, line.jp, line.yue, who === 'cat' ? 'cat' : voice, who === 'cat' ? {} : { hidden: listen });
     clearBubble(who);
   };
 
@@ -1182,53 +1344,123 @@ async function dramaPlay(sc) {
   world.catTo('street');
   world.setView('street', true);
   world.customerOut(true);
-  await world.streetPersonIn(friendLook);
-  await next('開始 ▶', h('div', { class: 'panel-title' }, `${sc.icon} ${sc.name}`, h('div', { class: 'sub' }, sc.intro)));
+  await world.streetPersonIn(npcLook(sc.rel));
+  // 每日一句：開場先教主角句（用 SAY 句，冇就用 key）
+  const keyLine = sc.key ? (sc.turns.find((t) => t.t === 'say')?.line || { jp: sc.key, yue: sc.points[0]?.yue || '' }) : null;
+  await next('開始 ▶', h('div', { class: 'panel-title' }, `${sc.icon} ${sc.name}`,
+    keyLine ? h('div', { class: 'sub' }, '📅 今日學呢句（撳 🔊 再聽）') : null,
+    keyLine ? jpLine(keyLine.jp, { yue: keyLine.yue, voice: sc.turns.some((t) => t.t === 'say') ? 'cat' : 'word', autoplay: true }) : null,
+    h('div', { class: 'sub' }, `${REL[sc.rel]} · ${sc.intro}`), sc.warn ? h('div', { class: 'sub' }, `⚠️ ${sc.warn}`) : null,
+    // 溫習：今場會用到嘅每日一句
+    sc.review ? h('div', { class: 'sub' }, '♻️ 今場會用到（每日一句）') : null,
+    ...(sc.review || []).map((id) => DAILY.find((d) => d.id === id)).filter(Boolean)
+      .map((d) => jpLine(d.key, { yue: d.name, voice: 'cat' }))));
 
   for (const t of sc.turns) {
-    if (t.t === 'f') {
+    // 對方講嘢嘅 turn：換咗人就換角色同把聲
+    const rel = t.rel || sc.rel;
+    if (['f', 'ls', 'ch', 'end'].includes(t.t) && rel !== curRel) {
+      hidePanel();
+      clearBubble();
+      await world.streetPersonIn(npcLook(rel));
+      curRel = rel;
+      voice = NPC[rel];
+    }
+    if (t.t === 'note') {
+      await next('▶', h('div', { class: 'panel-title' }, h('div', { class: 'sub' }, t.text)));
+    } else if (t.t === 'ch') {
+      // 冇對錯，揀法影響結局
+      const idx = shuffle(t.opts.map((_, i) => i));
+      const a = await choose(idx.map((i) => ({ el: dramaOpt(t.opts[i].jp, t.opts[i].yue, showYue), value: i })),
+        { title: card(null, `🔀 ${t.task}`) });
+      const o = t.opts[a.value];
+      aff += o.pt;
+      sfx(o.pt > 0 ? 'good' : 'tap');
+      await say2('cat', o);
+      if (o.re) await say2('cust', o.re);
+    } else if (t.t === 'end') {
+      const kind = aff - mistakes >= t.th ? 'good' : 'bad';
+      const e = t[kind];
+      for (const l of e.lines) await say2('cust', l);
+      const got = ((s.dramaEnds ||= {})[sc.id] ||= {});
+      got[kind] = 1;
+      ending = h('div', { class: 'sub' }, `🔀 結局：${e.name}（已解鎖 ${Object.keys(got).length}/2${kind === 'bad' ? '，揀法唔同會有另一個結局' : ''}）`);
+    } else if (t.t === 'f') {
       await say2('cust', t.line);
     } else if (t.t === 'me') {
       const items = [t.ok, ...t.bad];
       const idx = shuffle(items.map((_, i) => i));
       await ask({
-        caption: `🗣️ ${t.task}`,
-        options: idx.map((i) => ({ el: opt(items[i].jp, items[i].yue), why: items[i].why || '' })),
+        title: card(null, `🗣️ ${t.task}`),
+        options: idx.map((i) => ({ el: dramaOpt(items[i].jp, items[i].yue, showYue), why: items[i].why || '' })),
         correct: idx.indexOf(0),
       });
       await say2('cat', t.ok);
+    } else if (t.t === 'say') {
+      if (await speakStep(t.line, t.task)) spoken++;
     } else {
       await say2('cust', t.line);
       const items = [t.answer, ...t.wrong];
       const idx = shuffle(items.map((_, i) => i));
       await ask({
-        line: t.line, caption: t.task,
-        options: idx.map((i) => ({ el: opt(null, items[i]), why: i === 0 ? '' : '唔啱，再聽一次（撳句子可重聽）' })),
+        title: card(t.line, t.task),
+        options: idx.map((i) => ({ el: dramaOpt(null, items[i], true), why: i === 0 ? '' : '唔啱，再聽一次（撳句子可重聽）' })),
         correct: idx.indexOf(0),
       });
+      if (t.note) await next('明白 ▶', h('div', { class: 'panel-title' }, `🔍 ${t.note}`));
     }
+  }
+  // 冇 SAY 嘅場景：完場可以揀練講自己嘅對白
+  const mine = sc.turns.filter((t) => t.t === 'me').map((t) => t.ok);
+  if (!sc.warn && !sc.turns.some((t) => t.t === 'say') && mine.length) {
+    const a = await choose([{ label: `🎤 練講你嘅對白（${mine.length} 句）`, value: 1 }, { label: '跳過 ▶', value: 0 }],
+      { title: h('div', { class: 'panel-title' }, '要唔要開口講一次？') });
+    if (a.value) for (const l of mine) if (await speakStep(l, '🎤 跟住講你啱啱揀嘅句')) spoken++;
   }
   world.cat.happy();
   world.customerOut(true);
+  (s.dramaSeen ||= {})[sc.id] = 1;
+  // 每日一句：今日第一次完成先有獎，連續日數 +1
+  let bonus = 0;
+  if (today && s.dailyDay !== dayNo()) {
+    s.dailyStreak = s.dailyDay === dayNo() - 1 ? (s.dailyStreak || 0) + 1 : 1;
+    s.dailyDay = dayNo();
+    bonus = 30 + 10 * Math.min(s.dailyStreak, 7);
+  }
+  save();
+  await dramaEnd({
+    title: `${sc.icon} ${sc.name} 完成`, mistakes, lv: sc.lv, unit: sc.id, bonus, back, ch,
+    extra: [
+      ending,
+      bonus ? h('div', { class: 'sub' }, `📅 今日一句 +${bonus} 🪙（連續 ${s.dailyStreak} 日 🔥）`) : null,
+      spoken ? h('div', { class: 'sub' }, `🎤 開口講咗 ${spoken} 句`) : null,
+h('div', { class: 'sub' }, '📝 今日語言點（已收入句卡冊）'),
+      ...sc.points.map((p) => h('div', {}, h('span', { class: 'jp-inline', html: toHTML(p.jp) }), '　', p.yue))],
+  });
+}
 
-  const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
-  const coins = Math.round(80 * (0.6 + 0.4 * (stars / 3)));
-  const xp = 12 + stars * 5;
-  markU('drama', sc.lv, sc.id, mistakes === 0);
-  s.coins += coins;
-  s.served++;
-  addXP(xp);
-  renderHUD();
-  coinFly(coins, { x: innerWidth * 0.7, y: innerHeight * 0.35 });
-  [1, 2, 3].forEach((k) => k <= stars && setTimeout(() => sfx('good'), k * 180));
-  await next('返去 ▶', h('div', {},
-    h('div', { class: 'panel-title' }, `${sc.icon} ${sc.name} 完成`),
-    h('div', { class: 'stars-big' }, ...[1, 2, 3].map((k) => h('span', { class: k <= stars ? 'on' : '' }, '★'))),
-    h('div', { class: 'reward' }, `🪙 +${coins}　✨ +${xp} XP`),
-    h('div', { class: 'sub' }, '📝 今日語言點'),
-    ...sc.points.map((p) => h('div', {}, h('span', { class: 'jp-inline', html: toHTML(p.jp) }), '　', p.yue))));
-  milestones();
-  dramaMenu();
+// 講乜人：6 題，同一意思揀啱對象嘅講法
+async function registerGame() {
+  busy = true;
+  hidePanel();
+  clearBubble();
+  world.customerOut(true);
+  let mistakes = 0;
+  const ask = dramaAsk(2, () => mistakes++);
+  const qs = shuffle(REGISTER).slice(0, 6);
+  for (let i = 0; i < qs.length; i++) {
+    const r = qs[i];
+    const who = REG_REL[Math.floor(Math.random() * REG_REL.length)];
+    const idx = shuffle(REG_REL.slice());
+    await ask({
+      title: h('div', { class: 'panel-title' }, `🎯 ${i + 1} / ${qs.length}　對${REG_LABEL[who]}講：「${r.yue}」`),
+      // 選項唔顯示對象標籤（會穿煲），錯先講係對邊個講
+      options: idx.map((k) => ({ el: dramaOpt(r[k], '', false), why: `呢句係對${REG_LABEL[k]}講嘅講法` })),
+      correct: idx.indexOf(who),
+    });
+    say(r[who], 'cat');
+  }
+  await dramaEnd({ title: '🎯 講乜人 完成', mistakes, lv: 2, unit: 'register' });
 }
 
 async function streetServe({ index }) {
