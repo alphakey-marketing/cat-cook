@@ -63,7 +63,7 @@ export function showHUD(on) { $('#hud').classList.toggle('show', on); }
 export function panel(...kids) {
   const p = $('#panel');
   p.innerHTML = '';
-  p.classList.remove('hub-panel', 'sneak-panel');
+  p.classList.remove('hub-panel', 'sneak-panel', 'learning-panel');
   p.scrollTop = 0;
   p.append(...kids.flat().filter((k) => k != null && k !== false));
   p.classList.add('show');

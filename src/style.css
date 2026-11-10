@@ -538,3 +538,61 @@ button { min-height: 44px; }
 .lv-cell.done { background: rgba(80,180,100,.2); }
 .lv-cell.cur { outline: 2px solid #f0a040; }
 .lv-cell small { opacity: .75; }
+
+/* Learning menus: a bounded scroll region with persistent navigation/actions. */
+#panel.learning-panel, .large-text #panel.learning-panel {
+  left: 50%; right: auto; bottom: 12px; width: min(760px, calc(100% - 32px));
+  margin-left: 0; height: min(780px, calc(100dvh - 88px - var(--safe-t)));
+  max-height: calc(100dvh - 88px - var(--safe-t)); border-radius: 24px;
+  padding: 0; gap: 0; overflow: hidden; transform: translate(-50%, 110%);
+}
+#panel.learning-panel.show { transform: translateX(-50%); }
+#panel.learning-panel::before { display: none; }
+#panel.learning-panel > * { animation: none; }
+.learning-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+.learning-header h2 { margin: 0; font-size: 21px; }
+.learning-header .btn { min-height: 44px; font-size: 14px; padding: 8px 12px; }
+#panel.learning-panel .learning-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; scrollbar-gutter: stable; }
+.learning-content > * { flex-shrink: 0; min-width: 0; }
+.learning-footer { padding: 12px 20px calc(12px + var(--safe-b)); border-top: 1px solid var(--line); background: var(--paper); }
+.learning-footer > .btn { width: 100%; }
+.learning-footer .btn { min-height: 48px; animation: none; }
+.learning-footer small { font-size: 14px; }
+.learning-feature { padding: 16px; background: #f6e9d2; border-radius: 16px; }
+.learning-feature h3 { margin: 8px 0; font-size: 22px; line-height: 1.8; overflow-wrap: anywhere; }
+.learning-feature p { margin: 8px 0; line-height: 1.6; }
+.learning-panel .sub, .learning-panel .prog, .learning-panel .fold-head small { color: #65503e; }
+.learning-panel .sub { font-size: 14px; line-height: 1.6; }
+.learning-section-title { margin: 8px 0 0; font-size: 17px; }
+.learning-panel .chapter-tabs { margin: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.learning-panel .learning-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.learning-panel .chapter-tabs .btn[aria-pressed="true"] { color: var(--ink); background: #f6e9d2; border-color: #987a54; box-shadow: none; }
+.learning-panel .chapter-tabs .btn[aria-pressed="true"]::before { content: '✓'; }
+.learning-filters { padding: 12px; gap: 10px; }
+.learning-panel .scene-intro { display: block; font-size: 14px; font-weight: normal; line-height: 1.6; margin: 6px 0; }
+.learning-panel .drama-list .btn { text-align: left; padding: 12px; overflow-wrap: anywhere; }
+.learning-panel .drama-list small { display: block; font-size: 14px; color: #65503e; }
+.learning-panel .hub-btns { border: 0; padding-top: 0; }
+.learning-panel .fold > .hub-btns { padding: 10px; }
+.learning-panel .fold-head { font-size: 15px; }
+.daily-actions { display: flex; gap: 8px; }
+.daily-actions .primary { flex: 1; }
+.learning-panel :focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
+.large-text .learning-panel .sub, .large-text .learning-panel .scene-intro, .large-text .learning-panel small { font-size: 16px; }
+@media (max-width: 600px) {
+  #panel.learning-panel, .large-text #panel.learning-panel {
+    bottom: 0; width: 100%; height: calc(100dvh - 72px - var(--safe-t));
+    max-height: calc(100dvh - 72px - var(--safe-t)); border-radius: 20px 20px 0 0;
+  }
+  .learning-header { padding: 8px 12px; }
+  #panel.learning-panel .learning-content { padding: 12px; }
+  .learning-footer { padding: 10px 12px calc(10px + var(--safe-b)); }
+  .learning-feature { padding: 12px; }
+  .learning-feature h3 { font-size: 20px; }
+  .learning-panel .hub-btns.drama-list { grid-template-columns: 1fr; }
+}
+@media (max-height: 500px) {
+  #panel.learning-panel, .large-text #panel.learning-panel { bottom: 0; height: calc(100dvh - 68px - var(--safe-t)); max-height: calc(100dvh - 68px - var(--safe-t)); }
+  .learning-header { padding-top: 4px; padding-bottom: 4px; }
+  .learning-footer { padding-top: 6px; padding-bottom: calc(6px + var(--safe-b)); }
+}
