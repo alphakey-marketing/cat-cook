@@ -214,22 +214,32 @@ function hub() {
     chapter.id === 'hotel' || chapter.id === 'eki' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) shift({ role: 'staff' }); else toast('完成第一位客人就解鎖！'); } }, canRest ? (chapter.id === 'hotel' ? '🛎️ 上班（做前台）' : '🚉 上班（做站務員）') : '🔒 上班') : null,
     chapter.id === 'konbini' ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) konbiniShopper(); else toast('完成第一位客人就解鎖！'); } }, canRest ? '🛒 去買嘢（做客人）' : '🔒 去買嘢') : null,
     RESTO_CHAPTERS[chapter.id] ? h('button', { class: `btn big ${canRest ? '' : 'disabled'}`, onclick: () => { sfx('tap'); if (canRest) restaurant(chapter.id); else toast('完成第一位客人就解鎖！'); } }, canRest ? `${RESTO_CHAPTERS[chapter.id].icon} 去${RESTO_CHAPTERS[chapter.id].name}（做客人）` : `🔒 ${RESTO_CHAPTERS[chapter.id].name}`) : null,
-    h('button', { class: 'btn big', onclick: () => { sfx('tap'); dailyMenu(); } }, '📅 每日一句（聽＋講）'),
-    h('button', { class: 'btn big', onclick: () => { sfx('tap'); dramaMenu(); } }, '🎭 對話劇場（學口語）'),
-    h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
-    h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店'));
-  panel(h('div', { class: 'hub-info' },
+  );
+  const locations = h('details', { class: 'fold home-locations' },
+    h('summary', {}, h('b', {}, '轉換地點')),
     h('div', { class: 'chapter-tabs', 'aria-label': '選擇章節' }, CHAPTERS.map(c => h('button', {
       class: `btn ${c.id === chapter.id ? 'primary' : ''}`, 'data-chapter': c.id,
       'aria-pressed': String(c.id === chapter.id), onclick: () => { S().chapter = c.id; save(); sfx('tap'); hub(); },
-    }, c.id === 'eki' ? '🚉' : c.id === 'hotel' ? '🏨' : c.id === 'pharmacy' ? '💊' : c.id === 'street' ? '🗺️' : art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', ramen: 'dish_shoyu_ramen', konbini: 'goods_bento', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', ramen: '拉麵店', konbini: '便利店', eki: '車站', hotel: '酒店', pharmacy: '藥房', street: '街上', dark: '暗黑' }[c.id]}`))),
-    h('div', { class: 'panel-title' }, chapter.name),
-    h('div', { class: 'sub' }, `${chapter.intro}　完成 ${S().chapterShifts[chapter.id] || 0} 更`),
+    }, c.id === 'eki' ? '🚉' : c.id === 'hotel' ? '🏨' : c.id === 'pharmacy' ? '💊' : c.id === 'street' ? '🗺️' : art({ home: 'ui_open_shop', izakaya: 'shop_deco_lantern', cafe: 'dish_instant_coffee', sushi: 'dish_salmon_nigiri', ramen: 'dish_shoyu_ramen', konbini: 'goods_bento', dark: 'dish_dark_ding' }[c.id]), ` ${{ home: '食堂', izakaya: '居酒屋', cafe: '喫茶店', sushi: '壽司店', ramen: '拉麵店', konbini: '便利店', eki: '車站', hotel: '酒店', pharmacy: '藥房', street: '街上', dark: '暗黑' }[c.id]}`))));
+  panel(h('section', { class: 'home-current' },
+    h('div', { class: 'sub' }, `目前地點 · 完成 ${S().chapterShifts[chapter.id] || 0} 更`),
+    h('h2', {}, chapter.name),
+    h('div', { class: 'sub home-intro' }, chapter.intro), actions),
+  h('div', { class: 'hub-info' },
+    locations,
+    h('div', { class: 'home-learning' },
+      h('h3', {}, '輕鬆學日文'),
+      h('div', { class: 'hub-btns' },
+        h('button', { class: 'btn', onclick: () => { sfx('tap'); dailyMenu(); } }, '📅 每日一句（聽＋講）'),
+        h('button', { class: 'btn', onclick: () => { sfx('tap'); dramaMenu(); } }, '🎭 對話劇場（學口語）'))),
+    h('div', { class: 'hub-btns home-tools' },
+      h('button', { class: 'btn', onclick: () => { sfx('tap'); openBook(); } }, '📚 圖鑑'),
+      h('button', { class: 'btn', onclick: () => { sfx('tap'); openShop(world); } }, '🛍️ 商店')),
     chapter.id === 'dark' ? h('button', { class: 'btn', onclick: () => openBook('secrets') }, `後廚捷徑圖鑑 · ${Object.keys(S().darkSecrets).length} / 7`) : null,
     spv ? h('div', { class: 'special' }, '🌟 今日特價：',h('span', { class: 'jp-inline', html: toHTML(spv.jp) }), ' 金幣 x2') : null,
     chapterNudgeCard(chapter.id),
     levelNudgeCard(),
-  ), actions).classList.add('hub-panel');
+  )).classList.add('hub-panel', 'home-panel');
 }
 
 // ===== 一更（幾位客人）=====

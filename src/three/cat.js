@@ -35,6 +35,30 @@ export class Cat {
     const torso = sph(0.42, this.mBody, 1, 1.25, 0.9);
     torso.position.y = 1.0;
     this.body.add(torso);
+    // Short legs bridge the torso to paws whose soles sit at local y = 0.
+    this.feet = [];
+    for (const side of [-1, 1]) {
+      const leg = sph(0.13, this.mBody, 1, 2, 1);
+      leg.position.set(side * 0.19, 0.34, 0);
+      const foot = sph(0.15, this.mBody, 1.1, 0.7, 1.5);
+      foot.position.set(side * 0.19, 0.105, 0.1);
+      this.body.add(leg, foot);
+      this.feet.push(foot);
+    }
+    // Soft contact shadow stays on the floor while the body jumps.
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'rgba(0,0,0,0.4)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+    this.contactShadow = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.8),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, depthWrite: false, opacity: 0.7 }));
+    this.contactShadow.rotation.x = -Math.PI / 2;
+    this.contactShadow.position.set(0, 0.006, 0.06);
+    r.add(this.contactShadow);
     // 圍裙（白色前半球）
     // phi = π/2 係正前面 (+z)
     const apronGeo = new THREE.SphereGeometry(0.43, 24, 16, Math.PI / 2 - Math.PI * 0.32, Math.PI * 0.64, Math.PI * 0.38, Math.PI * 0.5);
@@ -294,5 +318,6 @@ export class Cat {
     }
     const breath = 1 + Math.sin(t * 2.2) * 0.012;
     this.body.scale.set(1 - stretch * 0.5, breath * (1 + stretch), 1 - stretch * 0.5);
+    this.contactShadow.material.opacity = 0.7 - Math.max(0, this.body.position.y) * 2;
   }
 }
