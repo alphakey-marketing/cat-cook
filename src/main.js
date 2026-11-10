@@ -1129,7 +1129,42 @@ async function hotelServe({ index }) {
 // ===== 街上問路：問路 → 聽指示 →（N1：接受帶路）→ 道別 =====
 // ===== 對話劇場：選場景 → 逐句對話 → 語言點小卡 =====
 let dramaRel = 'all';
+let dramaLv = null; // null = 跟玩家程度
 const lvName = (lv) => ['0 零基礎', 'N5', 'N4–N3', 'N1'][lv];
+const lvShort = (lv) => (lv < 0 ? '全部' : ['零基礎', 'N5', 'N4–N3', 'N1'][lv]);
+// 進度條
+const miniBar = (n, total) => h('span', { class: 'mini-bar', 'aria-hidden': 'true' }, h('i', { style: `width:${total ? Math.round((n / total) * 100) : 0}%` }));
+const progLine = (label, n, total, unit) => h('div', { class: 'prog', role: 'progressbar', 'aria-valuenow': String(n), 'aria-valuemax': String(total), 'aria-label': label },
+  h('span', {}, label), h('b', {}, `${n} / ${total} ${unit}`), miniBar(n, total));
+const foldHead = (title, n, total, unit) => h('span', { class: 'fold-head' }, h('b', {}, title), h('small', {}, `${n}/${total} ${unit}`), miniBar(n, total));
+// 摺疊卡：打開先砌內容，慳 DOM
+function fold(head, open, fill) {
+  const d = h('details', { class: 'fold', ...(open ? { open: '' } : {}) }, h('summary', {}, head));
+  let filled = false;
+  const go = () => { if (filled || !d.open) return; filled = true; d.append(...[fill()].flat().filter(Boolean)); };
+  d.addEventListener('toggle', go);
+  go();
+  return d;
+}
+// 每 size 個一組做單元；第一個未完成嘅自動打開
+function unitFolds(list, isDone, render, { size = 10, unit = '句', title = (i) => `單元 ${i + 1}`, autoOpen = true } = {}) {
+  const groups = [];
+  for (let i = 0; i < list.length; i += size) groups.push(list.slice(i, i + size));
+  const first = autoOpen ? groups.findIndex((g) => g.some((x) => !isDone(x))) : -1;
+  return groups.map((g, i) => {
+    const n = g.filter(isDone).length;
+    const head = autoOpen ? foldHead(`${n === g.length ? '✅' : n ? '⭐' : '📘'} ${title(i, g)}`, n, g.length, unit)
+      : h('span', { class: 'fold-head' }, h('b', {}, `📒 ${title(i, g)}`));
+    return fold(head, i === first, () => h('div', { class: 'hub-btns drama-list' }, ...g.map(render)));
+  });
+}
+// 程度 tab，每格有完成數
+const lvTabs = (lvs, cur, count, pick) => h('div', { class: 'chapter-tabs lv-tabs', 'aria-label': '程度', style: `grid-template-columns:repeat(${lvs.length},minmax(0,1fr))` },
+  ...lvs.map((lv) => {
+    const [n, t] = count(lv);
+    return h('button', { class: `btn ${cur === lv ? 'primary' : ''}`, 'aria-pressed': String(cur === lv), onclick: () => { sfx('tap'); pick(lv); } },
+      h('span', {}, lvShort(lv)), h('small', {}, `${n}/${t}`));
+  }));
 const npcLook = (rel) => CUSTOMERS.find((c) => c.id === NPC[rel]) || CUSTOMERS[0];
 function dramaMenu() {
   busy = true;
@@ -1142,34 +1177,47 @@ function dramaMenu() {
   const st = s.unitStat || {};
   const seen = s.dramaSeen || {};
   const ends = s.dramaEnds || {};
+  const myLv = jpLevel();
+  if (dramaLv == null) dramaLv = myLv;
   const chips = h('div', { class: 'chapter-tabs', 'aria-label': '揀關係' },
     ['all', 'series', ...Object.keys(REL)].map((k) => h('button', {
       class: `btn ${dramaRel === k ? 'primary' : ''}`, 'aria-pressed': String(dramaRel === k),
       onclick: () => { sfx('tap'); dramaRel = k; dramaMenu(); },
     }, k === 'all' ? '全部' : k === 'series' ? '📺 連續劇' : REL[k])));
-  const row = (sc, locked) => {
+  const row = (sc, locked, big) => {
     const done = st[`drama:${sc.lv}:${sc.id}`] || 0;
     const end = sc.turns.some((t) => t.t === 'end') ? ` · 🔀 結局 ${Object.keys(ends[sc.id] || {}).length}/2` : '';
     const tag = [sc.review ? '♻️' : '', sc.turns.some((t) => t.rel) ? '🔄' : ''].join('');
-    return h('button', { class: 'btn big', ...(locked ? { disabled: '' } : {}), onclick: () => { if (locked) return; sfx('tap'); dramaPlay(sc); } },
-      `${locked ? '🔒' : sc.icon} ${sc.ep ? `第${sc.ep}集 ` : ''}${sc.name}${tag ? ' ' + tag : ''}`,
+    return h('button', { class: `btn scene${locked ? ' disabled' : ''}${big ? ' primary big' : ''}`, ...(locked ? { 'aria-disabled': 'true' } : {}), onclick: () => { if (locked) return; sfx('tap'); dramaPlay(sc); } },
+      `${big ? '▶ 繼續：' : ''}${locked ? '🔒' : sc.icon} ${sc.ep ? `第${sc.ep}集 ` : ''}${sc.name}${tag ? ' ' + tag : ''}`,
       h('small', { style: 'display:block;opacity:.75' }, locked ? '玩完上一集先開' :
-        `${lvName(sc.lv)} · ${REL[sc.rel]} · ${TOPIC[sc.topic]}${end}${done >= UNIT_DONE_AT ? ' · ✅' : done ? ' · ▶' : ''}`));
+        `${lvName(sc.lv)} · ${REL[sc.rel]} · ${TOPIC[sc.topic]}${end}${done >= UNIT_DONE_AT ? ' · ✅' : done ? ' · ▶' : seen[sc.id] ? ' · 👀' : ''}`));
   };
-  // 連續劇：按集數排，上一集玩過先解鎖
-  const series = Object.entries(SERIES).flatMap(([k, name]) => {
-    const eps = DRAMA.filter((sc) => sc.series === k).sort((a, b) => a.ep - b.ep);
-    return [h('div', { class: 'sub' }, name), h('div', { class: 'hub-btns' }, ...eps.map((sc, i) => row(sc, i > 0 && !seen[eps[i - 1].id])))];
+  // 連續劇：按集數排，上一集玩過先解鎖；每套收埋做一張卡
+  const seriesEps = Object.entries(SERIES).map(([k, name]) => [name, DRAMA.filter((sc) => sc.series === k).sort((a, b) => a.ep - b.ep)]);
+  const series = seriesEps.map(([name, eps]) => {
+    const n = eps.filter((sc) => seen[sc.id]).length;
+    return fold(foldHead(`${n === eps.length ? '✅' : '📺'} ${name}`, n, eps.length, '集'), dramaRel === 'series' && n < eps.length,
+      () => h('div', { class: 'hub-btns drama-list' }, ...eps.map((sc, i) => row(sc, i > 0 && !seen[eps[i - 1].id]))));
   });
-  const singles = DRAMA.filter((sc) => !sc.series && (dramaRel === 'all' || sc.rel === dramaRel))
-    .slice().sort((a, b) => a.lv - b.lv).map((sc) => row(sc, false));
+  // 繼續：先揀玩緊嗰套劇下一集，再揀自己程度未玩嘅單集
+  const nextEp = seriesEps.map(([, eps]) => (eps.some((sc) => seen[sc.id]) ? eps.find((sc) => !seen[sc.id]) : null)).find(Boolean);
+  const next = nextEp || DRAMA.find((sc) => !sc.series && sc.lv === myLv && !seen[sc.id]) || DRAMA.find((sc) => !seen[sc.id] && (!sc.series || sc.ep === 1));
+  const relOk = (sc) => dramaRel === 'all' || sc.rel === dramaRel;
+  const lvCount = (lv) => { const a = DRAMA.filter((sc) => !sc.series && relOk(sc) && (lv < 0 || sc.lv === lv)); return [a.filter((sc) => seen[sc.id]).length, a.length]; };
+  const singles = DRAMA.filter((sc) => !sc.series && relOk(sc) && (dramaLv < 0 || sc.lv === dramaLv)).slice().sort((a, b) => a.lv - b.lv);
+  const seenAll = DRAMA.filter((sc) => seen[sc.id]).length;
   panel(
     h('div', { class: 'panel-title' }, '🎭 對話劇場'),
-    h('div', { class: 'sub' }, '學真實日本人會講嘅口語。🔀 多結局　🔄 中途換人（換語體）　♻️ 溫習每日一句'),
+    progLine('📈 睇完', seenAll, DRAMA.length, '場'),
+    next ? h('div', { class: 'hub-btns' }, row(next, false, true)) : h('div', { class: 'sub' }, '🎉 全部場景睇晒！可以重玩搵另一個結局。'),
+    h('div', { class: 'sub drama-legend' }, ...['🔀 多結局', '🔄 中途換人（換語體）', '♻️ 溫習每日一句'].map((t) => h('span', {}, t))),
     chips,
     ...(dramaRel === 'all' || dramaRel === 'series' ? series : []),
     dramaRel === 'series' ? null : h('div', { class: 'sub' }, '🎬 單集'),
-    dramaRel === 'series' ? null : h('div', { class: 'hub-btns' }, ...singles),
+    dramaRel === 'series' ? null : lvTabs([-1, 0, 1, 2, 3], dramaLv, lvCount, (lv) => { dramaLv = lv; dramaMenu(); }),
+    dramaRel === 'series' ? null : singles.length ? h('div', { class: 'hub-btns drama-list' }, ...singles.map((sc) => row(sc, false)))
+      : h('div', { class: 'sub' }, '呢個程度未有場景，揀第個程度啦。'),
     h('div', { class: 'hub-btns' },
       h('button', { class: 'btn', onclick: () => { sfx('tap'); registerGame(); } }, '🎯 講乜人（語體切換）'),
       h('button', { class: 'btn', onclick: () => { sfx('tap'); phraseBook(); } }, '📒 句卡冊'),
@@ -1225,7 +1273,7 @@ function speakStep(line, task) {
 // 每日一句：今日一句 + 全部清單；連續日數有獎
 const dayNo = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
 let dailyCat = 'n';
-let dailyLv = -1;
+let dailyLv = null; // null = 跟玩家程度
 function dailyMenu() {
   busy = true;
   clearBubble();
@@ -1245,17 +1293,19 @@ function dailyMenu() {
       h('small', { style: 'display:block;opacity:.75' }, `${sc.n} ${sc.name} · ${lvName(sc.lv)}${sc.warn ? ' · ⚠️ 只聽' : ''}${b ? ' · ' + '★'.repeat(b) : ''}`));
   };
   const chip = (on, label, fn) => h('button', { class: `btn ${on ? 'primary' : ''}`, 'aria-pressed': String(on), onclick: () => { sfx('tap'); fn(); dailyMenu(); } }, label);
+  // 程度預設跟玩家（每日一句冇零基礎，最低 N5）
+  if (dailyLv == null) dailyLv = Math.max(1, Math.min(3, jpLevel()));
   const list = pool.filter((sc) => dailyLv < 0 || sc.lv === dailyLv);
   const cleared = pool.filter((sc) => best[sc.id]).length;
+  const lvCount = (lv) => { const a = pool.filter((sc) => lv < 0 || sc.lv === lv); return [a.filter((sc) => best[sc.id]).length, a.length]; };
   panel(
     h('div', { class: 'panel-title' }, '📅 每日一句'),
     h('div', { class: 'sub' }, `每段：👂 聽 → 🗣️ 揀 → 💬 用 → 🎤 講。${s.dailyStreak ? `連續 ${s.dailyStreak} 日 🔥 ` : ''}${doneToday ? '（今日完成咗）' : '（玩今日一句有額外金幣）'}`),
     h('div', { class: 'chapter-tabs', 'aria-label': '話題' }, ...Object.entries(DAILY_CAT).map(([k, v]) => chip(dailyCat === k, v, () => { dailyCat = k; }))),
-    h('div', { class: 'sub' }, `今日一句 · 完成 ${cleared} / ${pool.length}`),
     h('div', { class: 'hub-btns' }, row(td, true)),
-    h('div', { class: 'chapter-tabs', 'aria-label': '程度' }, chip(dailyLv < 0, '全部', () => { dailyLv = -1; }),
-      ...[1, 2, 3].map((lv) => chip(dailyLv === lv, lvName(lv), () => { dailyLv = lv; }))),
-    h('div', { class: 'hub-btns' }, ...list.map((sc) => row(sc, false))),
+    progLine(`📈 ${DAILY_CAT[dailyCat]} 學咗`, cleared, pool.length, '句'),
+    lvTabs([-1, 1, 2, 3], dailyLv, lvCount, (lv) => { dailyLv = lv; dailyMenu(); }),
+    ...unitFolds(list, (sc) => best[sc.id], (sc) => row(sc, false)),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); hub(); } }, '⬅️ 返大堂'),
   ).classList.add('hub-panel');
 }
@@ -1265,12 +1315,20 @@ function phraseBook() {
   const seen = S().dramaSeen || {};
   const all = [...DRAMA, ...DAILY];
   const scs = all.filter((sc) => seen[sc.id]);
+  const card = (sc) => h('div', { class: 'phrase-card' },
+    h('div', { class: 'sub' }, `${sc.icon} ${sc.name}（${REL[sc.rel]} · ${lvName(sc.lv)}）`),
+    ...sc.points.map((p) => (/[ぁ-んァ-ン]/.test(p.jp) ? jpLine(p.jp, { yue: p.yue, voice: 'word' }) : h('div', {}, `💡 ${p.jp}：${p.yue}`))));
+  // 按來源分組，每組再每 10 場一疊；全部收埋，打開先砌（幾百張卡都唔慢）
+  const groups = [['🎭 對話劇場', DRAMA], ...Object.entries(DAILY_CAT).map(([k, v]) => [`📅 ${v}`, DAILY.filter((sc) => sc.cat === k)])];
   panel(
-    h('div', { class: 'panel-title' }, `📒 句卡冊 · ${scs.length} / ${all.length} 場景`),
+    h('div', { class: 'panel-title' }, '📒 句卡冊'),
+    progLine('📈 收集咗', scs.length, all.length, '場'),
     scs.length ? null : h('div', { class: 'sub' }, '玩完一個場景，佢嘅語言點就會收入呢度。'),
-    ...scs.map((sc) => h('div', { style: 'margin:8px 0' },
-      h('div', { class: 'sub' }, `${sc.icon} ${sc.name}（${REL[sc.rel]} · ${lvName(sc.lv)}）`),
-      ...sc.points.map((p) => (/[ぁ-んァ-ン]/.test(p.jp) ? jpLine(p.jp, { yue: p.yue, voice: 'word' }) : h('div', {}, `💡 ${p.jp}：${p.yue}`))))),
+    ...groups.map(([name, pool]) => {
+      const got = pool.filter((sc) => seen[sc.id]);
+      return got.length ? fold(foldHead(name, got.length, pool.length, '場'), false,
+        () => h('div', { class: 'fold-body' }, ...unitFolds(got, () => true, card, { unit: '場', autoOpen: false, title: (i, g) => `第 ${i * 10 + 1}–${i * 10 + g.length} 張` }))) : null;
+    }),
     h('button', { class: 'btn', onclick: () => { sfx('tap'); dramaMenu(); } }, '⬅️ 返去'),
   ).classList.add('hub-panel');
 }

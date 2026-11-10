@@ -8,9 +8,14 @@ import N3 from './daily_n3.js';
 import N4 from './daily_n4.js';
 import K1 from './daily_k1.js';
 import K2 from './daily_k2.js';
+import L1 from './daily_l1.js';
+import L2 from './daily_l2.js';
+import L3 from './daily_l3.js';
+import L4 from './daily_l4.js';
+import L5 from './daily_l5.js';
 
 // 話題：n 日常 / k 感情
-export const DAILY_CAT = { n: '🌤️ 日常', k: '💢 感情' };
+export const DAILY_CAT = { n: '🌤️ 日常', k: '💢 感情', l: '💕 戀愛' };
 
 // 手寫完整版（日常 001–010）
 const HAND = [
@@ -228,7 +233,7 @@ function build(raw, cat) {
 }
 
 HAND.forEach((sc, i) => { sc.cat = 'n'; sc.n = String(i + 1).padStart(3, '0'); });
-export const DAILY = [...HAND, ...build([...N1, ...N2, ...N3, ...N4], 'n'), ...build([...K1, ...K2], 'k')];
+export const DAILY = [...HAND, ...build([...N1, ...N2, ...N3, ...N4], 'n'), ...build([...K1, ...K2], 'k'), ...build([...L1, ...L2, ...L3, ...L4, ...L5], 'l')];
 
 export const dailyLines = () => [
   ...sceneLines(DAILY),
