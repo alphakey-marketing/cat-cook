@@ -389,6 +389,37 @@ button { min-height: 44px; }
 .hub-btns { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .hub-btns .btn { width: 100%; min-height: 48px; padding: 10px 6px; font-size: 15px; }
 .hub-btns .btn.primary { animation: none; }
+/* 劇場場景 list：窄畫面一欄，闊畫面兩欄 */
+.hub-btns.drama-list { grid-template-columns: 1fr; }
+@media (min-width: 600px) { .hub-btns.drama-list { grid-template-columns: 1fr 1fr; } }
+.drama-list .btn.scene small { font-size: 12px; }
+.drama-list .btn.disabled { opacity: .5; cursor: default; }
+.drama-legend { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.drama-legend span { white-space: nowrap; }
+/* 進度條 */
+.mini-bar { display: block; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.mini-bar i { display: block; height: 100%; background: var(--green); border-radius: 3px; }
+.prog { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; font-size: 14px; color: var(--muted); }
+.prog b { color: var(--ink); }
+.prog .mini-bar { grid-column: 1 / -1; height: 8px; }
+/* 摺疊卡（單元 / 連續劇） */
+.fold { border: 2px solid var(--line); border-radius: 14px; background: #fff; flex: none; }
+.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 10px 12px; min-height: 48px; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after { content: '▾'; color: var(--muted); transition: transform .2s; }
+.fold:not([open]) > summary::after { transform: rotate(-90deg); }
+.fold[open] > summary { border-bottom: 1px solid var(--line); }
+.fold-head { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; font-size: 15px; }
+.fold-head small { color: var(--muted); font-size: 13px; }
+.fold-head .mini-bar { grid-column: 1 / -1; }
+.fold > .hub-btns { border-top: 0; padding: 8px; }
+.fold-body { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.fold-body .fold { border-width: 1px; }
+.fold-body .hub-btns.drama-list { grid-template-columns: 1fr; }
+.phrase-card { text-align: left; padding: 4px 0; }
+/* 程度 tab：名 + 完成數 */
+.lv-tabs .btn { flex-direction: column; gap: 0; line-height: 1.2; }
+.lv-tabs .btn small { font-size: 11px; opacity: .8; font-weight: normal; }
 .mg-help { color: var(--ink); background: #fff2c9; padding: 8px 10px; border-radius: 10px; font-size: 14px; line-height: 1.45; font-weight: 700; }
 .request-actions .choice { min-height: 100px; }
 .request-icon { font-size: 30px; }
