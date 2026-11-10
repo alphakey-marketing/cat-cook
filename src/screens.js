@@ -109,7 +109,11 @@ export function openBook(tab = 'recipes') {
   const content = h('div', { class: 'tab-content' });
   const T = { recipes: '🍳 食譜', words: '📝 單詞', phrases: '💬 句子', secrets: '🌙 後廚', stats: '📊 紀錄' };
   const show = (t) => {
-    tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
+    tabs.querySelectorAll('button').forEach((b) => {
+      b.classList.toggle('on', b.dataset.t === t);
+      b.setAttribute('aria-pressed', String(b.dataset.t === t));
+    });
+    content.parentElement?.scrollTo(0, 0);
     content.innerHTML = '';
     if (t === 'recipes') {
       const grid = h('div', { class: 'book-grid' });
@@ -143,18 +147,8 @@ export function openBook(tab = 'recipes') {
       content.append(h('div', { class: 'progress-line' },
         `識咗 ${p.learned} / ${p.total} 個 · 🌸 熟晒 ${p.mastered} 個`,
         h('div', { class: 'bar' }, h('i', { style: `width:${p.total ? (p.learned / p.total) * 100 : 0}%` })),
-        h('div', { class: 'sub' }, `見過 ${p.seen} 個 · 仲有 ${p.unseen} 個未見過　（🌱→🌸 越溫越熟）`),
-        ...p.chapters.filter((c) => c.total).map((c) => h('div', { class: 'sub' }, `${c.icon} ${c.name} ${c.learned} / ${c.total}`,
-          h('div', { class: 'bar' }, h('i', { style: `width:${(c.learned / c.total) * 100}%` })))),
-        h('div', { class: 'lv-grid-title' }, '🎓 各章各級進度（學晒 = 90%）'),
-        ...PROGRESS_ROWS.map(({ id: ch, label }) => h('div', { class: 'lv-grid-row' },
-          h('b', {}, label),
-          ...LEVELS.map((l) => {
-            const u = unitProgress(ch, l.id), done = u.ratio >= CHAPTER_DONE_RATIO;
-            return h('div', { class: `lv-cell ${done ? 'done' : ''} ${jpLevel() === l.id ? 'cur' : ''}`, title: LEVEL_LEARN[ch][l.id] },
-              h('span', {}, `${done ? '✅' : l.icon} ${l.name}`), h('small', {}, `${u.done} / ${u.total}`),
-              h('div', { class: 'bar' }, h('i', { style: `width:${u.ratio * 100}%` })));
-          })))), list);
+        h('div', { class: 'sub' }, `見過 ${p.seen} 個 · 待重溫 ${ids.filter((id) => VOCAB[id] && S().srs[id].due <= Date.now()).length} 個`),
+        h('div', { class: 'sub' }, '按單詞聽發音。章節進度可以喺「紀錄」睇。')), list);
     } else if (t === 'phrases') {
       // 閒聊／再見／落單細節：見過先顯示，按等級分組，點一下聽
       const L = jpLevel();
@@ -189,11 +183,30 @@ export function openBook(tab = 'recipes') {
       const s = S();
       const rows = [['🔥 連續日數', `${s.streak} 日`], ['📅 玩咗', `${s.daysPlayed} 日`], ['🐾 招呼客人', `${s.served} 位`], ['🏮 去餐廳', `${s.restaurantDone} 次`], ['📝 識咗單詞', `${wordProgress().learned} 個`], ['💕 小黑好感度', `${s.affection}`]];
       content.append(h('div', { class: 'stats' }, rows.map(([a, b]) => h('div', { class: 'stat' }, h('span', {}, a), h('b', {}, b)))));
+      const p = wordProgress();
+      content.append(h('h3', {}, '各章單詞收集'),
+        ...p.chapters.filter((c) => c.total).map((c) => h('div', { class: 'progress-line' }, `${c.icon} ${c.name} ${c.learned} / ${c.total}`,
+          h('div', { class: 'bar' }, h('i', { style: `width:${(c.learned / c.total) * 100}%` })))),
+        h('h3', {}, '情境掌握進度'),
+        h('p', { class: 'sub' }, '掌握達標：90%。情境練習需兩次一次答啱；餐廳及便利店按重溫熟練度計。按章節睇各程度。'),
+        ...PROGRESS_ROWS.map(({ id: ch, label }) => h('details', { class: 'fold book-progress' },
+          h('summary', {}, h('b', {}, label)),
+          h('div', { class: 'lv-grid-row' }, ...LEVELS.map((l) => {
+            const u = unitProgress(ch, l.id), done = u.ratio >= CHAPTER_DONE_RATIO;
+            return h('div', { class: `lv-cell ${done ? 'done' : ''} ${jpLevel() === l.id ? 'cur' : ''}`, title: LEVEL_LEARN[ch][l.id] },
+              h('b', {}, `${done ? '✅' : l.icon} ${l.name}`),
+              h('span', {}, `已掌握 ${u.done} / ${u.total}`),
+              h('div', { class: 'bar' }, h('i', { style: `width:${u.ratio * 100}%` })),
+              h('small', {}, LEVEL_LEARN[ch][l.id]));
+          })))));
     }
   };
   for (const [k, v] of Object.entries(T)) tabs.append(h('button', { 'data-t': k, onclick: () => { sfx('tap'); show(k); } }, v));
   show(tab);
-  modal('📚 圖鑑', h('div', {}, tabs, content), { wide: true });
+  const { card } = modal('📚 圖鑑', content, { wide: true });
+  card.classList.add('book-modal');
+  tabs.setAttribute('aria-label', '圖鑑分類');
+  card.insertBefore(tabs, card.querySelector('.card-body'));
 }
 
 // ===== 商店 =====

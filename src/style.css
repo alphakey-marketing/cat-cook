@@ -596,3 +596,49 @@ button { min-height: 44px; }
   .learning-header { padding-top: 4px; padding-bottom: 4px; }
   .learning-footer { padding-top: 6px; padding-bottom: calc(6px + var(--safe-b)); }
 }
+
+/* Home keeps the current activity visible; destinations are an optional drawer. */
+#panel.home-panel, .large-text #panel.home-panel { max-height: min(78dvh, calc(100dvh - 80px - var(--safe-t))); gap: 12px; }
+.home-current h2 { margin: 3px 0 6px; font-size: 22px; }
+.home-current .hub-btns { border: 0; padding-top: 10px; }
+.home-current .hub-btns .btn:not(.primary) { font-size: 14px; }
+.home-current .sub { font-size: 14px; line-height: 1.5; }
+.home-panel .hub-info::after { display: none; }
+.home-panel .hub-info { gap: 12px; }
+.home-locations > summary { justify-content: space-between; }
+.home-locations > .chapter-tabs { padding: 10px; margin: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.home-locations .btn[aria-pressed="true"] { color: var(--ink); background: var(--paper2); border-color: #987a54; }
+.home-learning h3 { margin: 0 0 8px; font-size: 16px; }
+.home-learning .hub-btns, .home-tools { border: 0; padding: 0; }
+.home-learning .btn { line-height: 1.5; }
+.home-panel :focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
+@media (min-width: 1000px) {
+  #panel.home-panel, .large-text #panel.home-panel { left: auto; right: 24px; bottom: 24px; width: 450px; margin-left: 0; border-radius: 24px; max-height: calc(100dvh - 100px - var(--safe-t)); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  #panel.home-panel, .large-text #panel.home-panel { left: auto; right: 12px; width: 48vw; margin-left: 0; transform: translateY(105%); max-height: calc(100dvh - 76px - var(--safe-t)); }
+  #panel.home-panel.show, .large-text #panel.home-panel.show { transform: none; }
+  .home-current h2 { font-size: 18px; margin: 0; }
+  .home-current .home-intro { display: none; }
+}
+
+/* Book navigation lives outside the scroll region. */
+.book-modal > .tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); flex: none; gap: 4px; padding: 8px 16px; margin: 0; border-bottom: 1px solid var(--line); }
+.book-modal > .tabs button { min-width: 0; min-height: 48px; padding: 8px 2px; font-size: 14px; }
+.book-modal .card-body { scrollbar-gutter: stable; }
+.book-modal .progress-line { line-height: 1.6; margin-bottom: 14px; }
+.book-progress { margin: 10px 0; }
+.book-progress > summary { justify-content: space-between; }
+.book-progress .lv-grid-row { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; margin: 0; gap: 10px; font-size: 14px; }
+.book-progress .lv-cell { padding: 10px; gap: 8px; }
+.book-progress small { font-size: 13px; line-height: 1.6; }
+.book-modal .word-row { flex-wrap: wrap; }
+.book-modal :focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
+@media (min-width: 900px) {
+  .book-modal.wide { max-width: min(960px, calc(100vw - 48px)); }
+  .book-progress .lv-grid-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 360px) {
+  .book-modal > .tabs { padding: 8px; }
+  .book-modal > .tabs button { font-size: 13px; }
+}
