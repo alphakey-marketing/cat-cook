@@ -1129,7 +1129,6 @@ async function hotelServe({ index }) {
 // ===== 街上問路：問路 → 聽指示 →（N1：接受帶路）→ 道別 =====
 // ===== 對話劇場：選場景 → 逐句對話 → 語言點小卡 =====
 let dramaRel = 'all';
-let dramaLv = null; // null = 跟玩家程度
 let dramaMode = 'series';
 let dramaFiltersOpen = false;
 let dailyFiltersOpen = false;
@@ -1147,8 +1146,6 @@ function learningFilters(label, open, remember, ...content) {
   d.addEventListener('toggle', () => remember(d.open));
   return d;
 }
-const lvName = (lv) => ['0 零基礎', 'N5', 'N4–N3', 'N1'][lv];
-const lvShort = (lv) => (lv < 0 ? '全部' : ['零基礎', 'N5', 'N4–N3', 'N1'][lv]);
 // 進度條
 const miniBar = (n, total) => h('span', { class: 'mini-bar', 'aria-hidden': 'true' }, h('i', { style: `width:${total ? Math.round((n / total) * 100) : 0}%` }));
 const progLine = (label, n, total, unit) => h('div', { class: 'prog', role: 'progressbar', 'aria-valuenow': String(n), 'aria-valuemax': String(total), 'aria-label': label },
@@ -1175,13 +1172,6 @@ function unitFolds(list, isDone, render, { size = 10, unit = '句', title = (i) 
     return fold(head, i === first, () => h('div', { class: 'hub-btns drama-list' }, ...g.map(render)));
   });
 }
-// 程度 tab，每格有完成數
-const lvTabs = (lvs, cur, count, pick) => h('div', { class: 'chapter-tabs lv-tabs', 'aria-label': '程度', style: `grid-template-columns:repeat(${lvs.length},minmax(0,1fr))` },
-  ...lvs.map((lv) => {
-    const [n, t] = count(lv);
-    return h('button', { class: `btn ${cur === lv ? 'primary' : ''}`, 'aria-pressed': String(cur === lv), onclick: () => { sfx('tap'); pick(lv); } },
-      h('span', {}, lvShort(lv)), h('small', {}, `${n}/${t}`));
-  }));
 const npcLook = (rel) => CUSTOMERS.find((c) => c.id === NPC[rel]) || CUSTOMERS[0];
 function dramaMenu() {
   busy = true;
@@ -1194,8 +1184,6 @@ function dramaMenu() {
   const st = s.unitStat || {};
   const seen = s.dramaSeen || {};
   const ends = s.dramaEnds || {};
-  const myLv = jpLevel();
-  if (dramaLv == null) dramaLv = myLv;
   const chips = h('div', { class: 'chapter-tabs', 'aria-label': '揀關係' },
     ['all', ...Object.keys(REL)].map((k) => h('button', {
       class: `btn ${dramaRel === k ? 'primary' : ''}`, 'aria-pressed': String(dramaRel === k),
@@ -1209,7 +1197,7 @@ function dramaMenu() {
       `${big ? (sc.ep > 1 ? '繼續：' : '開始：') : ''}${locked ? '🔒' : sc.icon} ${sc.ep ? `第${sc.ep}集 ` : ''}${sc.name}${tag ? ' ' + tag : ''}`,
       !big ? h('span', { class: 'scene-intro' }, sc.intro) : null,
       h('small', { style: 'display:block;opacity:.75' }, locked ? '玩完上一集先開' :
-        `${lvName(sc.lv)} · ${REL[sc.rel]} · ${TOPIC[sc.topic]}${end}${done >= UNIT_DONE_AT ? ' · ✅' : done ? ' · ▶' : seen[sc.id] ? ' · 👀' : ''}`));
+        `${REL[sc.rel]} · ${TOPIC[sc.topic]}${end}${done >= UNIT_DONE_AT ? ' · ✅' : done ? ' · ▶' : seen[sc.id] ? ' · 👀' : ''}`));
   };
   // 連續劇：按集數排，上一集玩過先解鎖；每套收埋做一張卡
   const seriesEps = Object.entries(SERIES).map(([k, name]) => [name, DRAMA.filter((sc) => sc.series === k).sort((a, b) => a.ep - b.ep)]);
@@ -1221,8 +1209,7 @@ function dramaMenu() {
   // 繼續：先揀玩緊嗰套劇下一集，再揀自己程度未玩嘅單集
   const nextEp = seriesEps.map(([, eps]) => (eps.some((sc) => seen[sc.id]) ? eps.find((sc) => !seen[sc.id]) : null)).find(Boolean);
   const relOk = (sc) => dramaRel === 'all' || sc.rel === dramaRel;
-  const lvCount = (lv) => { const a = DRAMA.filter((sc) => !sc.series && relOk(sc) && (lv < 0 || sc.lv === lv)); return [a.filter((sc) => seen[sc.id]).length, a.length]; };
-  const singles = DRAMA.filter((sc) => !sc.series && relOk(sc) && (dramaLv < 0 || sc.lv === dramaLv)).slice().sort((a, b) => a.lv - b.lv);
+  const singles = DRAMA.filter((sc) => !sc.series && relOk(sc)).slice().sort((a, b) => a.lv - b.lv);
   const next = dramaMode === 'series'
     ? nextEp || seriesEps.map(([, eps]) => eps.find((sc, i) => !seen[sc.id] && (i === 0 || seen[eps[i - 1].id]))).find(Boolean)
     : singles.find((sc) => !seen[sc.id]);
@@ -1230,16 +1217,15 @@ function dramaMenu() {
   learningPanel('對話劇場', [
     next ? h('section', { class: 'learning-feature' }, h('div', { class: 'sub' }, next === nextEp ? '接住上次嘅故事' : '為你推薦'),
       h('h3', {}, `${next.series ? SERIES[next.series] + ' · ' : ''}${next.ep ? `第 ${next.ep} 集：` : ''}${next.name}`),
-      h('p', {}, next.intro), h('div', { class: 'sub' }, `${lvName(next.lv)} · ${REL[next.rel]} · ${TOPIC[next.topic]}`))
+      h('p', {}, next.intro), h('div', { class: 'sub' }, `${REL[next.rel]} · ${TOPIC[next.topic]}`))
       : h('p', {}, '呢個選擇已無新場景。可以重玩，或者換個玩法／篩選。'),
     h('div', { class: 'chapter-tabs learning-modes', 'aria-label': '玩法' }, ...[['series', '追連續劇'], ['single', '玩單集']].map(([key, label]) =>
       h('button', { class: 'btn', 'aria-pressed': String(dramaMode === key), onclick: () => { dramaMode = key; sfx('tap'); dramaMenu(); } }, label))),
     ...(dramaMode === 'series' ? series : [
-      learningFilters(`篩選場景 · ${lvShort(dramaLv)} · ${REL[dramaRel] || '全部關係'}`, dramaFiltersOpen, (open) => { dramaFiltersOpen = open; },
-        h('b', {}, '人物關係'), chips, h('b', {}, '程度'),
-        lvTabs([-1, 0, 1, 2, 3], dramaLv, lvCount, (lv) => { dramaLv = lv; dramaMenu(); })),
+      learningFilters(`篩選場景 · ${REL[dramaRel] || '全部關係'}`, dramaFiltersOpen, (open) => { dramaFiltersOpen = open; },
+        h('b', {}, '人物關係'), chips),
       singles.length ? h('div', { class: 'hub-btns drama-list' }, ...singles.map((sc) => row(sc, false)))
-        : h('p', {}, '呢個篩選未有場景。打開篩選，試吓其他程度或關係。')]),
+        : h('p', {}, '呢個篩選未有場景。打開篩選，試吓其他關係。')]),
     progLine('已完成場景', seenAll, DRAMA.length, '場'),
     h('div', { class: 'hub-btns' },
       h('button', { class: 'btn', onclick: () => { sfx('tap'); registerGame(); } }, '角色練習'),
@@ -1295,7 +1281,6 @@ function speakStep(line, task) {
 // 每日一句：今日一句 + 全部清單；連續日數有獎
 const dayNo = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
 let dailyCat = 'n';
-let dailyLv = null; // null = 跟玩家程度
 function dailyMenu() {
   busy = true;
   clearBubble();
@@ -1306,41 +1291,39 @@ function dailyMenu() {
   const s = S();
   const best = s.dailyStat || {};
   const pool = DAILY.filter((sc) => sc.cat === dailyCat);
-  // 程度預設跟玩家（每日一句冇零基礎，最低 N5）
-  if (dailyLv == null) dailyLv = Math.max(1, Math.min(3, jpLevel()));
-  const list = pool.filter((sc) => dailyLv < 0 || sc.lv === dailyLv);
+  // 每個話題入面由易到難排（sort 穩定，同級保持原有次序）
+  const list = pool.slice().sort((a, b) => a.lv - b.lv);
   const td = list.length ? list[dayNo() % list.length] : null;
   const doneToday = s.dailyDay === dayNo();
   const row = (sc, big) => {
     const b = best[sc.id] || 0;
     return h('button', { class: `btn ${big ? 'primary big' : ''}`, onclick: () => { sfx('tap'); dramaPlay(sc, { back: dailyMenu, today: sc === td, ch: 'daily' }); } },
       h('b', {}, sc.name), h('span', { class: 'jp-inline scene-intro', html: toHTML(sc.key) }),
-      h('small', {}, `${lvName(sc.lv)}${sc.warn ? ' · 只做聽力' : ''}${b ? ' · ' + '★'.repeat(b) : ' · 未學'}`));
+      h('small', {}, `${sc.warn ? '只做聽力 · ' : ''}${b ? '★'.repeat(b) : '未學'}`));
   };
   const chip = (on, label, fn) => h('button', { class: `btn ${on ? 'primary' : ''}`, 'aria-pressed': String(on), onclick: () => { sfx('tap'); fn(); dailyMenu(); } }, label);
   const cleared = pool.filter((sc) => best[sc.id]).length;
-  const lvCount = (lv) => { const a = pool.filter((sc) => lv < 0 || sc.lv === lv); return [a.filter((sc) => best[sc.id]).length, a.length]; };
   const start = (sc, isToday) => { sfx('tap'); dramaPlay(sc, { back: dailyMenu, today: isToday, ch: 'daily' }); };
   const extra = td && list.find((sc) => sc !== td && !best[sc.id]);
   learningPanel('每日一句', [
     h('section', { class: 'learning-feature' },
       h('div', { class: 'sub', role: 'status' }, `${doneToday ? '今日已完成' : '今日一句'}${s.dailyStreak ? ` · 連續 ${s.dailyStreak} 日` : ''}`),
-      td ? h('h3', { class: 'jp-inline', html: toHTML(td.key) }) : h('h3', {}, '呢個程度未有句子'),
-      td ? h('p', {}, td.name) : h('p', {}, '打開句庫篩選，揀其他程度。'),
-      td ? h('div', { class: 'sub' }, `${lvName(td.lv)} · ${DAILY_CAT[dailyCat]}${td.warn ? ' · 只做聽力' : ''}`) : null,
+      td ? h('h3', { class: 'jp-inline', html: toHTML(td.key) }) : h('h3', {}, '呢個話題未有句子'),
+      td ? h('p', {}, td.name) : h('p', {}, '打開句庫篩選，揀其他話題。'),
+      td ? h('div', { class: 'sub' }, `${DAILY_CAT[dailyCat]}${td.warn ? ' · 只做聽力' : ''}`) : null,
       td ? h('div', { class: 'sub' }, doneToday ? '獎勵已領取。可以重溫，或者再學一句。' : '完成今日一句，領取額外金幣。') : null),
     h('h3', { class: 'learning-section-title' }, '探索句庫'),
-    learningFilters(`句庫篩選 · ${DAILY_CAT[dailyCat]} · ${lvShort(dailyLv)}`, dailyFiltersOpen, (open) => { dailyFiltersOpen = open; },
+    learningFilters(`句庫篩選 · ${DAILY_CAT[dailyCat]}`, dailyFiltersOpen, (open) => { dailyFiltersOpen = open; },
       h('b', {}, '話題'),
       h('div', { class: 'chapter-tabs', 'aria-label': '話題' }, ...Object.entries(DAILY_CAT).map(([k, v]) => chip(dailyCat === k, v, () => { dailyCat = k; }))),
-      h('b', {}, '程度'), lvTabs([-1, 1, 2, 3], dailyLv, lvCount, (lv) => { dailyLv = lv; dailyMenu(); })),
+    ),
     ...unitFolds(list, (sc) => best[sc.id], (sc) => row(sc, false), { title: (i, g) => `${i + 1}. ${g[0].name}等情境` }),
     progLine(`${DAILY_CAT[dailyCat]} 已學`, cleared, pool.length, '句'),
   ], td ? h('div', { class: 'daily-actions' },
     h('button', { class: 'btn primary big', onclick: () => start(doneToday && extra ? extra : td, !(doneToday && extra)) },
       doneToday && extra ? h('span', {}, '再學一句', h('small', { class: 'scene-intro' }, extra.name)) : doneToday ? '重溫今日一句' : '開始學習'),
     doneToday && extra ? h('button', { class: 'btn', onclick: () => start(td, true) }, '重溫') : null)
-    : h('span', {}, '揀其他程度，開始學習'));
+    : h('span', {}, '揀其他話題，開始學習'));
 }
 
 // 句卡冊：玩過嘅場景嘅語言點，可重聽
@@ -1349,7 +1332,7 @@ function phraseBook() {
   const all = [...DRAMA, ...DAILY];
   const scs = all.filter((sc) => seen[sc.id]);
   const card = (sc) => h('div', { class: 'phrase-card' },
-    h('div', { class: 'sub' }, `${sc.icon} ${sc.name}（${REL[sc.rel]} · ${lvName(sc.lv)}）`),
+    h('div', { class: 'sub' }, `${sc.icon} ${sc.name}（${REL[sc.rel]}）`),
     ...sc.points.map((p) => (/[ぁ-んァ-ン]/.test(p.jp) ? jpLine(p.jp, { yue: p.yue, voice: 'word' }) : h('div', {}, `💡 ${p.jp}：${p.yue}`))));
   // 按來源分組，每組再每 10 場一疊；全部收埋，打開先砌（幾百張卡都唔慢）
   const groups = [['🎭 對話劇場', DRAMA], ...Object.entries(DAILY_CAT).map(([k, v]) => [`📅 ${v}`, DAILY.filter((sc) => sc.cat === k)])];
