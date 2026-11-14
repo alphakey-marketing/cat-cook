@@ -275,7 +275,7 @@ export function openSettings(world) {
     }, `${l.icon} ${l.name}`, h('small', {}, l.learn || l.desc))));
   };
   drawLvBox();
-  const credits = Object.values(VOICES).map((v) => `VOICEVOX:${v.name}`).filter((v, i, a) => a.indexOf(v) === i).join('、');
+  const credits = Object.values(VOICES).map((v) => `VOICEVOX:${v.credit || v.name}`).filter((v, i, a) => a.indexOf(v) === i).join('、');
   const body = h('div', { class: 'settings' },
     h('div', { class: 'set-row lv-row' }, h('div', {}, h('b', {}, '📚 日文程度'), h('div', { class: 'sub' }, '決定客人同餐廳對白嘅難度；轉咗之後新句即刻生效')), lvBox),
     row('振假名 ふりがな', 'furigana', '漢字上面顯示讀音'),
