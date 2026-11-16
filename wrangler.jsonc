@@ -1,0 +1,11 @@
+{
+  "name": "cat-cook",
+  "compatibility_date": "2026-10-23",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    { "pattern": "cat-cook.keymarketing.vip", "custom_domain": true }
+  ]
+}
